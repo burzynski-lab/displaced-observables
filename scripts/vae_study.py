@@ -159,11 +159,17 @@ def main() -> None:
     is_bb = labels["sample"] == 1
     ctaus = sorted(set(labels["ctau"][labels["sample"] == 2]))
 
-    # QCD split: 60/20/20 train/val/test
+    # 60/20/20 splits (deterministic, shared convention with transformer_study)
+    def split(idx):
+        idx = idx.copy()
+        np.random.default_rng(args.seed).shuffle(idx)
+        n_i = len(idx)
+        return (idx[: int(0.6 * n_i)], idx[int(0.6 * n_i): int(0.8 * n_i)],
+                idx[int(0.8 * n_i):])
+
     idx = np.where(is_qcd)[0]
-    rng.shuffle(idx)
+    tr, va, te = split(idx)
     n = len(idx)
-    tr, va, te = idx[: int(0.6 * n)], idx[int(0.6 * n): int(0.8 * n)], idx[int(0.8 * n):]
     print(f"QCD jets: {n} (train {len(tr)} / val {len(va)} / test {len(te)}); "
           f"b-enriched: {is_bb.sum()}; signal ctau points: {[f'{c:g}' for c in ctaus]}")
 
@@ -192,6 +198,26 @@ def main() -> None:
                 if ctau == 10.0:
                     score_store[(kind, basis_name)] = (s_qcd, s_sig)
 
+    # supervised ceiling on the same S+D basis: per-ctau BDT, evaluated at
+    # the identical fixed-QCD-anomaly-rate working points
+    from sklearn.ensemble import HistGradientBoostingClassifier
+
+    basis_sd = BASES["S+D"]
+    x_qtr, x_qte = matrix(tr, basis_sd).numpy(), matrix(te, basis_sd).numpy()
+    for ctau in ctaus:
+        s_idx = np.where((labels["sample"] == 2) & (labels["ctau"] == ctau))[0]
+        s_tr, _, s_te = split(s_idx)
+        bdt = HistGradientBoostingClassifier(random_state=args.seed)
+        X = np.concatenate([x_qtr, matrix(s_tr, basis_sd).numpy()])
+        y = np.concatenate([np.zeros(len(x_qtr)), np.ones(len(s_tr))])
+        bdt.fit(X, y)
+        sc_qcd = bdt.decision_function(x_qte)
+        sc_sig = bdt.decision_function(matrix(s_te, basis_sd).numpy())
+        for fpr in FPRS:
+            thr = np.quantile(sc_qcd, 1 - fpr)
+            results[("BDT-sup", "S+D", ctau, fpr)] = np.mean(sc_sig > thr)
+    print("supervised BDT(S+D) ceiling computed")
+
     # money plot: signal efficiency at fixed QCD anomaly rate vs ctau
     fig, axes = plt.subplots(1, 2, figsize=(14, 6))
     colors = {"S": "tab:gray", "S+D": "tab:red"}
@@ -205,6 +231,9 @@ def main() -> None:
                         color=colors[basis_name],
                         alpha=1.0 if kind == "VAE" else 0.55,
                         label=f"{kind}, basis {basis_name}")
+        y = [results[("BDT-sup", "S+D", c, fpr)] for c in ctaus]
+        ax.plot(ctaus, y, marker="^", ms=5, lw=1.4, ls="-", color="black",
+                label="supervised BDT, S+D (ceiling)")
         ax.set_xscale("symlog", linthresh=1)
         ax.set_xlabel("$c\\tau(\\pi_d)$ [mm]")
         ax.set_ylabel(f"signal efficiency @ QCD anomaly rate {fpr:g}")
@@ -238,13 +267,19 @@ def main() -> None:
 
     print(f"\nplots written to {out_dir}/")
     print("\nsignal efficiency @ QCD anomaly rate:")
-    print(f"{'model':5s} {'basis':5s} " + " ".join(f"{c:>7g}" for c in ctaus))
+    print(f"{'model':7s} {'basis':5s} " + " ".join(f"{c:>7g}" for c in ctaus))
     for fpr in FPRS:
         print(f"-- FPR {fpr:g}")
         for kind in ("AE", "VAE"):
             for basis_name in BASES:
                 effs = " ".join(f"{results[(kind, basis_name, c, fpr)]:7.3f}" for c in ctaus)
-                print(f"{kind:5s} {basis_name:5s} {effs}")
+                print(f"{kind:7s} {basis_name:5s} {effs}")
+        effs = " ".join(f"{results[('BDT-sup', 'S+D', c, fpr)]:7.3f}" for c in ctaus)
+        print(f"{'BDT-sup':7s} {'S+D':5s} {effs}")
+        frac = " ".join(
+            f"{results[('VAE', 'S+D', c, fpr)] / max(results[('BDT-sup', 'S+D', c, fpr)], 1e-9):7.2f}"
+            for c in ctaus)
+        print(f"{'VAE/sup':7s} {'S+D':5s} {frac}")
 
 
 if __name__ == "__main__":

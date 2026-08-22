@@ -685,14 +685,30 @@ augmentation: the $b$-jet anomaly rate at the $1\%$ inclusive working
 point rises only from $\sim 0.5\%$ to $\sim 1.5\%$, the anticipated
 mild heavy-flavor tail that furnishes an in-situ validation region.
 
+Figure~\ref{fig:vae} also shows the natural ceiling for this
+comparison: a \emph{supervised} classifier (gradient-boosted tree) on
+the same $S{+}D$ basis, trained per $\ctau$ point and evaluated at the
+identical fixed-anomaly-rate working points. Since basis and working
+point are shared, the gap between the black and red curves isolates the
+cost of model-independence alone. That cost is confined to short
+lifetimes: at the $1\%$ working point the unsupervised VAE realizes
+$51\%$ of the supervised efficiency at $\ctau = 1$~mm, $72\%$ at 3~mm,
+$87\%$ at 10~mm, and $\geq 96\%$ for $\ctau \geq 30$~mm --- at long
+lifetime the signal is so deep in the tails of the learned QCD density
+that no supervision is needed, while near the $B$-hadron lifetime a
+targeted search retains a genuine advantage over the model-agnostic
+one.
+
 \begin{figure}[tb]
   \centering
   \includegraphics[width=0.85\textwidth]{vae_efficiency_truth.png}
   \caption{Signal efficiency of the (V)AE anomaly score at a fixed QCD
   anomaly rate of $10^{-2}$ (left) and $10^{-3}$ (right), versus
   $\ctau(\pid)$. Gray dashed: standard substructure basis $S$; red
-  solid: augmented basis $S{+}D$. Identical architecture and training
-  in all cases; truth-level tracking.}
+  solid: augmented basis $S{+}D$; black: supervised BDT on the same
+  $S{+}D$ basis at the same working points, the per-basis ceiling that
+  isolates the cost of model-independence. Identical (V)AE architecture
+  and training in all cases; truth-level tracking.}
   \label{fig:vae}
 \end{figure}
 
