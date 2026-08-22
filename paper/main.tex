@@ -49,16 +49,16 @@ $\dnought$-weighted angularities, displaced energy--energy correlators,
 and lifetime moments --- and characterize their discrimination power as
 a function of the dark-pion proper lifetime,
 $\ctau(\pid) \in [1, 300]$~mm, against light-flavor \emph{and
-heavy-flavor} QCD jets. The pairwise correlators, which exploit the
-angular correlation of displacement among tracks from a common decay
-vertex, dominate the single-track observables precisely in the
-short-lifetime regime where dark pions must be distinguished from $B$
-hadrons. Augmenting a (variational) autoencoder's substructure input basis with
+heavy-flavor} QCD jets. The displacement-weighted track multiplicity
+and the pairwise correlators --- the latter exploiting the angular
+correlation of displacement among tracks from a common decay vertex ---
+dominate the single-track observables precisely in the short-lifetime
+regime where dark pions must be distinguished from $B$ hadrons. Augmenting a (variational) autoencoder's substructure input basis with
 these observables extends the generality of anomaly detection to
 lifetime-frontier signatures: at a fixed $1\%$ QCD anomaly rate, the
 signal efficiency rises from the background-consistent $\lesssim 2\%$
-(standard basis, at every lifetime) to $54\%$ at $\ctau = 1$~mm and
-$\geq 90\%$ for $\ctau \geq 10$~mm, with the QCD background model
+(standard basis, at every lifetime) to $44\%$ at $\ctau = 1$~mm and
+$\geq 88\%$ for $\ctau \geq 10$~mm, with the QCD background model
 unaffected. We further
 quantify the fraction of the fully supervised discrimination ceiling,
 defined by a per-lifetime boosted-decision-tree classifier on the
@@ -482,25 +482,20 @@ signal efficiency as a function of $\ctau(\pid)$, per background
 flavor. Three qualitative results emerge:
 
 \begin{enumerate}
-  \item \textbf{Pairwise beats single-track at short lifetime.} At
-  $\ctau = 3$~mm the dEEC observables reach $b$-jet rejections of
-  $\mathcal{O}(300)$, versus $\mathcal{O}(5)$ for the single-track
-  baselines $\langle|\dnought|/\sigma\rangle$ and $L_1$, and
-  $\mathcal{O}(10\text{--}30)$ for the weighted angularities. Even at
-  $\ctau = 1$~mm --- barely twice the $B$-hadron lifetime --- the dEEC
-  retains $\mathcal{O}(100)$ rejection. The angular pair correlation,
-  not the total displacement, is what distinguishes a 3~mm dark pion
-  from a $B$ hadron. The three-point $\mathrm{dECF}_3$ sharpens the
-  coincidence requirement further and becomes the strongest single
-  observable for $\ctau \gtrsim 10$~mm (e.g.\ $b$-jet rejection
-  $\sim 4\times 10^3$ at 30~mm, three times the dEEC), while the
-  displacement-normalized
-  ratio $C_2(w)$ shows a distinct and complementary behavior: its
-  rejection is nearly \emph{independent of lifetime}
-  ($\approx 20$--$25\times$ against $b$ jets for
-  $1 \le \ctau \le 300$~mm), as expected for a variable sensitive to
-  the vertex structure of the displacement rather than its amount ---
-  a uniform working point across the entire lifetime grid.
+  \item \textbf{Multiplicity and pair correlation dominate the
+  single-track baselines.} With $R = 1.0$ jets capturing most of the
+  dark shower, the weighted multiplicity $\Sigma_i w_i$ is the
+  strongest single observable against $b$ jets at every lifetime ---
+  $385\times$ at $\ctau = 3$~mm and $54\times$ even at 1~mm, versus
+  $\mathcal{O}(5)$ for the single-track means
+  $\langle|\dnought|/\sigma\rangle$ and $L_1$ --- while the pairwise
+  dEEC leads against light jets at the shortest lifetimes
+  ($619\times$ at 1~mm). The displacement-normalized ratio $C_2(w)$
+  shows a distinct and complementary behavior: its rejection is nearly
+  \emph{independent of lifetime} ($\approx 10\times$ against $b$ jets
+  for $1 \le \ctau \le 300$~mm), as expected for a variable sensitive
+  to the vertex structure of the displacement rather than its amount
+  --- a uniform working point across the entire lifetime grid.
   \item \textbf{Standard substructure carries no lifetime information.}
   All lifetime-blind observables sit at rejections of $2$--$5$,
   independent of $\ctau$, confirming that the discrimination above is
@@ -511,12 +506,12 @@ flavor. Three qualitative results emerge:
   unsupervised method --- however expressive --- can recover
   information absent from its inputs.
   \item \textbf{The long-lifetime regime approaches saturation even at
-  $10^5$-jet background samples.} With $8.6\times 10^4$ $b$ jets and
-  $7.6\times 10^4$ light jets, most rejections are now measured rather
-  than bounded --- e.g.\ $\Sigma_i w_i$ reaches a measured $b$-jet
-  rejection of $2\times 10^5$ at $\ctau = 300$~mm --- while the
-  prompt-$\pT$-fraction baseline still rejects every background jet
-  for $\ctau \geq 10$~mm (statistics lower bounds, open markers).
+  $10^5$-jet background samples.} With $1.2\times 10^5$ $b$ jets and
+  $10^5$ light jets, rejections up to a few $\times 10^4$ are measured
+  rather than bounded --- e.g.\ $\Sigma_i w_i$ reaches a measured
+  $b$-jet rejection of $3.2\times 10^4$ at $\ctau = 30$~mm --- with
+  the strongest entries at $\ctau \geq 100$~mm remaining statistics
+  lower bounds (open markers).
   \todo{final production statistics on the cluster}
 \end{enumerate}
 
@@ -545,10 +540,10 @@ discrimination. Physically, the lifetime information resides in the
 \emph{number} of significantly displaced tracks --- dark-pion decay
 products are numerous but soft and broadly distributed within the jet,
 so energy weighting suppresses exactly the tracks that carry the
-signal. The single-observable hierarchy at short lifetime is therefore:
-pairwise correlation (dEEC) $\gtrsim$ weighted multiplicity
-$\sum_i w_i$ $\gg$ energy-weighted angularities $\gg$ single-track
-means. This motivates the flagship set carried into
+signal. The single-observable hierarchy is therefore: weighted multiplicity
+$\sum_i w_i$ $\gtrsim$ pairwise correlation (dEEC) $\gg$
+energy-weighted angularities $\gg$ single-track means, with the dEEC
+ahead against light jets at the shortest lifetimes. This motivates the flagship set carried into
 Secs.~\ref{sec:anomaly}--\ref{sec:gap}: $\{\mathrm{dEEC}(\min),\;
 \sum_i w_i,\; \lambda^1_0(w)\}$.
 
@@ -572,7 +567,7 @@ three tracking scenarios of Sec.~\ref{sec:tracking}. Three lessons
 emerge. First, the pairwise dEEC pays an \emph{efficiency-squared}
 penalty: under standard tracking its short-lifetime advantage largely
 collapses (at $\ctau = 3$~mm the $b$-jet rejection falls from
-$\mathcal{O}(300)$ at truth level to $\mathcal{O}(3)$), because a pair
+$\mathcal{O}(100)$ at truth level to $\mathcal{O}(3)$), because a pair
 observable requires both decay products to be reconstructed. Second,
 large-radius tracking restores much of the pairwise information for
 $\ctau \gtrsim 10$~mm, and the LRT-vs-standard gap as a function of
@@ -599,12 +594,16 @@ Secs.~\ref{sec:anomaly}--\ref{sec:gap} are performed per scenario.
 
 \paragraph{Pileup.} Figure~\ref{fig:pileup} shows the flagship
 observables under the standard+LRT scenario with and without minimum-bias
-overlay at $\mu = 60$. The rejection curves are statistically
-indistinguishable across the full lifetime grid. The mechanism is
+overlay at $\mu = 60$. The weighted-observable curves shift
+only mildly across the lifetime grid, while the prompt-$\pT$ fraction
+--- whose denominator grows with every accepted soft track --- degrades
+visibly, a further argument for the self-suppressing significance
+weighting. The mechanism is
 twofold: the $z_0$ association removes the prompt pileup bulk, and the
 significance weighting caps what leaks through at the resolution
-pedestal $w \simeq \ln 2$. After selection, pileup constitutes only
-$\sim 4\%$ of signal-jet tracks at $\mu = 60$, and while roughly half
+pedestal $w \simeq \ln 2$. After selection, pileup constitutes
+$\sim 14\%$ of signal-jet tracks at $\mu = 60$ for $R = 1.0$ jets
+(scaling with the cone area), and while roughly half
 of that residual is genuinely displaced (strange-hadron daughters,
 Fig.~\ref{fig:pileup} right), it is angularly uncorrelated and too rare
 to populate displaced \emph{pairs}: the dEEC is entirely unaffected.
@@ -696,15 +695,15 @@ anomaly rate --- consistent with flagging signal at the background rate
 --- \emph{independent of lifetime}, and at a $10^{-3}$ anomaly rate the
 efficiency is zero to sample precision. Augmenting the input basis to
 $S{+}D$, with the architecture, training, and working points unchanged,
-lifts the efficiency at the $1\%$ working point to $54\%$ at
-$\ctau = 1$~mm, $76\%$ at 3~mm, $90\%$ at 10~mm, and $\geq 97\%$ for
+lifts the efficiency at the $1\%$ working point to $44\%$ at
+$\ctau = 1$~mm, $69\%$ at 3~mm, $88\%$ at 10~mm, and $\geq 97\%$ for
 $\ctau \geq 30$~mm (VAE). At these training-sample sizes the
 variational architecture clearly outperforms the deterministic AE at
-short lifetime ($54\%$ versus $23\%$ at 1~mm): the KL term regularizes
+short lifetime ($44\%$ versus $15\%$ at 1~mm): the KL term regularizes
 the background model against the heavy-tailed displaced features that
 otherwise dominate the plain MSE objective. The background model is
 stable under the augmentation: the $b$-jet anomaly rate at the $1\%$
-inclusive working point rises only from $\sim 0.4\%$ to $\sim 1.5\%$,
+inclusive working point rises only from $\sim 0.5\%$ to $\sim 1.8\%$,
 the anticipated mild heavy-flavor tail that furnishes an in-situ
 validation region.
 
@@ -715,8 +714,8 @@ identical fixed-anomaly-rate working points. Since basis and working
 point are shared, the gap between the black and red curves isolates the
 cost of model-independence alone. That cost is confined to short
 lifetimes: at the $1\%$ working point the unsupervised VAE realizes
-$54\%$ of the supervised efficiency at $\ctau = 1$~mm, $77\%$ at 3~mm,
-$91\%$ at 10~mm, and $\geq 98\%$ for $\ctau \geq 30$~mm --- at long
+$45\%$ of the supervised efficiency at $\ctau = 1$~mm, $70\%$ at 3~mm,
+$89\%$ at 10~mm, and $\geq 98\%$ for $\ctau \geq 30$~mm --- at long
 lifetime the signal is so deep in the tails of the learned QCD density
 that no supervision is needed, while near the $B$-hadron lifetime a
 targeted search retains a genuine advantage over the model-agnostic
@@ -741,9 +740,9 @@ instinct backfires. Several displaced observables are heavy-tailed
 autoencoder practice recommends compressing such features (e.g.\
 $x \to \ln(1+x)$) before z-score normalization so the MSE objective is
 not dominated by tail events. We tested exactly this and find it
-\emph{degrades} the anomaly detection substantially: the VAE efficiency
-at the $1\%$ working point drops from $54\%$ to $20\%$ at
-$\ctau = 1$~mm and from $90\%$ to $59\%$ at 10~mm. The mechanism is
+\emph{degrades} the anomaly detection substantially, reducing the VAE
+efficiency at the $1\%$ working point by factors of $1.5$--$3$ across
+the short-lifetime half of the grid. The mechanism is
 that the tails are the signal: an untransformed displaced feature
 sitting many standard deviations from the QCD mean produces an
 enormous reconstruction error, and compressing the tails improves
@@ -772,11 +771,10 @@ retains, and how much is recoverable without lifetime information at
 all.
 
 Figure~\ref{fig:gap} shows the outcome. The single observables capture
-$50$--$85\%$ of the ceiling's log-rejection across the lifetime grid,
-with complementary strengths: the dEEC leads below $\sim 10$~mm, the
-weighted multiplicity above (at 300~mm its measured rejection even
-exceeds the test-sample-saturated ceiling bound, an artifact of the
-ceiling's statistics cap). The nominal-basis tree is the supervised
+$40$--$100\%$ of the ceiling's log-rejection across the lifetime grid:
+the weighted multiplicity leads against $b$ jets at every lifetime and
+itself saturates the test-sample ceiling for $\ctau \geq 30$~mm, while
+the dEEC leads against light jets at the shortest lifetimes. The nominal-basis tree is the supervised
 counterpart of the anomaly-detection blind spot: supervised training
 does extract a lifetime-\emph{independent} $\sim 50\times$ $b$-jet
 rejection from shape information alone, but the curve never rises with
