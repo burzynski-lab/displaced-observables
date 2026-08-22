@@ -544,7 +544,7 @@ signal. The single-observable hierarchy is therefore: weighted multiplicity
 $\sum_i w_i$ $\gtrsim$ pairwise correlation (dEEC) $\gg$
 energy-weighted angularities $\gg$ single-track means, with the dEEC
 ahead against light jets at the shortest lifetimes. This motivates the flagship set carried into
-Secs.~\ref{sec:anomaly}--\ref{sec:gap}: $\{\mathrm{dEEC}(\min),\;
+Secs.~\ref{sec:anomaly}--\ref{sec:supervised}: $\{\mathrm{dEEC}(\min),\;
 \sum_i w_i,\; \lambda^1_0(w)\}$.
 
 \begin{figure}[tb]
@@ -578,7 +578,7 @@ losing a displaced track degrades them linearly rather than
 quadratically. A realistic search should therefore combine a
 counting observable (robust) with the dEEC (maximal truth-level
 information), and the ML studies of
-Secs.~\ref{sec:anomaly}--\ref{sec:gap} are performed per scenario.
+Secs.~\ref{sec:anomaly}--\ref{sec:supervised} are performed per scenario.
 \todo{quantitative degradation table}
 
 \begin{figure}[tb]
@@ -629,110 +629,170 @@ denominators grow with every soft track.
 under each scenario.}
 
 % =====================================================================
-\section{Displacement-aware anomaly detection}
+\section{Anomaly detection with displacement-aware inputs}
 \label{sec:anomaly}
 
 The central application of the observable family is to extend the
 generality of substructure-based anomaly detection to the lifetime
-frontier. The proposed protocol is deliberately minimal, so that the
-comparison isolates the input basis rather than the architecture:
+frontier. This section specifies the study completely: the datasets,
+the input processing, the architectures and training procedure, and
+the evaluation protocol. The comparison is deliberately constructed so
+that the \emph{only} difference between the blind and the
+displacement-aware anomaly detectors is the input basis.
 
+\subsection{Datasets, input bases, and normalization}
+\label{sec:addata}
+
+The background training sample is the inclusive QCD dijet sample of
+Sec.~\ref{sec:simulation}: $122\,258$ selected jets, split
+$60/20/20$ into training ($73\,354$), validation ($24\,452$), and test
+($24\,452$) subsets by a seeded random permutation. The autoencoders
+never see signal: all $9\,126$ signal jets per $\ctau$ point are used
+for evaluation only. The b-enriched sample ($108\,453$ $b$-labeled
+jets) is likewise held out and used only to measure the heavy-flavor
+composition of the anomaly tail.
+
+Two per-jet input vectors are compared. Basis $S$ (12 features) is the
+nominal column of Table~\ref{tab:observables}: girth, mass angularity,
+$\mathrm{ECF}_2$, $\mathrm{ECF}_3$, $C_2$, $D_2$, $\tau_1$,
+$\tau_{21}$, $\tau_{32}$, $\pT^D$, $n_{\mathrm{trk}}$, and jet mass.
+Basis $S{+}D$ (24 features) appends the displacement-weighted column:
+$\Sigma_i w_i$, $\lambda^1_0(w)$, $\lambda^1_1(w)$,
+$\mathrm{dEEC}(\mathrm{prod})$, $\mathrm{dEEC}(\min)$,
+$\mathrm{dECF}_3$, $C_2(w)$, $D_2(w)$, $L_1$, $L_2L_0/L_1^2$,
+$\langle|\dnought|/\sigma\rangle$, and the prompt-$\pT$ fraction.
+
+Every feature is z-score normalized, $\hat x = (x - \mu)/\sigma$, with
+$\mu$ and $\sigma$ computed \emph{on the inclusive QCD sample only};
+signal jets are normalized with the same constants, so displaced jets
+appear many standard deviations from zero in the displaced features.
+No other preprocessing is applied --- in particular no compression of
+heavy-tailed features, for the reason quantified in
+Sec.~\ref{sec:tails}.
+
+\subsection{Architecture, loss, and training}
+\label{sec:adtrain}
+
+Both models are small fully connected autoencoders acting on the
+normalized feature vector $\hat x \in \mathbb{R}^{d}$ ($d = 12$ or
+$24$):
+\begin{itemize}
+  \item \textbf{Encoder}: $d \to 64 \to 32$ with ReLU activations,
+  followed by two linear heads producing $\mu \in \mathbb{R}^{8}$ and
+  $\log\sigma^2 \in \mathbb{R}^{8}$ (latent dimension 8).
+  \item \textbf{Decoder}: $8 \to 32 \to 64 \to d$, ReLU between hidden
+  layers, linear output. About $7\times 10^3$ parameters in total.
+  \item \textbf{VAE}: the latent code is sampled via the
+  reparameterization trick during training, $z = \mu + \epsilon \odot
+  \sigma$ with $\epsilon \sim \mathcal{N}(0, I)$, and set to
+  $z = \mu$ at evaluation. The per-jet loss is the ELBO with
+  feature-averaged reconstruction error,
+  \begin{equation}
+    \mathcal{L}(x) \;=\; \frac{1}{d}\sum_{j=1}^{d}
+        (\hat x_j - \tilde x_j)^2
+    \;-\; \frac{1}{2}\cdot\frac{1}{8}\sum_{k=1}^{8}
+        \left(1 + \log\sigma_k^2 - \mu_k^2 - \sigma_k^2\right),
+    \label{eq:elbo}
+  \end{equation}
+  where $\tilde x$ is the reconstruction.
+  \item \textbf{AE}: identical architecture with a deterministic
+  latent ($z = \mu$ throughout) and the MSE term of
+  Eq.~(\ref{eq:elbo}) alone.
+\end{itemize}
+Training uses Adam with learning rate $10^{-3}$ and batch size 256 on
+the QCD training subset, for at most 200 epochs with early stopping
+(patience 15) on the validation loss; the best-validation weights are
+retained. With fixed seeds the four trainings converge at 19 (VAE,
+$S$), 48 (VAE, $S{+}D$), 195 (AE, $S$), and 126 (AE, $S{+}D$) epochs.
+The \textbf{anomaly score} of a jet is its per-sample loss
+$\mathcal{L}(x)$ (for the AE, the MSE alone).
+
+\subsection{Working points and results}
+\label{sec:adresults}
+
+Anomaly-score thresholds are defined as quantiles of the QCD
+\emph{test} subset at fixed anomaly rates of $10^{-2}$ and $10^{-3}$;
+the figure of merit is the signal efficiency at these fixed rates,
+per $\ctau$ point.
+
+Figure~\ref{fig:vaescore} shows the score distributions. In basis $S$
+the signal is indistinguishable from QCD at every lifetime --- the
+efficiency at the $1\%$ working point is $0.2$--$0.5\%$
+(background-consistent), and zero to sample precision at $10^{-3}$.
+In basis $S{+}D$, with architecture, training, and working points
+unchanged, the signal population migrates orders of magnitude into the
+loss tail, and the efficiency at the $1\%$ working point becomes
+$44\%$ at $\ctau = 1$~mm, $69\%$ at 3~mm, $88\%$ at 10~mm, and
+$\geq 97\%$ for $\ctau \geq 30$~mm (VAE; Fig.~\ref{fig:vae}).
+
+Figure~\ref{fig:vaerecon} shows \emph{why} through the per-feature
+reconstructions: trained only on QCD, the decoder reconstructs the
+QCD test sample faithfully in every feature, while signal jets ---
+whose displaced features lie far outside the learned manifold --- are
+reconstructed back onto it, producing the large per-jet loss that the
+anomaly score keys on.
+
+Three further observations:
 \begin{enumerate}
-  \item \textbf{Background model.} Train a (variational) autoencoder on
-  QCD jets only (signal-free training sample; in data this would be a
-  control region or the bulk of an inclusive jet sample), with a
-  per-jet feature vector as input.
-  \item \textbf{Two input bases.} Basis $S$ (``standard''): the
-  nominal column of Table~\ref{tab:observables} --- angularities,
-  $\mathrm{ECF}_n$ and ratios, $\tau_N$ and ratios, $\pT^D$,
-  $n_{\mathrm{trk}}$, jet mass. Basis $S{+}D$: the same vector
-  augmented with the displacement-weighted column (anchor weighted
-  angularities, dEEC with both pairings, low lifetime moments and
-  ratio).
-  \item \textbf{Evaluation.} Anomaly score = reconstruction error (AE)
-  or a combination with the KL term (VAE). Compare ROC curves of the
-  anomaly score against emerging-jet signal, per $\ctau$ point and per
-  background flavor, for $S$ versus $S{+}D$. The figure of merit is
-  the improvement in signal efficiency at fixed background anomaly
-  rate (e.g.\ $10^{-3}$), as a function of $\ctau$.
-  \item \textbf{Background-model stability.} Verify that augmenting
-  the basis does not degrade the background model itself: the QCD
-  anomaly-score distribution and its flavor composition should be
-  statistically unchanged between $S$ and $S{+}D$ trainings, since for
-  background the added observables are concentrated near the prompt
-  pedestal $w \simeq \ln 2$ (with $b$ jets populating a mild tail ---
-  itself a useful in-situ validation region).
+  \item \textbf{The background model is stable under augmentation.}
+  The $b$-jet anomaly rate at the $1\%$ inclusive working point rises
+  only from $\sim 0.5\%$ (basis $S$) to $\sim 1.8\%$ (basis $S{+}D$)
+  --- the anticipated mild heavy-flavor tail, usable as an in-situ
+  validation region.
+  \item \textbf{The variational architecture outperforms the
+  deterministic AE at short lifetime} ($44\%$ versus $15\%$ at 1~mm at
+  the $1\%$ working point): the KL term regularizes the background
+  model against the broad displaced features that otherwise dominate
+  the plain MSE objective.
+  \item \textbf{The cost of model-independence is confined to short
+  lifetimes.} The black curve in Fig.~\ref{fig:vae} is a
+  fully supervised XGBoost classifier (Sec.~\ref{sec:supervised})
+  trained per $\ctau$ point on the same $S{+}D$ basis and evaluated at
+  the identical fixed-anomaly-rate working points, so the gap to the
+  red curve isolates supervision alone. The unsupervised VAE realizes
+  $45\%$ of the supervised efficiency at $\ctau = 1$~mm, $70\%$ at
+  3~mm, $89\%$ at 10~mm, and $\geq 98\%$ for $\ctau \geq 30$~mm: at
+  long lifetime the signal sits so deep in the tails of the learned
+  QCD density that supervision buys nothing, while near the $B$-hadron
+  lifetime a targeted search retains a genuine advantage.
 \end{enumerate}
-
-The expectation from Sec.~\ref{sec:results} is unambiguous: since the
-supervised separation in basis $S$ is bounded by rejections of
-$2$--$5$ while basis $S{+}D$ supports rejections of
-$\mathcal{O}(10^2$--$10^3)$, the unsupervised ROC must improve
-dramatically once displacement enters the input basis; the
-quantitative question is how much of the supervised gain the
-autoencoder realizes, and how stably across $\ctau$.
-
-Figures~\ref{fig:vaescore} and~\ref{fig:vae} show the result at truth
-level, for a fully-connected (V)AE trained on inclusive QCD jets only
-(60/20/20 train/validation/test split; anomaly thresholds set on the
-QCD test sample). The anomaly-score distributions
-(Fig.~\ref{fig:vaescore}) display the mechanism directly: in basis $S$
-the signal score distribution is indistinguishable from QCD, while in
-$S{+}D$ the signal population migrates orders of magnitude into the
-reconstruction-error tail.
 
 \begin{figure}[tb]
   \centering
   \includegraphics[width=0.95\textwidth]{vae_scores_truth.png}
-  \caption{Anomaly-score distributions (per-sample loss) for the QCD
-  test sample and signal at $\ctau = 10$~mm, for the nominal basis $S$
+  \caption{Anomaly-score distributions (per-jet loss) for the QCD test
+  sample and signal at $\ctau = 10$~mm, for the nominal basis $S$
   (left) and the augmented basis $S{+}D$ (right), AE and VAE.
   Truth-level tracking.}
   \label{fig:vaescore}
-\end{figure} The blind spot is total: in basis $S$ the anomaly
-detector tags emerging jets at $0.5$--$2\%$ efficiency for a $1\%$ QCD
-anomaly rate --- consistent with flagging signal at the background rate
---- \emph{independent of lifetime}, and at a $10^{-3}$ anomaly rate the
-efficiency is zero to sample precision. Augmenting the input basis to
-$S{+}D$, with the architecture, training, and working points unchanged,
-lifts the efficiency at the $1\%$ working point to $44\%$ at
-$\ctau = 1$~mm, $69\%$ at 3~mm, $88\%$ at 10~mm, and $\geq 97\%$ for
-$\ctau \geq 30$~mm (VAE). At these training-sample sizes the
-variational architecture clearly outperforms the deterministic AE at
-short lifetime ($44\%$ versus $15\%$ at 1~mm): the KL term regularizes
-the background model against the heavy-tailed displaced features that
-otherwise dominate the plain MSE objective. The background model is
-stable under the augmentation: the $b$-jet anomaly rate at the $1\%$
-inclusive working point rises only from $\sim 0.5\%$ to $\sim 1.8\%$,
-the anticipated mild heavy-flavor tail that furnishes an in-situ
-validation region.
-
-Figure~\ref{fig:vae} also shows the natural ceiling for this
-comparison: a \emph{supervised} classifier (gradient-boosted tree) on
-the same $S{+}D$ basis, trained per $\ctau$ point and evaluated at the
-identical fixed-anomaly-rate working points. Since basis and working
-point are shared, the gap between the black and red curves isolates the
-cost of model-independence alone. That cost is confined to short
-lifetimes: at the $1\%$ working point the unsupervised VAE realizes
-$45\%$ of the supervised efficiency at $\ctau = 1$~mm, $70\%$ at 3~mm,
-$89\%$ at 10~mm, and $\geq 98\%$ for $\ctau \geq 30$~mm --- at long
-lifetime the signal is so deep in the tails of the learned QCD density
-that no supervision is needed, while near the $B$-hadron lifetime a
-targeted search retains a genuine advantage over the model-agnostic
-one.
+\end{figure}
 
 \begin{figure}[tb]
   \centering
-  \includegraphics[width=0.85\textwidth]{vae_efficiency_truth.png}
+  \includegraphics[width=0.95\textwidth]{vae_efficiency_truth.png}
   \caption{Signal efficiency of the (V)AE anomaly score at a fixed QCD
   anomaly rate of $10^{-2}$ (left) and $10^{-3}$ (right), versus
-  $\ctau(\pid)$. Gray dashed: standard substructure basis $S$; red
-  solid: augmented basis $S{+}D$; black: supervised BDT on the same
-  $S{+}D$ basis at the same working points, the per-basis ceiling that
-  isolates the cost of model-independence. Identical (V)AE architecture
-  and training in all cases; truth-level tracking.}
+  $\ctau(\pid)$. Gray dashed: basis $S$; red solid: basis $S{+}D$;
+  black: the supervised XGBoost classifier of
+  Sec.~\ref{sec:supervised} on the same $S{+}D$ basis at the same
+  working points. Identical (V)AE architecture and training
+  throughout; truth-level tracking.}
   \label{fig:vae}
 \end{figure}
+
+\begin{figure}[tb]
+  \centering
+  \includegraphics[width=0.95\textwidth]{vae_recon_VAE_SpD_truth.png}
+  \caption{Per-feature input and reconstruction distributions of the
+  VAE trained on QCD only (basis $S{+}D$), for the QCD test sample and
+  for signal at $\ctau = 10$~mm. QCD is reconstructed faithfully;
+  signal reconstructions are pulled onto the QCD manifold, producing
+  the large anomaly score.}
+  \label{fig:vaerecon}
+\end{figure}
+
+\subsection{Input preprocessing and the heavy-tail effect}
+\label{sec:tails}
 
 One design choice deserves an explicit warning, because the natural
 instinct backfires. Several displaced observables are heavy-tailed
@@ -742,44 +802,50 @@ $x \to \ln(1+x)$) before z-score normalization so the MSE objective is
 not dominated by tail events. We tested exactly this and find it
 \emph{degrades} the anomaly detection substantially, reducing the VAE
 efficiency at the $1\%$ working point by factors of $1.5$--$3$ across
-the short-lifetime half of the grid. The mechanism is
-that the tails are the signal: an untransformed displaced feature
-sitting many standard deviations from the QCD mean produces an
-enormous reconstruction error, and compressing the tails improves
+the short-lifetime half of the grid. The mechanism is that the tails
+are the signal: an untransformed displaced feature sitting many
+standard deviations from the QCD mean produces an enormous
+reconstruction error, and compressing the tails improves
 background-model fidelity at the direct expense of exactly that
 anomaly contrast. For displacement-aware anomaly detection the
 heavy-tailed features should enter the autoencoder untransformed.
 
 \stub{Repeat under the standard and standard+LRT tracking scenarios;
 per-flavor efficiency curves; latent-space diagnostics; cross-check
-with the reco-level set-based architectures (deep-set / DETR) of the
-companion framework.}
+with reco-level set-based architectures (deep-set / DETR).}
 
 % =====================================================================
-\section{The interpretability gap}
-\label{sec:gap}
+\section{Comparison with fully supervised classifiers}
+\label{sec:supervised}
 
-The ceiling is a fully supervised XGBoost classifier on the complete
-$S{+}D$ observable basis, trained per $\ctau$ point (signal versus
-inclusive QCD, class-weighted, early-stopped on a held-out validation
-split). Against it, on identical jet splits, we compare the tree
-restricted to the nominal basis $S$ and the strongest single
-observables --- $\mathrm{dEEC}(\min)$ and the weighted multiplicity
-$\Sigma_i w_i$. The question the comparison answers is how much of the
-family's combined discrimination a single interpretable observable
-retains, and how much is recoverable without lifetime information at
-all.
+To quantify how much of the family's combined discrimination a single
+interpretable observable retains, we compare against fully supervised
+classifiers trained on the same features and jet splits. The ceiling
+is an XGBoost classifier on the complete 24-feature $S{+}D$ basis,
+trained separately per $\ctau$ point: signal versus inclusive QCD
+using the training subsets of Sec.~\ref{sec:addata} ($73\,354$ QCD
+and $5\,476$ signal jets), up to 400 trees with the library defaults
+(maximum depth 6, learning rate 0.3), class-weighted by the training
+imbalance (\texttt{scale\_pos\_weight} $\simeq 13$), with early
+stopping after 20 rounds without validation-logloss improvement.
+Scores are class probabilities; working points use the same
+definitions as elsewhere (50\% signal efficiency for rejections, or
+fixed QCD anomaly rates in Sec.~\ref{sec:adresults}). An identically
+configured classifier restricted to the 12-feature nominal basis $S$,
+and the two strongest single observables ($\mathrm{dEEC}(\min)$ and
+$\Sigma_i w_i$), are evaluated on the same test jets.
 
 Figure~\ref{fig:gap} shows the outcome. The single observables capture
 $40$--$100\%$ of the ceiling's log-rejection across the lifetime grid:
 the weighted multiplicity leads against $b$ jets at every lifetime and
 itself saturates the test-sample ceiling for $\ctau \geq 30$~mm, while
-the dEEC leads against light jets at the shortest lifetimes. The nominal-basis tree is the supervised
-counterpart of the anomaly-detection blind spot: supervised training
-does extract a lifetime-\emph{independent} $\sim 50\times$ $b$-jet
-rejection from shape information alone, but the curve never rises with
-$\ctau$ --- displacement is where all the lifetime discrimination
-lives, and two interpretable observables transmit most of it.
+the dEEC leads against light jets at the shortest lifetimes. The
+nominal-basis classifier is the supervised counterpart of the
+anomaly-detection blind spot: supervised training does extract a
+lifetime-\emph{independent} $\sim 40\times$ $b$-jet rejection from
+shape information alone, but the curve never rises with $\ctau$ ---
+displacement is where all the lifetime discrimination lives, and two
+interpretable observables transmit most of it.
 \todo{seed ensembles for error bands; production statistics}
 
 \begin{figure}[tb]
@@ -787,8 +853,8 @@ lives, and two interpretable observables transmit most of it.
   \includegraphics[width=0.95\textwidth]{interpretability_gap_truth.png}
   \caption{Left: $b$-jet rejection at 50\% signal efficiency versus
   $\ctau(\pid)$ for the supervised XGBoost ceiling on the full $S{+}D$
-  basis, the tree restricted to the nominal basis $S$, and the two
-  strongest single observables. Plateaus reflect the test-sample
+  basis, the classifier restricted to the nominal basis $S$, and the
+  two strongest single observables. Plateaus reflect the test-sample
   statistics. Right: fraction of the ceiling's log-rejection captured
   by each proxy. Truth-level tracking.}
   \label{fig:gap}
