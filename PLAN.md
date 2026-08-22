@@ -52,7 +52,7 @@ argument, not a TCL card. Delphes stays available as a closure test.
 
 ## 2. Truth-level observables (`src/displaced_observables/observables.py`)
 
-Jets: anti-kt R = 0.4 on all visible final state, pT > 100 GeV, |η| < 2.5
+Jets: anti-kt R = 1.0 on all visible final state, pT > 100 GeV, |η| < 2.5
 (leading two). Tracks: charged constituents, pT > 1 GeV, |η| < 2.5,
 truth |d0| < 300 mm (acceptance ceiling).
 
@@ -101,8 +101,9 @@ computation — same observable code runs on truth and smeared inputs:
   augmented S+D); small MLP AE and VAE (torch, in a separate `ml` pixi
   feature) trained on QCD only; anomaly-score ROC per cτ/flavor,
   efficiency gain at fixed anomaly rate, background-model stability.
-- Transformer ceiling (money plot 4): constituent-level transformer on the
-  identical track inputs (`(z, θ, φ, d0/σ, q)`); same `ml` extra.
+- Supervised ceiling (money plot 4): per-lifetime XGBoost BDT on the full
+  S+D basis; single observables and the nominal-basis BDT compared
+  against it; same `ml` extra.
 - Delphes closure: run the same events through Delphes ATLAS card with
   track covariance, compare parametrized layer vs Delphes tracks.
 - MadGraph alternate portal (appendix): `cards/madgraph/` proc card,

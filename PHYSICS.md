@@ -24,8 +24,9 @@ ceiling, as a function of cτ, including against heavy-flavor backgrounds.*
    augmenting a VAE/AE input basis with the displacement-weighted
    observables recovers sensitivity: anomaly-score ROC with vs without
    the displacement observables, per cτ.
-4. Quantify the gap to a constituent-level transformer trained on the same
-   inputs ("interpretability gap").
+4. Quantify the interpretability gap: fraction of the fully supervised
+   ceiling (XGBoost BDT on the complete observable basis) retained by
+   individual observables.
 5. Show robustness under realistic tracking: d0 smearing, efficiency vs
    production radius, with/without large-radius tracking, pileup.
 
@@ -97,8 +98,8 @@ Truth level first, then a parametrized tracking layer:
 3. Anomaly-detection gain: (V)AE anomaly-score ROC / signal efficiency at
    fixed anomaly rate vs cτ, standard substructure basis S vs augmented
    basis S+D — the "closing the blind spot" plot.
-4. Interpretability gap: constituent transformer as ceiling; fraction of
-   ceiling reached by best 2–3 observables, vs cτ.
+4. Interpretability gap: supervised BDT on the full observable basis as
+   ceiling; fraction of ceiling reached by best 2–3 observables, vs cτ.
 
 ## Milestones
 
@@ -114,7 +115,7 @@ Truth level first, then a parametrized tracking layer:
 - [ ] Tracking parametrization layer; redo with both scenarios + pileup.
 - [ ] AE/VAE anomaly-detection study: train on QCD with basis S and S+D,
       anomaly-score ROC per cτ + background-model stability (money plot 3).
-- [ ] Transformer baseline; interpretability-gap plot (money plot 4).
+- [ ] Supervised-BDT ceiling; interpretability-gap plot (money plot 4).
 - [ ] Paper draft; public code release under burzynski-lab.
 
 ## Scope discipline
@@ -129,5 +130,5 @@ One student (ideal first project — generator-level start, incremental
 difficulty) + JB; optionally one Task Force theorist for the observable
 definition / IRC-safety framing (track observables are IRC-unsafe; frame
 via track functions, calculability deferred). Present at ML4Jets; submit
-SciPost Physics or PRD; arXiv hep-ph cross-listed cs.LG if the transformer
+SciPost Physics or PRD; arXiv hep-ph cross-listed cs.LG if the ML
 comparison is prominent.

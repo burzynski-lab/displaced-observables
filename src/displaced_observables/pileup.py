@@ -63,7 +63,7 @@ def overlay_pileup(
     lib: dict,
     mu: float,
     seed: int = 0,
-    radius: float = 0.4,
+    radius: float = 1.0,
     bs_sigma_z: float = 45.0,
 ) -> ak.Array:
     """Return a copy of the jet table with Poisson(mu) minimum-bias events

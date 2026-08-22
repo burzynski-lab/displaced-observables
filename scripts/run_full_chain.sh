@@ -23,15 +23,14 @@ pixi run python scripts/track_ip_plots.py --scenario truth > plots/track_ip.log 
 echo "=== pileup study ==="
 pixi run python scripts/pileup_study.py > plots/pileup_study.log 2>&1
 
-echo "=== feature + track exports ==="
+echo "=== feature export ==="
 pixi run -e ml python scripts/export_features.py --scenario truth > plots/export_features.log 2>&1
-pixi run -e ml python scripts/export_tracks.py --scenario truth > plots/export_tracks.log 2>&1
 
 echo "=== AE/VAE study ==="
 pixi run -e ml python scripts/vae_study.py --scenario truth > plots/vae_study.log 2>&1
 
-echo "=== transformer ceiling study ==="
-pixi run -e ml python scripts/transformer_study.py --scenario truth > plots/transformer_study.log 2>&1
+echo "=== interpretability study (BDT ceiling) ==="
+pixi run -e ml python scripts/interpretability_study.py --scenario truth > plots/interpretability_study.log 2>&1
 
 echo "=== paper ==="
 pixi run paper > /dev/null 2>&1

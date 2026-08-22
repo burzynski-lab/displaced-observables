@@ -15,7 +15,7 @@ import vector
 
 vector.register_awkward()
 
-JET_R = 0.4
+JET_R = 1.0
 
 
 def weight(trk) -> ak.Array:

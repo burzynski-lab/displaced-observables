@@ -60,11 +60,12 @@ signal efficiency rises from the background-consistent $\lesssim 2\%$
 (standard basis, at every lifetime) to $54\%$ at $\ctau = 1$~mm and
 $\geq 90\%$ for $\ctau \geq 10$~mm, with the QCD background model
 unaffected. We further
-quantify the fraction of the fully-supervised discrimination ceiling,
-defined by a constituent-level transformer, that the observable family
-captures, and demonstrate robustness under a parametrized tracking
-response including impact-parameter resolution, efficiency loss with
-production radius, large-radius tracking, and pileup.
+quantify the fraction of the fully supervised discrimination ceiling,
+defined by a per-lifetime boosted-decision-tree classifier on the
+complete observable basis, that individual observables capture, and
+demonstrate robustness under a parametrized tracking response
+including impact-parameter resolution, efficiency loss with production
+radius, large-radius tracking, and pileup.
 \end{abstract}
 
 \tableofcontents
@@ -139,8 +140,8 @@ substructure basis gains sensitivity to displaced signatures across the
 full $\ctau$ range when the input basis is augmented with the
 displacement-weighted observables, without degrading its background
 model;
-(iv) quantify the gap to a fully supervised constituent-level
-transformer trained on the same inputs; and
+(iv) quantify how much of the fully supervised discrimination ceiling
+on the complete observable basis individual observables retain; and
 (v) establish robustness under a realistic parametrized tracking
 response.
 
@@ -149,7 +150,7 @@ response.
 \label{sec:observables}
 
 Jets are clustered with the anti-$k_t$ algorithm~\cite{Cacciari:2008gp}
-with $R = 0.4$ from all visible final-state particles. Observables are
+with $R = 1.0$ from all visible final-state particles. Observables are
 computed from the jet's charged constituents (``tracks'') $i$ with
 transverse-momentum fraction $z_i = p_{\mathrm{T},i} / \pT^{\mathrm{jet}}$, angle
 $\theta_i = \dR(i, \mathrm{jet\ axis})/R$, transverse impact parameter
@@ -374,13 +375,13 @@ Appendix~\ref{app:portal}.
 The background is QCD dijet production in the same $\hat p_T$ regime,
 split by jet flavor at analysis level: a jet is labeled $b$ ($c$) if a
 weakly-decaying bottom (charm) hadron with $\pT > 5$~GeV lies within
-$\dR < 0.4$ of the jet axis. A dedicated hard-$b\bar b$ sample
+$\dR < 1.0$ of the jet axis. A dedicated hard-$b\bar b$ sample
 augments the $b$-jet statistics; per-flavor results are shape-based, so
 the samples are combined freely. \todo{hard-$c\bar c$ sample}
 
 \subsection{Jet and track selection}
 
-Jets: anti-$k_t$, $R=0.4$, built from all visible final-state
+Jets: anti-$k_t$, $R=1.0$, built from all visible final-state
 particles; the two leading jets with
 $500 < \pT < 1000$~GeV and $|\eta| < 2.5$ are analyzed.
 Tracks: charged constituents with $\pT > 1$~GeV, $|\eta| < 2.5$, and
@@ -672,10 +673,24 @@ dramatically once displacement enters the input basis; the
 quantitative question is how much of the supervised gain the
 autoencoder realizes, and how stably across $\ctau$.
 
-Figure~\ref{fig:vae} shows the result at truth level, for a
-fully-connected (V)AE trained on inclusive QCD jets only
+Figures~\ref{fig:vaescore} and~\ref{fig:vae} show the result at truth
+level, for a fully-connected (V)AE trained on inclusive QCD jets only
 (60/20/20 train/validation/test split; anomaly thresholds set on the
-QCD test sample). The blind spot is total: in basis $S$ the anomaly
+QCD test sample). The anomaly-score distributions
+(Fig.~\ref{fig:vaescore}) display the mechanism directly: in basis $S$
+the signal score distribution is indistinguishable from QCD, while in
+$S{+}D$ the signal population migrates orders of magnitude into the
+reconstruction-error tail.
+
+\begin{figure}[tb]
+  \centering
+  \includegraphics[width=0.95\textwidth]{vae_scores_truth.png}
+  \caption{Anomaly-score distributions (per-sample loss) for the QCD
+  test sample and signal at $\ctau = 10$~mm, for the nominal basis $S$
+  (left) and the augmented basis $S{+}D$ (right), AE and VAE.
+  Truth-level tracking.}
+  \label{fig:vaescore}
+\end{figure} The blind spot is total: in basis $S$ the anomaly
 detector tags emerging jets at $0.5$--$2\%$ efficiency for a $1\%$ QCD
 anomaly rate --- consistent with flagging signal at the background rate
 --- \emph{independent of lifetime}, and at a $10^{-3}$ anomaly rate the
@@ -720,57 +735,64 @@ one.
   \label{fig:vae}
 \end{figure}
 
+One design choice deserves an explicit warning, because the natural
+instinct backfires. Several displaced observables are heavy-tailed
+($L_1$, $\langle|\dnought|/\sigma\rangle$ span decades), and standard
+autoencoder practice recommends compressing such features (e.g.\
+$x \to \ln(1+x)$) before z-score normalization so the MSE objective is
+not dominated by tail events. We tested exactly this and find it
+\emph{degrades} the anomaly detection substantially: the VAE efficiency
+at the $1\%$ working point drops from $54\%$ to $20\%$ at
+$\ctau = 1$~mm and from $90\%$ to $59\%$ at 10~mm. The mechanism is
+that the tails are the signal: an untransformed displaced feature
+sitting many standard deviations from the QCD mean produces an
+enormous reconstruction error, and compressing the tails improves
+background-model fidelity at the direct expense of exactly that
+anomaly contrast. For displacement-aware anomaly detection the
+heavy-tailed features should enter the autoencoder untransformed.
+
 \stub{Repeat under the standard and standard+LRT tracking scenarios;
-per-flavor efficiency curves; latent-space and reconstruction
-diagnostics; cross-check with the reco-level set-based architectures
-(deep-set / DETR) of the companion framework.}
+per-flavor efficiency curves; latent-space diagnostics; cross-check
+with the reco-level set-based architectures (deep-set / DETR) of the
+companion framework.}
 
 % =====================================================================
 \section{The interpretability gap}
 \label{sec:gap}
 
-To bound what the observable family might be leaving on the table, we
-train a fully supervised constituent-level classifier per $\ctau$
-point: a permutation-invariant transformer (two encoder layers, four
-heads, masked mean pooling) over the jet's tracks with per-track inputs
-$(z_i, \Delta\eta_i, \Delta\phi_i,\allowbreak
-\mathrm{sgn}(d_{0,i})\ln(1+|d_{0,i}|/\sigma_i), q_i)$ --- the identical
-information content available to the observables. It is compared, on
-the same jet splits, against a gradient-boosted tree on the $S{+}D$
-observable basis, a tree on the nominal basis $S$, and the single best
-observable $\mathrm{dEEC}(\min)$.
+The ceiling is a fully supervised XGBoost classifier on the complete
+$S{+}D$ observable basis, trained per $\ctau$ point (signal versus
+inclusive QCD, class-weighted, early-stopped on a held-out validation
+split). Against it, on identical jet splits, we compare the tree
+restricted to the nominal basis $S$ and the strongest single
+observables --- $\mathrm{dEEC}(\min)$ and the weighted multiplicity
+$\Sigma_i w_i$. The question the comparison answers is how much of the
+family's combined discrimination a single interpretable observable
+retains, and how much is recoverable without lifetime information at
+all.
 
-Figure~\ref{fig:gap} shows the outcome. The interpretability gap is
-\emph{at most zero}: with $\mathcal{O}(10^5)$-jet background samples
-the $S{+}D$ tree now \emph{exceeds} the measured transformer rejection
-outright for $1 \leq \ctau \leq 30$~mm (e.g.\ $5.9\times 10^3$ versus
-$1.2\times 10^3$ against $b$ jets at 1~mm, and test-sample-saturated
-$> 8\times 10^4$ versus a measured $2.2\times 10^3$ at 3~mm), and the
-single dEEC observable alone captures $65$--$80\%$ of the transformer's
-log-rejection. The nominal-basis tree is the supervised counterpart of
-the anomaly-detection blind spot: supervised training does extract a
-lifetime-\emph{independent} $\sim 50\times$ $b$-jet rejection from
-shape information alone, but the curve never rises with $\ctau$ ---
-displacement is where all the lifetime discrimination lives, and the
-analytic family transmits essentially all of it. The appropriate
-caveat has sharpened accordingly: a compact transformer trained on
-$\mathcal{O}(10^4)$ signal jets evidently does not realize the true
-information ceiling, so Fig.~\ref{fig:gap} bounds the gap from the
-side that matters --- the engineered observable basis loses nothing
-relative to a constituent-level learner trained under identical
-conditions, and a larger transformer could at best close back up to
-the tree. \todo{seed ensembles for error bands; larger transformer at
-production statistics}
+Figure~\ref{fig:gap} shows the outcome. The single observables capture
+$50$--$85\%$ of the ceiling's log-rejection across the lifetime grid,
+with complementary strengths: the dEEC leads below $\sim 10$~mm, the
+weighted multiplicity above (at 300~mm its measured rejection even
+exceeds the test-sample-saturated ceiling bound, an artifact of the
+ceiling's statistics cap). The nominal-basis tree is the supervised
+counterpart of the anomaly-detection blind spot: supervised training
+does extract a lifetime-\emph{independent} $\sim 50\times$ $b$-jet
+rejection from shape information alone, but the curve never rises with
+$\ctau$ --- displacement is where all the lifetime discrimination
+lives, and two interpretable observables transmit most of it.
+\todo{seed ensembles for error bands; production statistics}
 
 \begin{figure}[tb]
   \centering
   \includegraphics[width=0.95\textwidth]{interpretability_gap_truth.png}
   \caption{Left: $b$-jet rejection at 50\% signal efficiency versus
-  $\ctau(\pid)$ for the supervised constituent transformer, the
-  gradient-boosted trees on bases $S{+}D$ and $S$, and the single best
-  observable. Plateaus at $8.2\times 10^3$ reflect the test-sample
-  statistics. Right: fraction of the transformer's log-rejection
-  captured by each interpretable proxy. Truth-level tracking.}
+  $\ctau(\pid)$ for the supervised XGBoost ceiling on the full $S{+}D$
+  basis, the tree restricted to the nominal basis $S$, and the two
+  strongest single observables. Plateaus reflect the test-sample
+  statistics. Right: fraction of the ceiling's log-rejection captured
+  by each proxy. Truth-level tracking.}
   \label{fig:gap}
 \end{figure}
 

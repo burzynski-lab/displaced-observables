@@ -76,8 +76,8 @@ def test_standard_angularity_and_eec():
     # two tracks, z=0.5 each, at eta=+/-0.1 (dR_ij=0.2), dr-to-axis=0.2
     t = dict(z=0.5, dr=0.2, d0=1.0, sigma_d0=0.01)
     jets = make_jet([{**t, "eta": 0.1}, {**t, "eta": -0.1}])
-    # lambda^1_1 = 2 * 0.5 * (0.2/0.4) = 0.5 — no displacement dependence
-    assert np.isclose(obs.angularity_std(jets, 1, 1)[0], 0.5)
+    # lambda^1_1 = 2 * 0.5 * (0.2/R) — no displacement dependence
+    assert np.isclose(obs.angularity_std(jets, 1, 1)[0], 2 * 0.5 * 0.2 / obs.JET_R)
     assert np.isclose(obs.eec(jets, 1.0)[0], 0.5 * 0.5 * 0.2)
     assert obs.n_tracks(jets)[0] == 2
     # equal-pT tracks: pT^D = 1/sqrt(2)
@@ -134,8 +134,8 @@ def test_nsubjettiness_limits():
     tau1, tau2 = obs.nsubjettiness(jets, 1), obs.nsubjettiness(jets, 2)
     assert tau2[0] < 1e-12
     # tau1: kt merges both into axis at eta=0 -> each track at dR=0.15,
-    # tau1 = (0.5*0.15 + 0.5*0.15) / (1.0 * 0.4)
-    assert np.isclose(tau1[0], 0.15 / 0.4)
+    # tau1 = (0.5*0.15 + 0.5*0.15) / (1.0 * R)
+    assert np.isclose(tau1[0], 0.15 / obs.JET_R)
     assert obs.tau_ratio(jets, 2, 1)[0] < 1e-10
     # single track: tau1 = 0, ratios well-defined
     j1 = make_jet([dict(z=1.0)])

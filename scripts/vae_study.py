@@ -139,38 +139,49 @@ def reconstruct(model, x, device):
 
 
 def plot_reconstruction(model, x_te, basis, norm, kind, basis_name,
-                        out_dir, scenario, device):
+                        out_dir, scenario, device, x_sig=None,
+                        sig_label="signal 10 mm"):
     """Diagnostics mirroring ej-vae plot/recon.py jet-level plots:
-    input-vs-recon overlay per feature (physical units, QCD test sample)
-    and the normalized residual bias/spread summary."""
-    recon_n = reconstruct(model, x_te, device)
-    inp_n = x_te.numpy()
+    input-vs-recon overlay per feature (physical units) for the QCD test
+    sample and, when given, for signal — the signal reconstruction is
+    pulled onto the QCD manifold, which is exactly why its per-sample
+    loss is large. Plus the normalized residual bias/spread summary."""
     means = np.array([norm[v]["mean"] for v in basis])
     stds = np.array([norm[v]["std"] for v in basis])
-    inp = inp_n * stds + means
-    rec = recon_n * stds + means
+
+    def phys(x_n):
+        return x_n * stds + means
+
+    inp = phys(x_te.numpy())
+    rec = phys(reconstruct(model, x_te, device))
+    series = [("QCD input", inp, "C0", "-"), ("QCD recon", rec, "C1", "-")]
+    if x_sig is not None:
+        s_inp = phys(x_sig.numpy())
+        s_rec = phys(reconstruct(model, x_sig, device))
+        series += [(f"{sig_label} input", s_inp, "C3", "--"),
+                   (f"{sig_label} recon", s_rec, "C2", "--")]
     tag = f"{kind}_{basis_name.replace('+', 'p')}_{scenario}"
 
     ncol = 6 if len(basis) > 12 else 4
     nrow = int(np.ceil(len(basis) / ncol))
     fig, axes = plt.subplots(nrow, ncol, figsize=(3.2 * ncol, 2.6 * nrow))
     for k, (ax, var) in enumerate(zip(axes.ravel(), basis)):
-        lo, hi = np.quantile(inp[:, k], [0.001, 0.999])
+        allv = np.concatenate([s[1][:, k] for s in series])
+        lo, hi = np.quantile(allv, [0.001, 0.999])
         if hi <= lo:
             hi = lo + 1
         bins = np.linspace(lo, hi, 50)
-        ax.hist(np.clip(inp[:, k], lo, hi), bins=bins, histtype="step",
-                lw=1.2, label="input", color="C0")
-        ax.hist(np.clip(rec[:, k], lo, hi), bins=bins, histtype="step",
-                lw=1.2, label="recon", color="C1")
+        for label, arr, color, ls in series:
+            ax.hist(np.clip(arr[:, k], lo, hi), bins=bins, histtype="step",
+                    lw=1.1, label=label, color=color, ls=ls, density=True)
         ax.set_yscale("log")
         ax.set_xlabel(var, fontsize=9)
         ax.tick_params(labelsize=7)
         if k == 0:
-            ax.legend(fontsize=8)
+            ax.legend(fontsize=7)
     for ax in axes.ravel()[len(basis):]:
         ax.set_visible(False)
-    fig.suptitle(f"{kind}, basis {basis_name} — QCD test input vs reconstruction",
+    fig.suptitle(f"{kind}, basis {basis_name} — input vs reconstruction",
                  fontsize=12)
     fig.tight_layout()
     fig.savefig(out_dir / f"vae_recon_{tag}.png", dpi=140)
@@ -252,8 +263,10 @@ def main() -> None:
             s_qcd = scores(model, x_te, device)
             s_bb = scores(model, matrix(np.where(is_bb)[0], basis), device)
             print(f"{kind:3s} [{basis_name:3s}]: {n_ep} epochs, val loss {val:.4f}")
+            sig10 = np.where((labels["sample"] == 2) & (labels["ctau"] == 10.0))[0]
             plot_reconstruction(model, x_te, basis, norm, kind, basis_name,
-                                out_dir, args.scenario, device)
+                                out_dir, args.scenario, device,
+                                x_sig=matrix(sig10, basis))
             thresholds = {fpr: np.quantile(s_qcd, 1 - fpr) for fpr in FPRS}
             bb_flav5 = labels["flav"][is_bb] == 5
             for fpr, thr in thresholds.items():
@@ -319,19 +332,22 @@ def main() -> None:
     fig.savefig(out_dir / f"vae_efficiency_{args.scenario}.png", dpi=150)
     plt.close(fig)
 
-    # anomaly-score distributions at ctau = 10 mm
+    # anomaly-score distributions at ctau = 10 mm (log-x)
     fig, axes = plt.subplots(1, 2, figsize=(14, 6))
     for ax, basis_name in zip(axes, BASES):
         for kind in ("AE", "VAE"):
             s_qcd, s_sig = score_store[(kind, basis_name)]
-            lo, hi = np.quantile(np.concatenate([s_qcd, s_sig]), [0.001, 0.999])
-            bins = np.linspace(lo, hi, 60)
+            allv = np.concatenate([s_qcd, s_sig])
+            lo = max(np.quantile(allv, 0.001), 1e-4)
+            hi = np.quantile(allv, 0.999)
+            bins = np.logspace(np.log10(lo), np.log10(hi if hi > lo else lo * 10), 60)
             ax.hist(np.clip(s_qcd, lo, hi), bins=bins, density=True,
                     histtype="step", ls="--", label=f"QCD test [{kind}]")
             ax.hist(np.clip(s_sig, lo, hi), bins=bins, density=True,
                     histtype="step", label=f"signal 10 mm [{kind}]")
         ax.set_xlabel(f"anomaly score (basis {basis_name})")
         ax.set_ylabel("density")
+        ax.set_xscale("log")
         ax.set_yscale("log")
         ax.set_ylim(top=ax.get_ylim()[1] * 200)
         ax.legend(fontsize=8, loc="upper right")

@@ -77,7 +77,7 @@ def decorate(ax, extra: str | None = None):
     lines = [
         f"Pythia {PYTHIA_VERSION}, $\\sqrt{{s}} = 13.6$ TeV",
         "$Z'(1.5\\,\\mathrm{TeV}) \\to q_{\\mathrm{D}}\\bar{q}_{\\mathrm{D}}$ dark shower",
-        "anti-$k_t$ $R=0.4$, $500 < p_T^{jet} < 1000$ GeV",
+        "anti-$k_t$ $R=1.0$, $500 < p_T^{jet} < 1000$ GeV",
     ]
     if extra:
         lines.append(extra)
@@ -141,7 +141,7 @@ def main() -> None:
 
     # differential <w_i w_j> vs dR profile (energy-weighted) — money-plot candidate
     fig, ax = plt.subplots(figsize=(8, 6))
-    dr_bins = np.linspace(0, 0.4, 21)
+    dr_bins = np.linspace(0, 1.0, 26)
     for name, jcoll, style in (
         [("QCD light", backgrounds["QCD light"], "--"), ("QCD b", backgrounds["QCD b"], "--")]
         + [(f"signal $c\\tau$={c:g} mm", j, "-") for c, j in signals.items()]

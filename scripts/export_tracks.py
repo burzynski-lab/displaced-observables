@@ -29,7 +29,7 @@ from displaced_observables.features import label_table
 from displaced_observables.jets import build_jet_table
 from displaced_observables.tracking import SCENARIOS, apply_tracking
 
-MAX_TRACKS = 60
+MAX_TRACKS = 120
 
 
 def _delta_phi(a, b):

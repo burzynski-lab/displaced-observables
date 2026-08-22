@@ -33,7 +33,7 @@ def truth_d0(part) -> ak.Array:
 def cluster_jets(
     events: ak.Array,
     *,
-    radius: float = 0.4,
+    radius: float = 1.0,
     min_jet_pt: float = 500.0,
     max_jet_pt: float = 1000.0,
     max_abs_eta: float = 2.5,
@@ -71,7 +71,7 @@ def cluster_jets(
     return jets, cons
 
 
-def label_flavor(jets, hf_hadrons, radius: float = 0.4) -> ak.Array:
+def label_flavor(jets, hf_hadrons, radius: float = 1.0) -> ak.Array:
     """Per-jet flavor label: 5 (b), 4 (c), 0 (light) by matching
     weakly-decaying heavy-flavor hadrons with pT > 5 GeV within dR < radius."""
     pairs = ak.cartesian({"j": jets, "h": hf_hadrons}, axis=1, nested=True)
@@ -89,7 +89,7 @@ def label_flavor(jets, hf_hadrons, radius: float = 0.4) -> ak.Array:
 def build_jet_table(
     events: ak.Array,
     *,
-    radius: float = 0.4,
+    radius: float = 1.0,
     min_jet_pt: float = 500.0,
     max_jet_pt: float = 1000.0,
     min_track_pt: float = 1.0,

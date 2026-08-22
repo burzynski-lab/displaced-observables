@@ -48,8 +48,18 @@ BASIS_D = {
 }
 
 
-def feature_table(jets: ak.Array, chunk_size: int = 20_000) -> np.ndarray:
-    """All features (S then D) as a structured numpy array.
+# heavy-tailed (values >> 1, multi-decade tails) features, optionally
+# stored as log(1+x). Empirically (see paper Sec. on anomaly detection):
+# the transform improves autoencoder reconstruction fidelity but DEGRADES
+# anomaly contrast — the untransformed tails are what push signal jets to
+# extreme reconstruction error — so the default is off.
+LOG1P_FEATURES = {"ang_00", "L1", "Lratio", "ip2d", "d2", "dd2"}
+
+
+def feature_table(jets: ak.Array, chunk_size: int = 5_000,
+                  log1p: bool = False) -> np.ndarray:
+    """All features (S then D) as a structured numpy array; with
+    ``log1p=True`` the LOG1P_FEATURES are stored log1p-transformed.
 
     Computed in chunks: the pairwise/triple combination observables
     (dEEC, ECF3, dECF3) allocate O(n_jets * n_trk^3) transients, which at
@@ -60,7 +70,10 @@ def feature_table(jets: ak.Array, chunk_size: int = 20_000) -> np.ndarray:
     for lo in range(0, len(jets), chunk_size):
         chunk = jets[lo:lo + chunk_size]
         for name, fn in cols.items():
-            out[name][lo:lo + len(chunk)] = np.asarray(fn(chunk), dtype=np.float32)
+            vals = np.asarray(fn(chunk), dtype=np.float64)
+            if log1p and name in LOG1P_FEATURES:
+                vals = np.log1p(np.maximum(vals, 0.0))
+            out[name][lo:lo + len(chunk)] = vals.astype(np.float32)
     return out
 
 

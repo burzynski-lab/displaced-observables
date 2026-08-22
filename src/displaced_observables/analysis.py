@@ -63,7 +63,7 @@ def with_scenario(tables: dict, scenario: str) -> dict:
     }
 
 
-def chunked(fn, jets, chunk_size: int = 20_000) -> np.ndarray:
+def chunked(fn, jets, chunk_size: int = 5_000) -> np.ndarray:
     """Evaluate a per-jet observable in chunks. The combination observables
     (dEEC, ECF3, dECF3) allocate O(n_jets * n_trk^2..3) transients, so
     evaluating 10^5+ jets in one call would need tens of GB."""

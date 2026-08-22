@@ -36,6 +36,10 @@ def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--data", default="data")
     ap.add_argument("--scenario", default="truth", choices=list(SCENARIOS))
+    ap.add_argument("--log1p", action="store_true",
+                    help="log1p-transform heavy-tailed features (degrades "
+                         "anomaly contrast; kept for the transform study)")
+    ap.add_argument("--suffix", default="", help="output filename suffix")
     args = ap.parse_args()
 
     data_dir = Path(args.data)
@@ -43,28 +47,28 @@ def main() -> None:
 
     blocks = []
     qcd = build(sorted(data_dir.glob("qcd_seed*.parquet")), scenario)
-    qcd_feats = feature_table(qcd)
+    qcd_feats = feature_table(qcd, log1p=args.log1p)
     blocks.append((qcd_feats, label_table(qcd, 0, -1.0)))
     print(f"inclusive QCD: {len(qcd)} jets")
 
     bb_files = sorted(data_dir.glob("qcdbb_seed*.parquet"))
     if bb_files:
         bb = build(bb_files, scenario)
-        blocks.append((feature_table(bb), label_table(bb, 1, -1.0)))
+        blocks.append((feature_table(bb, log1p=args.log1p), label_table(bb, 1, -1.0)))
         print(f"b-enriched QCD: {len(bb)} jets")
 
     for f in sorted(data_dir.glob("signal_ctau*_seed*.parquet"),
                     key=lambda p: float(re.search(r"ctau([\d.]+)mm", p.name)[1])):
         ctau = float(re.search(r"ctau([\d.]+)mm", f.name)[1])
         sig = build([f], scenario)
-        blocks.append((feature_table(sig), label_table(sig, 2, ctau)))
+        blocks.append((feature_table(sig, log1p=args.log1p), label_table(sig, 2, ctau)))
         print(f"signal ctau={ctau:g} mm: {len(sig)} jets")
 
     feats = np.concatenate([b[0] for b in blocks])
     labels = np.concatenate([b[1] for b in blocks])
-    out = data_dir / f"features_{args.scenario}.h5"
+    out = data_dir / f"features_{args.scenario}{args.suffix}.h5"
     write_h5(out, feats, labels)
-    write_norm_yaml(data_dir / f"norm_{args.scenario}.yaml", qcd_feats)
+    write_norm_yaml(data_dir / f"norm_{args.scenario}{args.suffix}.yaml", qcd_feats)
     print(f"wrote {out} ({len(feats)} jets) and norm YAML")
 
 
