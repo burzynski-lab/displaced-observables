@@ -51,6 +51,7 @@ lhapdf = "*"
 [feature.ml.dependencies]
 pytorch = ">=2.4"
 h5py = "*"
+xgboost = "*"
 
 [environments]
 mg5 = { features = ["mg5"], no-default-feature = true }

@@ -198,21 +198,26 @@ def main() -> None:
                 if ctau == 10.0:
                     score_store[(kind, basis_name)] = (s_qcd, s_sig)
 
-    # supervised ceiling on the same S+D basis: per-ctau BDT, evaluated at
-    # the identical fixed-QCD-anomaly-rate working points
-    from sklearn.ensemble import HistGradientBoostingClassifier
+    # supervised ceiling on the same S+D basis: per-ctau BDT (XGBoost),
+    # evaluated at the identical fixed-QCD-anomaly-rate working points
+    from xgboost import XGBClassifier
 
     basis_sd = BASES["S+D"]
-    x_qtr, x_qte = matrix(tr, basis_sd).numpy(), matrix(te, basis_sd).numpy()
+    x_qtr, x_qva = matrix(tr, basis_sd).numpy(), matrix(va, basis_sd).numpy()
+    x_qte = matrix(te, basis_sd).numpy()
     for ctau in ctaus:
         s_idx = np.where((labels["sample"] == 2) & (labels["ctau"] == ctau))[0]
-        s_tr, _, s_te = split(s_idx)
-        bdt = HistGradientBoostingClassifier(random_state=args.seed)
+        s_tr, s_va, s_te = split(s_idx)
+        bdt = XGBClassifier(
+            n_estimators=400, random_state=args.seed,
+            early_stopping_rounds=20, eval_metric="logloss")
         X = np.concatenate([x_qtr, matrix(s_tr, basis_sd).numpy()])
         y = np.concatenate([np.zeros(len(x_qtr)), np.ones(len(s_tr))])
-        bdt.fit(X, y)
-        sc_qcd = bdt.decision_function(x_qte)
-        sc_sig = bdt.decision_function(matrix(s_te, basis_sd).numpy())
+        X_val = np.concatenate([x_qva, matrix(s_va, basis_sd).numpy()])
+        y_val = np.concatenate([np.zeros(len(x_qva)), np.ones(len(s_va))])
+        bdt.fit(X, y, eval_set=[(X_val, y_val)], verbose=False)
+        sc_qcd = bdt.predict_proba(x_qte)[:, 1]
+        sc_sig = bdt.predict_proba(matrix(s_te, basis_sd).numpy())[:, 1]
         for fpr in FPRS:
             thr = np.quantile(sc_qcd, 1 - fpr)
             results[("BDT-sup", "S+D", ctau, fpr)] = np.mean(sc_sig > thr)

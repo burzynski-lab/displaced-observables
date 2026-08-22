@@ -158,7 +158,7 @@ def main() -> None:
     def feat_matrix(idx, basis):
         return np.stack([jets[v][idx] for v in basis], axis=1).astype(np.float64)
 
-    from sklearn.ensemble import HistGradientBoostingClassifier
+    from xgboost import XGBClassifier
 
     methods = ["transformer", "BDT S+D", "BDT S", "dEEC(min)"]
     results = {}  # (method, ctau, bname) -> rejection
@@ -180,15 +180,19 @@ def main() -> None:
             s_bkg = score_transformer(model, x_all[bidx], pad_all[bidx], device)
             results[("transformer", ctau, bname)] = rejection_at_eff(s_sig, s_bkg)
 
-        # ---- BDTs on the observable bases (same split)
+        # ---- BDTs (XGBoost) on the observable bases (same split)
         for mname, basis in (("BDT S+D", BASIS_S + BASIS_D), ("BDT S", BASIS_S)):
-            bdt = HistGradientBoostingClassifier(random_state=args.seed)
+            bdt = XGBClassifier(
+                n_estimators=400, random_state=args.seed,
+                early_stopping_rounds=20, eval_metric="logloss")
             X = np.concatenate([feat_matrix(q_tr, basis), feat_matrix(s_tr, basis)])
             y = np.concatenate([np.zeros(len(q_tr)), np.ones(len(s_tr))])
-            bdt.fit(X, y)
-            sc_sig = bdt.decision_function(feat_matrix(s_te, basis))
+            X_val = np.concatenate([feat_matrix(q_va, basis), feat_matrix(s_va, basis)])
+            y_val = np.concatenate([np.zeros(len(q_va)), np.ones(len(s_va))])
+            bdt.fit(X, y, eval_set=[(X_val, y_val)], verbose=False)
+            sc_sig = bdt.predict_proba(feat_matrix(s_te, basis))[:, 1]
             for bname, bidx in bkg_cats.items():
-                sc_bkg = bdt.decision_function(feat_matrix(bidx, basis))
+                sc_bkg = bdt.predict_proba(feat_matrix(bidx, basis))[:, 1]
                 results[(mname, ctau, bname)] = rejection_at_eff(sc_sig, sc_bkg)
 
         # ---- best single observable
