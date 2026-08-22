@@ -57,8 +57,8 @@ hadrons. Augmenting a (variational) autoencoder's substructure input basis with
 these observables extends the generality of anomaly detection to
 lifetime-frontier signatures: at a fixed $1\%$ QCD anomaly rate, the
 signal efficiency rises from the background-consistent $\lesssim 2\%$
-(standard basis, at every lifetime) to $49\%$ at $\ctau = 1$~mm and
-$\geq 86\%$ for $\ctau \geq 10$~mm, with the QCD background model
+(standard basis, at every lifetime) to $54\%$ at $\ctau = 1$~mm and
+$\geq 90\%$ for $\ctau \geq 10$~mm, with the QCD background model
 unaffected. We further
 quantify the fraction of the fully-supervised discrimination ceiling,
 defined by a constituent-level transformer, that the observable family
@@ -490,8 +490,10 @@ flavor. Three qualitative results emerge:
   retains $\mathcal{O}(100)$ rejection. The angular pair correlation,
   not the total displacement, is what distinguishes a 3~mm dark pion
   from a $B$ hadron. The three-point $\mathrm{dECF}_3$ sharpens the
-  coincidence requirement further and is the strongest single
-  observable at short lifetime, while the displacement-normalized
+  coincidence requirement further and becomes the strongest single
+  observable for $\ctau \gtrsim 10$~mm (e.g.\ $b$-jet rejection
+  $\sim 4\times 10^3$ at 30~mm, three times the dEEC), while the
+  displacement-normalized
   ratio $C_2(w)$ shows a distinct and complementary behavior: its
   rejection is nearly \emph{independent of lifetime}
   ($\approx 20$--$25\times$ against $b$ jets for
@@ -507,12 +509,14 @@ flavor. Three qualitative results emerge:
   observables, emerging jets are at most mildly atypical, and no
   unsupervised method --- however expressive --- can recover
   information absent from its inputs.
-  \item \textbf{The long-lifetime regime saturates.} For
-  $\ctau \gtrsim 30$~mm several observables, including the simple
-  prompt-$\pT$-fraction baseline, reject all background jets in the
-  current samples; distinguishing among them requires larger samples
-  or tighter working points. \todo{high-statistics production;
-  quote lower bounds properly (clipped markers)}
+  \item \textbf{The long-lifetime regime approaches saturation even at
+  $10^5$-jet background samples.} With $8.6\times 10^4$ $b$ jets and
+  $7.6\times 10^4$ light jets, most rejections are now measured rather
+  than bounded --- e.g.\ $\Sigma_i w_i$ reaches a measured $b$-jet
+  rejection of $2\times 10^5$ at $\ctau = 300$~mm --- while the
+  prompt-$\pT$-fraction baseline still rejects every background jet
+  for $\ctau \geq 10$~mm (statistics lower bounds, open markers).
+  \todo{final production statistics on the cluster}
 \end{enumerate}
 
 \begin{figure}[tb]
@@ -677,13 +681,17 @@ anomaly rate --- consistent with flagging signal at the background rate
 --- \emph{independent of lifetime}, and at a $10^{-3}$ anomaly rate the
 efficiency is zero to sample precision. Augmenting the input basis to
 $S{+}D$, with the architecture, training, and working points unchanged,
-lifts the efficiency at the $1\%$ working point to $49\%$ at
-$\ctau = 1$~mm, $71\%$ at 3~mm, $86\%$ at 10~mm, and $\geq 95\%$ for
-$\ctau \geq 30$~mm (VAE; the deterministic AE is comparable, slightly
-weaker at short lifetime). The background model is stable under the
-augmentation: the $b$-jet anomaly rate at the $1\%$ inclusive working
-point rises only from $\sim 0.5\%$ to $\sim 1.5\%$, the anticipated
-mild heavy-flavor tail that furnishes an in-situ validation region.
+lifts the efficiency at the $1\%$ working point to $54\%$ at
+$\ctau = 1$~mm, $76\%$ at 3~mm, $90\%$ at 10~mm, and $\geq 97\%$ for
+$\ctau \geq 30$~mm (VAE). At these training-sample sizes the
+variational architecture clearly outperforms the deterministic AE at
+short lifetime ($54\%$ versus $23\%$ at 1~mm): the KL term regularizes
+the background model against the heavy-tailed displaced features that
+otherwise dominate the plain MSE objective. The background model is
+stable under the augmentation: the $b$-jet anomaly rate at the $1\%$
+inclusive working point rises only from $\sim 0.4\%$ to $\sim 1.5\%$,
+the anticipated mild heavy-flavor tail that furnishes an in-situ
+validation region.
 
 Figure~\ref{fig:vae} also shows the natural ceiling for this
 comparison: a \emph{supervised} classifier (gradient-boosted tree) on
@@ -692,8 +700,8 @@ identical fixed-anomaly-rate working points. Since basis and working
 point are shared, the gap between the black and red curves isolates the
 cost of model-independence alone. That cost is confined to short
 lifetimes: at the $1\%$ working point the unsupervised VAE realizes
-$51\%$ of the supervised efficiency at $\ctau = 1$~mm, $72\%$ at 3~mm,
-$87\%$ at 10~mm, and $\geq 96\%$ for $\ctau \geq 30$~mm --- at long
+$54\%$ of the supervised efficiency at $\ctau = 1$~mm, $77\%$ at 3~mm,
+$91\%$ at 10~mm, and $\geq 98\%$ for $\ctau \geq 30$~mm --- at long
 lifetime the signal is so deep in the tails of the learned QCD density
 that no supervision is needed, while near the $B$-hadron lifetime a
 targeted search retains a genuine advantage over the model-agnostic
@@ -732,26 +740,27 @@ the same jet splits, against a gradient-boosted tree on the $S{+}D$
 observable basis, a tree on the nominal basis $S$, and the single best
 observable $\mathrm{dEEC}(\min)$.
 
-Figure~\ref{fig:gap} shows the outcome. At the present sample sizes the
-interpretability gap is \emph{consistent with zero}: the $S{+}D$ tree
-matches or exceeds the transformer at every lifetime, both saturating
-the test-sample rejection ceiling for $\ctau \gtrsim 3$--$10$~mm, and
-the single dEEC observable alone captures $70$--$88\%$ of the ceiling's
-log-rejection for $\ctau \geq 1$~mm. The nominal-basis tree is the
-supervised counterpart of the anomaly-detection blind spot: supervised
-training does extract a lifetime-\emph{independent} $\sim 50\times$
-$b$-jet rejection from shape information alone, but the curve never
-rises with $\ctau$ --- displacement is where all the lifetime
-discrimination lives, and the analytic family transmits essentially all
-of it. Two caveats qualify the null gap: rejections at long lifetime
-are capped by test statistics (open saturation in
-Fig.~\ref{fig:gap}), and a compact transformer trained on
-$\mathcal{O}(10^4)$ jets need not realize the true information ceiling.
-Both are addressed by the high-statistics production; at development
-scale the defensible statement is that the observable basis loses
-nothing relative to a constituent-level learner trained under identical
-conditions. \todo{high-statistics rerun; seed ensembles for error
-bands}
+Figure~\ref{fig:gap} shows the outcome. The interpretability gap is
+\emph{at most zero}: with $\mathcal{O}(10^5)$-jet background samples
+the $S{+}D$ tree now \emph{exceeds} the measured transformer rejection
+outright for $1 \leq \ctau \leq 30$~mm (e.g.\ $5.9\times 10^3$ versus
+$1.2\times 10^3$ against $b$ jets at 1~mm, and test-sample-saturated
+$> 8\times 10^4$ versus a measured $2.2\times 10^3$ at 3~mm), and the
+single dEEC observable alone captures $65$--$80\%$ of the transformer's
+log-rejection. The nominal-basis tree is the supervised counterpart of
+the anomaly-detection blind spot: supervised training does extract a
+lifetime-\emph{independent} $\sim 50\times$ $b$-jet rejection from
+shape information alone, but the curve never rises with $\ctau$ ---
+displacement is where all the lifetime discrimination lives, and the
+analytic family transmits essentially all of it. The appropriate
+caveat has sharpened accordingly: a compact transformer trained on
+$\mathcal{O}(10^4)$ signal jets evidently does not realize the true
+information ceiling, so Fig.~\ref{fig:gap} bounds the gap from the
+side that matters --- the engineered observable basis loses nothing
+relative to a constituent-level learner trained under identical
+conditions, and a larger transformer could at best close back up to
+the tree. \todo{seed ensembles for error bands; larger transformer at
+production statistics}
 
 \begin{figure}[tb]
   \centering

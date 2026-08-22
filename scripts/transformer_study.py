@@ -66,6 +66,9 @@ def train_transformer(x, m, y, x_val, m_val, y_val, device, seed):
     opt = torch.optim.Adam(model.parameters(), lr=LR)
     best, best_state, wait = np.inf, None, 0
     n = len(x)
+    # class weighting for the imbalanced (large-QCD) training sample
+    pos_w = torch.tensor((y == 0).sum().item() / max((y == 1).sum().item(), 1),
+                         device=device)
     for epoch in range(EPOCHS):
         model.train()
         perm = torch.randperm(n)
@@ -73,7 +76,8 @@ def train_transformer(x, m, y, x_val, m_val, y_val, device, seed):
             b = perm[i:i + BATCH]
             opt.zero_grad()
             logit = model(x[b].to(device), m[b].to(device))
-            loss = F.binary_cross_entropy_with_logits(logit, y[b].to(device))
+            loss = F.binary_cross_entropy_with_logits(
+                logit, y[b].to(device), pos_weight=pos_w)
             loss.backward()
             opt.step()
         model.eval()
@@ -82,7 +86,8 @@ def train_transformer(x, m, y, x_val, m_val, y_val, device, seed):
             for i in range(0, len(x_val), 2048):
                 logit = model(x_val[i:i + 2048].to(device), m_val[i:i + 2048].to(device))
                 vals.append(F.binary_cross_entropy_with_logits(
-                    logit, y_val[i:i + 2048].to(device), reduction="none").cpu())
+                    logit, y_val[i:i + 2048].to(device), pos_weight=pos_w,
+                    reduction="none").cpu())
             val = torch.cat(vals).mean().item()
         if val < best - 1e-5:
             best, wait = val, 0
@@ -184,7 +189,8 @@ def main() -> None:
         for mname, basis in (("BDT S+D", BASIS_S + BASIS_D), ("BDT S", BASIS_S)):
             bdt = XGBClassifier(
                 n_estimators=400, random_state=args.seed,
-                early_stopping_rounds=20, eval_metric="logloss")
+                early_stopping_rounds=20, eval_metric="logloss",
+                scale_pos_weight=len(q_tr) / max(len(s_tr), 1))
             X = np.concatenate([feat_matrix(q_tr, basis), feat_matrix(s_tr, basis)])
             y = np.concatenate([np.zeros(len(q_tr)), np.ones(len(s_tr))])
             X_val = np.concatenate([feat_matrix(q_va, basis), feat_matrix(s_va, basis)])

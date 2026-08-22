@@ -130,6 +130,73 @@ def scores(model, x, device):
         return sample_loss(model, x.to(device)).cpu().numpy()
 
 
+def reconstruct(model, x, device):
+    """Deterministic reconstruction (z = mu) in normalized space."""
+    model.eval()
+    with torch.no_grad():
+        recon, _, _ = model(x.to(device))
+    return recon.cpu().numpy()
+
+
+def plot_reconstruction(model, x_te, basis, norm, kind, basis_name,
+                        out_dir, scenario, device):
+    """Diagnostics mirroring ej-vae plot/recon.py jet-level plots:
+    input-vs-recon overlay per feature (physical units, QCD test sample)
+    and the normalized residual bias/spread summary."""
+    recon_n = reconstruct(model, x_te, device)
+    inp_n = x_te.numpy()
+    means = np.array([norm[v]["mean"] for v in basis])
+    stds = np.array([norm[v]["std"] for v in basis])
+    inp = inp_n * stds + means
+    rec = recon_n * stds + means
+    tag = f"{kind}_{basis_name.replace('+', 'p')}_{scenario}"
+
+    ncol = 6 if len(basis) > 12 else 4
+    nrow = int(np.ceil(len(basis) / ncol))
+    fig, axes = plt.subplots(nrow, ncol, figsize=(3.2 * ncol, 2.6 * nrow))
+    for k, (ax, var) in enumerate(zip(axes.ravel(), basis)):
+        lo, hi = np.quantile(inp[:, k], [0.001, 0.999])
+        if hi <= lo:
+            hi = lo + 1
+        bins = np.linspace(lo, hi, 50)
+        ax.hist(np.clip(inp[:, k], lo, hi), bins=bins, histtype="step",
+                lw=1.2, label="input", color="C0")
+        ax.hist(np.clip(rec[:, k], lo, hi), bins=bins, histtype="step",
+                lw=1.2, label="recon", color="C1")
+        ax.set_yscale("log")
+        ax.set_xlabel(var, fontsize=9)
+        ax.tick_params(labelsize=7)
+        if k == 0:
+            ax.legend(fontsize=8)
+    for ax in axes.ravel()[len(basis):]:
+        ax.set_visible(False)
+    fig.suptitle(f"{kind}, basis {basis_name} — QCD test input vs reconstruction",
+                 fontsize=12)
+    fig.tight_layout()
+    fig.savefig(out_dir / f"vae_recon_{tag}.png", dpi=140)
+    plt.close(fig)
+
+    # normalized residual summary (bias and spread per feature)
+    diff = rec - inp
+    iqr_in = np.percentile(inp, 75, axis=0) - np.percentile(inp, 25, axis=0)
+    scale = np.where(iqr_in > 0, iqr_in, 1.0)
+    med = np.median(diff, axis=0) / scale
+    iqr = (np.percentile(diff, 75, axis=0) - np.percentile(diff, 25, axis=0)) / scale
+    fig, axes = plt.subplots(2, 1, figsize=(10, 7), sharex=True)
+    x = np.arange(len(basis))
+    axes[0].bar(x, med, color="C0")
+    axes[0].axhline(0, color="k", lw=0.8, ls="--")
+    axes[0].set_ylabel("median(rec$-$in)/IQR(in)", fontsize=10)
+    axes[1].bar(x, iqr, color="C1")
+    axes[1].set_ylabel("IQR(rec$-$in)/IQR(in)", fontsize=10)
+    axes[1].set_xticks(x, basis, rotation=60, ha="right", fontsize=8)
+    fig.suptitle(f"{kind}, basis {basis_name} — reconstruction residual summary",
+                 fontsize=12)
+    fig.tight_layout()
+    fig.savefig(out_dir / f"vae_recon_summary_{tag}.png", dpi=140)
+    plt.close(fig)
+
+
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--data", default="data")
@@ -185,6 +252,8 @@ def main() -> None:
             s_qcd = scores(model, x_te, device)
             s_bb = scores(model, matrix(np.where(is_bb)[0], basis), device)
             print(f"{kind:3s} [{basis_name:3s}]: {n_ep} epochs, val loss {val:.4f}")
+            plot_reconstruction(model, x_te, basis, norm, kind, basis_name,
+                                out_dir, args.scenario, device)
             thresholds = {fpr: np.quantile(s_qcd, 1 - fpr) for fpr in FPRS}
             bb_flav5 = labels["flav"][is_bb] == 5
             for fpr, thr in thresholds.items():
@@ -210,7 +279,8 @@ def main() -> None:
         s_tr, s_va, s_te = split(s_idx)
         bdt = XGBClassifier(
             n_estimators=400, random_state=args.seed,
-            early_stopping_rounds=20, eval_metric="logloss")
+            early_stopping_rounds=20, eval_metric="logloss",
+            scale_pos_weight=len(x_qtr) / max(len(s_tr), 1))
         X = np.concatenate([x_qtr, matrix(s_tr, basis_sd).numpy()])
         y = np.concatenate([np.zeros(len(x_qtr)), np.ones(len(s_tr))])
         X_val = np.concatenate([x_qva, matrix(s_va, basis_sd).numpy()])
