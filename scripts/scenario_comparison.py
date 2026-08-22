@@ -20,7 +20,7 @@ import numpy as np
 
 from displaced_observables import observables as obs
 from displaced_observables.analysis import (
-    load_raw_tables, pt_weights, rejection, with_scenario,
+    chunked, load_raw_tables, pt_weights, rejection, with_scenario,
 )
 from make_plots import decorate
 
@@ -57,12 +57,12 @@ def main() -> None:
         ref_pt = np.concatenate([np.asarray(j.pt) for j in signals.values()])
         bkg_w = {n: pt_weights(ref_pt, np.asarray(j.pt)) for n, j in backgrounds.items()}
         vals_b = {
-            key: {n: np.asarray(fn(j)) for n, j in backgrounds.items() if len(j)}
+            key: {n: chunked(fn, j) for n, j in backgrounds.items() if len(j)}
             for key, (_, fn) in FLAGSHIP.items()
         }
         for key, (_, fn) in FLAGSHIP.items():
             for ctau, j in signals.items():
-                v = np.asarray(fn(j))
+                v = chunked(fn, j)
                 for n, vb in vals_b[key].items():
                     val, sat = rejection(v, vb, eff=args.eff, bkg_weights=bkg_w[n])
                     results.setdefault((scenario, key, n), []).append((ctau, val, sat))

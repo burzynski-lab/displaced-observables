@@ -21,7 +21,7 @@ import mplhep as hep
 import numpy as np
 
 from displaced_observables import observables as obs
-from displaced_observables.analysis import load_raw_tables, pt_weights, rejection
+from displaced_observables.analysis import chunked, load_raw_tables, pt_weights, rejection
 from displaced_observables.pileup import build_library, overlay_pileup
 from displaced_observables.tracking import SCENARIOS, apply_tracking
 from make_plots import decorate
@@ -73,9 +73,9 @@ def main() -> None:
         bkg_w = {n: pt_weights(ref_pt, np.asarray(j.pt)) for n, j in bkgs.items()}
 
         for key, (_, fn) in FLAGSHIP.items():
-            vals_b = {n: np.asarray(fn(j)) for n, j in bkgs.items() if len(j)}
+            vals_b = {n: chunked(fn, j) for n, j in bkgs.items() if len(j)}
             for c, j in sigs.items():
-                v = np.asarray(fn(j))
+                v = chunked(fn, j)
                 for n, vb in vals_b.items():
                     val, sat = rejection(v, vb, eff=args.eff, bkg_weights=bkg_w[n])
                     results.setdefault((mu, key, n), []).append((c, val, sat))

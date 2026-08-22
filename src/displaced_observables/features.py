@@ -48,13 +48,19 @@ BASIS_D = {
 }
 
 
-def feature_table(jets: ak.Array) -> np.ndarray:
-    """All features (S then D) as a structured numpy array."""
+def feature_table(jets: ak.Array, chunk_size: int = 20_000) -> np.ndarray:
+    """All features (S then D) as a structured numpy array.
+
+    Computed in chunks: the pairwise/triple combination observables
+    (dEEC, ECF3, dECF3) allocate O(n_jets * n_trk^3) transients, which at
+    10^5+ jets would otherwise reach tens of GB."""
     cols = {**BASIS_S, **BASIS_D}
     dtype = np.dtype([(name, "f4") for name in cols])
     out = np.empty(len(jets), dtype=dtype)
-    for name, fn in cols.items():
-        out[name] = np.asarray(fn(jets), dtype=np.float32)
+    for lo in range(0, len(jets), chunk_size):
+        chunk = jets[lo:lo + chunk_size]
+        for name, fn in cols.items():
+            out[name][lo:lo + len(chunk)] = np.asarray(fn(chunk), dtype=np.float32)
     return out
 
 

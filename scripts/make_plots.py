@@ -21,7 +21,7 @@ import numpy as np
 
 from displaced_observables import observables as obs
 from displaced_observables.analysis import (
-    load_raw_tables, pt_weights, rejection, with_scenario,
+    chunked, load_raw_tables, pt_weights, rejection, with_scenario,
 )
 from displaced_observables.tracking import SCENARIOS
 
@@ -109,10 +109,10 @@ def main() -> None:
     rej_rows = []
     for key, (label, fn, group) in OBSERVABLES.items():
         fig, axm = plt.subplots(figsize=(8, 6))
-        vals_b = {n: np.asarray(fn(j)) for n, j in backgrounds.items() if len(j)}
+        vals_b = {n: chunked(fn, j) for n, j in backgrounds.items() if len(j)}
         allv = np.concatenate(
             list(vals_b.values())
-            + [np.asarray(fn(j)) for j in signals.values() if len(j)]
+            + [chunked(fn, j) for j in signals.values() if len(j)]
         )
         lo, hi = np.quantile(allv, [0.001, 0.999])
         bins = np.linspace(lo, hi if hi > lo else lo + 1, 60)
@@ -122,7 +122,7 @@ def main() -> None:
         for ctau, j in signals.items():
             if len(j) == 0:
                 continue
-            v = np.asarray(fn(j))
+            v = chunked(fn, j)
             axm.hist(v, bins=bins, density=True, histtype="step",
                      label=f"signal $c\\tau$={ctau:g} mm")
             row = {"obs": key, "ctau": ctau}
