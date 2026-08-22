@@ -1,0 +1,18 @@
+! b-enriched QCD: hard bbbar production. Used to populate the b-jet ROC
+! curves (the irreducible background) with useful statistics; per-flavor
+! ROCs are shape-only, so b-jets from this sample combine with b-jets from
+! the inclusive dijet sample. Same pTHat slice as qcd_dijet.cmnd.
+! Random seed is set programmatically.
+
+Beams:idA = 2212
+Beams:idB = 2212
+Beams:eCM = 13600.
+
+HardQCD:hardbbbar = on
+PhaseSpace:pTHatMin = 450.
+
+Random:setSeed = on
+Next:numberShowEvent = 0
+Next:numberShowProcess = 0
+Next:numberShowInfo = 0
+Print:quiet = on

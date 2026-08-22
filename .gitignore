@@ -1,0 +1,14 @@
+# pixi
+.pixi/
+# outputs
+data/
+plots/
+# python
+__pycache__/
+*.egg-info/
+.pytest_cache/
+# latex build
+paper/main.pdf
+paper/*.log
+paper/*.xdv
+paper/*.aux

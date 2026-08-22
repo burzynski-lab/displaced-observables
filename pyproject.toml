@@ -1,0 +1,12 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "displaced-observables"
+version = "0.1.0"
+description = "Displacement-weighted jet substructure observables for dark-shower (emerging jet) signatures"
+requires-python = ">=3.11"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/displaced_observables"]

@@ -1,0 +1,50 @@
+[workspace]
+authors = ["jburzyns <jackson.carl.burzynski@cern.ch>"]
+channels = ["conda-forge"]
+name = "displaced-observables"
+platforms = ["osx-arm64", "linux-64"]
+version = "0.1.0"
+
+[tasks]
+generate = "python scripts/generate.py"
+plots = "python scripts/make_plots.py"
+test = "pytest tests/ -v"
+paper = "tectonic paper/main.tex"
+
+[dependencies]
+python = "3.12.*"
+# generators
+pythia8 = ">=8.312"
+lhapdf = "*"
+hepmc3 = "*"
+# jets + detector
+fastjet = ">=3.4"
+delphes = ">=3.5"
+root = "*"
+# analysis stack
+numpy = "*"
+awkward = ">=2"
+uproot = ">=5"
+hist = "*"
+vector = "*"
+matplotlib = "*"
+scikit-learn = "*"
+scipy = "*"
+pyarrow = "*"
+tqdm = "*"
+pyyaml = "*"
+pytest = "*"
+mplhep = ">=1.3.3,<2"
+tectonic = ">=0.17.0,<0.18"
+
+[pypi-dependencies]
+displaced-observables = { path = ".", editable = true }
+
+# MadGraph pins python 3.9 on conda-forge, so it lives in its own environment:
+#   pixi run -e mg5 mg5_aMC cards/madgraph/<proc_card>.dat
+[feature.mg5.dependencies]
+mg5amcnlo = ">=3.5"
+lhapdf = "*"
+
+[environments]
+mg5 = { features = ["mg5"], no-default-feature = true }

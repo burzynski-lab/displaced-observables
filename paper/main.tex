@@ -1,0 +1,685 @@
+% Displacement-weighted jet substructure observables — draft
+% Target: SciPost Physics / PRD (~15 pages). Plain article class for the
+% draft; port to the journal class at submission.
+% Build: pixi run paper   (tectonic paper/main.tex)
+\documentclass[11pt]{article}
+
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\usepackage{subcaption}
+
+\graphicspath{{../plots/}}
+
+% ------------------------------------------------------------------ macros
+\newcommand{\stub}[1]{\begin{center}\fbox{\parbox{0.92\textwidth}{\color{red!70!black}\textbf{STUB:} #1}}\end{center}}
+\newcommand{\todo}[1]{{\color{red!70!black}[TODO: #1]}}
+\newcommand{\dnought}{d_0}
+\newcommand{\ctau}{c\tau}
+\newcommand{\pid}{\pi_{\mathrm{D}}}
+\newcommand{\qD}{q_{\mathrm{D}}}
+\newcommand{\dR}{\Delta R}
+\newcommand{\pT}{p_{\mathrm{T}}}
+
+\title{Displacement-weighted jet substructure observables\\
+for emerging-jet signatures}
+\author{Jackson Burzynski\thanks{\texttt{jackson.carl.burzynski@cern.ch}}
+\and \todo{student} \and \todo{optional theorist}}
+\date{\today\ --- \textbf{DRAFT}}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Dark-sector models with confining hidden dynamics predict ``emerging
+jets'': QCD-like jets whose constituents originate from displaced
+dark-pion decays. Model-agnostic anomaly-detection searches built on
+jet substructure --- autoencoders and related unsupervised
+architectures trained on calorimeter- or momentum-based observables ---
+are largely \emph{blind} to this signature: we show that the standard
+substructure basis (angularities, energy correlation functions,
+$N$-subjettiness) carries essentially no lifetime information, so an
+anomalous sector whose only distinguishing feature is displacement
+would evade substructure-based anomaly detection.
+We introduce an interpretable, analytic family of
+\emph{displacement-weighted} jet substructure observables ---
+$\dnought$-weighted angularities, displaced energy--energy correlators,
+and lifetime moments --- and characterize their discrimination power as
+a function of the dark-pion proper lifetime,
+$\ctau(\pid) \in [1, 300]$~mm, against light-flavor \emph{and
+heavy-flavor} QCD jets. The pairwise correlators, which exploit the
+angular correlation of displacement among tracks from a common decay
+vertex, dominate the single-track observables precisely in the
+short-lifetime regime where dark pions must be distinguished from $B$
+hadrons. \todo{final numbers} Augmenting a (variational) autoencoder's
+substructure input basis with these observables extends the generality
+of anomaly detection to lifetime-frontier signatures: the
+anomaly-score ROC against emerging jets improves \todo{by X across the
+$\ctau$ grid} while the QCD background model is unaffected. We further
+quantify the fraction of the fully-supervised discrimination ceiling,
+defined by a constituent-level transformer, that the observable family
+captures, and demonstrate robustness under a parametrized tracking
+response including impact-parameter resolution, efficiency loss with
+production radius, large-radius tracking, and pileup.
+\end{abstract}
+
+\tableofcontents
+
+% =====================================================================
+\section{Introduction}
+\label{sec:intro}
+
+Confining dark sectors coupled to the Standard Model through a heavy
+mediator generically produce collider signatures in which a parton-level
+dark quark showers and hadronizes into a multiplicity of dark hadrons,
+a fraction of which decay back to SM particles with macroscopic proper
+lifetimes~\cite{Schwaller:2015gea,Albouy:2022cin}. The resulting
+``emerging jet'' contains an anomalously large fraction of tracks with
+sizable impact parameter, distributed among several displaced vertices
+along the jet axis.
+
+Existing search strategies occupy two extremes. Cut-based analyses use
+simple per-jet counting variables --- e.g.\ the prompt-track energy
+fraction or the median unsigned impact parameter --- which are robust
+and interpretable but discard the rich correlation structure of the
+displaced final state~\cite{Schwaller:2015gea,ATLAS:EJ,CMS:EJ}.
+Machine-learned constituent-level taggers, at the other extreme,
+approach the information-theoretic ceiling but resist physical
+interpretation, complicate calibration, and obscure which features of
+the signal carry the discrimination power.
+
+A third, increasingly prominent strategy is \emph{model-agnostic
+anomaly detection}: unsupervised or weakly supervised architectures ---
+autoencoders (AEs), variational autoencoders (VAEs), and density-based
+methods --- trained on background-dominated data to flag any jet or
+event that populates the tails of the learned background
+model~\cite{Farina:2018fyg,Heimel:2018mkt,Kasieczka:2021xcg,ATLAS:dijetAD}.
+The generality of such searches is bounded by their input
+representation: an anomaly can only be flagged if it is anomalous
+\emph{in the variables the network sees}. Substructure-based anomaly
+detection typically uses calorimeter- or momentum-based inputs ---
+constituent four-vectors, angularities, energy correlators,
+$N$-subjettiness --- none of which carry lifetime information. This
+paper demonstrates that blind spot quantitatively: across every
+standard substructure observable we study, emerging jets are separated
+from QCD by rejection factors of only $2$--$5$, independent of the
+dark-pion lifetime (Sec.~\ref{sec:results}). A dark shower whose
+principal anomaly is \emph{displacement} looks ordinary to a
+substructure autoencoder. The throughline of this work is that
+augmenting anomaly-detection input bases with a small set of
+interpretable, displacement-aware observables closes this blind spot
+at negligible architectural cost (Sec.~\ref{sec:anomaly}).
+
+This paper develops the middle ground: a systematic, analytic family of
+jet substructure observables in which each track is weighted by its
+displacement significance. The family is organized in three tiers of
+increasing structure --- weighted angularities (single-track moments),
+displaced energy--energy correlators (pairwise moments), and lifetime
+moments (direct $\ctau$ estimators) --- and reduces smoothly to standard
+track-based substructure in the prompt limit. Because track-level
+observables are not infrared-and-collinear safe, a first-principles
+description would proceed through track
+functions~\cite{Chang:2013rca,Li:2021zcf}; we define our observables
+with this correspondence in mind but defer calculability questions.
+\todo{tighten IRC/track-function framing with theorist input}
+
+Our physics goals are:
+(i) define the observable family and identify which moments carry
+lifetime information;
+(ii) map discrimination power as a function of $\ctau(\pid)$ against
+light-flavor and heavy-flavor QCD jets separately --- the irreducible
+background at short lifetime being $b$ jets, since
+$\ctau(B) \approx 0.5$~mm;
+(iii) demonstrate that a (V)AE anomaly detector trained on a standard
+substructure basis gains sensitivity to displaced signatures across the
+full $\ctau$ range when the input basis is augmented with the
+displacement-weighted observables, without degrading its background
+model;
+(iv) quantify the gap to a fully supervised constituent-level
+transformer trained on the same inputs; and
+(v) establish robustness under a realistic parametrized tracking
+response.
+
+% =====================================================================
+\section{Observable definitions}
+\label{sec:observables}
+
+Jets are clustered with the anti-$k_t$ algorithm~\cite{Cacciari:2008gp}
+with $R = 0.4$ from all visible final-state particles. Observables are
+computed from the jet's charged constituents (``tracks'') $i$ with
+transverse-momentum fraction $z_i = p_{\mathrm{T},i} / \pT^{\mathrm{jet}}$, angle
+$\theta_i = \dR(i, \mathrm{jet\ axis})/R$, transverse impact parameter
+$d_{0,i}$, and per-track resolution $\sigma_i$.
+
+\subsection{Displacement weight}
+\label{sec:weight}
+
+Each track carries a displacement weight based on its impact-parameter
+\emph{significance},
+\begin{equation}
+  w_i \;=\; \ln\!\left(1 + \frac{|d_{0,i}|}{\sigma_i}\right).
+  \label{eq:weight}
+\end{equation}
+The logarithm compresses the long lifetime tail, and the significance
+ratio makes the weight self-regulating against resolution: a prompt
+track smeared to $|\dnought| \sim \sigma$ receives $w \simeq \ln 2$,
+while genuinely displaced tracks receive $w \sim \ln(|\dnought|/\sigma)
+\gg 1$. In the ideal-detector limit $\sigma \to 0$ the weight diverges
+only logarithmically, so all observables below remain finite and
+smearing-stable.
+
+Each family below is presented as a \emph{nominal} (lifetime-blind)
+observable next to its \emph{displacement-weighted} counterpart,
+obtained by a single insertion of the weight of Eq.~(\ref{eq:weight})
+per track. This pairing is used throughout the paper: every
+distribution, ROC, and anomaly-detection input basis is shown for both
+members, so the lifetime information contributed by the weighting is
+read off directly. Table~\ref{tab:observables} summarizes the family.
+
+\subsection{Angularities}
+\label{sec:tier1}
+
+The nominal track angularities~\cite{Larkoski:2014pca} and their
+displacement-weighted generalization are
+\begin{equation}
+  \lambda^\kappa_\beta \;=\; \sum_{i \in \mathrm{jet}}
+      z_i^\kappa \, \theta_i^\beta ,
+  \qquad\qquad
+  \lambda^\kappa_\beta(w) \;=\; \sum_{i \in \mathrm{jet}}
+      w_i \, z_i^\kappa \, \theta_i^\beta .
+  \label{eq:angularity}
+\end{equation}
+The nominal family contains the standard substructure workhorses:
+girth $(\kappa,\beta) = (1,1)$, the mass-like angularity $(1,2)$,
+track multiplicity $n_{\mathrm{trk}} = \lambda^0_0$, and
+$(\pT^D)^2 = \lambda^2_0$. The corresponding weighted anchors are the
+displaced-$\pT$ fraction $(1,0)$, displaced girth $(1,1)$, and a
+displaced-mass proxy $(1,2)$. In the fully prompt limit every track
+sits at the resolution pedestal $w_i \simeq \ln 2$, so
+$\lambda^\kappa_\beta(w) \to \ln 2 \cdot \lambda^\kappa_\beta$: the
+weighted observable degenerates to a rescaled copy of its nominal
+partner, and any \emph{shape} difference between the pair is a pure
+lifetime effect. A scan in $(\kappa, \beta)$ identifies which moments
+carry the lifetime information. \todo{$(\kappa,\beta)$ scan figure}
+
+\subsection{Energy--energy correlators}
+\label{sec:tier2}
+
+The nominal two-point energy correlation
+function~\cite{Larkoski:2013eya} and its displaced counterpart are
+\begin{equation}
+  \mathrm{ECF}_2(\beta) \;=\; \sum_{i<j} z_i z_j \, (\dR_{ij})^\beta,
+  \qquad\qquad
+  \mathrm{dEEC}(\beta) \;=\; \sum_{i<j} z_i z_j \,
+      (\dR_{ij})^\beta \; g(w_i, w_j),
+  \label{eq:deec}
+\end{equation}
+with pair weighting $g = w_i w_j$ or $g = \min(w_i, w_j)$.
+The physics carried by the weighting is qualitatively new at this
+order: dark-pion decays produce \emph{pairs} of displaced tracks from
+common vertices, so displacement in signal is angularly correlated at
+small pair separation $\dR_{ij}$, while in QCD (including $B$ decays,
+with their single low-multiplicity vertex chain) the correlation is
+weaker. The product weighting rewards pairs in which both tracks are
+displaced; the $\min$ weighting is stricter, vanishing unless
+\emph{both} tracks are significantly displaced, and is correspondingly
+more robust against single-track resolution tails. The differential
+profile $\langle w_i w_j \rangle (\dR_{ij})$, shown in
+Fig.~\ref{fig:wij}, exhibits the vertex pair correlation directly and
+connects to the energy-correlator-on-tracks literature
+\cite{Chang:2013rca,Lee:2023npz}.
+
+At higher point count we use the nominal
+$\mathrm{ECF}_3(\beta) = \sum_{i<j<k} z_i z_j z_k
+(\dR_{ij}\dR_{ik}\dR_{jk})^\beta$ and the ratios
+$C_2 = \mathrm{ECF}_3 \mathrm{ECF}_1 / \mathrm{ECF}_2^2$ and
+$D_2 = \mathrm{ECF}_3 \mathrm{ECF}_1^3 / \mathrm{ECF}_2^3$; weighted
+three-point correlators (sensitive to \emph{multiple} displaced
+vertices per jet) are a natural extension left to future work.
+
+\subsection{Lifetime moments}
+\label{sec:tier3}
+
+The lifetime moments have no nontrivial nominal partner --- the
+$\dnought$-independent limit of the family is
+$L_0 = \sum_i z_i$, the charged energy fraction --- and are the most
+direct $\ctau$ estimators:
+\begin{equation}
+  L_n \;=\; \sum_i z_i \, |d_{0,i}|^n ,
+  \qquad n = 0, 1, 2, \ldots
+  \label{eq:moments}
+\end{equation}
+together with dimensionless ratios such as $L_2 L_0 / L_1^2$, which
+measures the width of the per-jet displacement distribution
+independently of its scale. These support a ``measure, don't just
+tag'' program: given a tagged emerging-jet sample, the moments estimate
+$\ctau(\pid)$ itself. \todo{develop the $\ctau$-measurement section}
+
+\subsection{Signed variants}
+\label{sec:signed}
+
+Throughout, we also consider signed-$\dnought$ variants in which
+$|d_{0,i}|$ in Eq.~(\ref{eq:weight}) carries the lifetime sign of the
+track relative to the jet axis: positive if the point of closest
+approach lies along the jet direction, negative otherwise. As in
+heavy-flavor tagging, the negative-signed tail is populated purely by
+resolution and calibrates the $w_i \simeq \ln 2$ prompt pedestal in
+situ. \stub{Signed-variant distributions and in-situ calibration
+closure test.}
+
+\subsection{Prong-structure observables and search-style baselines}
+\label{sec:standard}
+
+Two further sets complete the basis. First, the nominal
+prong-structure observables, for which we do not construct weighted
+counterparts here: $N$-subjettiness~\cite{Thaler:2010tr} with
+exclusive-$k_t$ axes,
+\begin{equation}
+  \tau_N = \frac{\sum_i z_i \, \min_a (\dR_{ia})^\beta}
+                {\sum_i z_i \, R^\beta},
+\end{equation}
+its ratios $\tau_{21}$, $\tau_{32}$, and the jet mass. Second, the
+search-style single-track baselines against which any new displaced
+observable must be compared: the mean impact-parameter significance
+$\langle |\dnought|/\sigma \rangle$ and the prompt $\pT$ fraction
+(fraction of track $\pT$ carried by tracks with
+$|\dnought|/\sigma < 3$), the latter analogous to the $\alpha$-type
+variables of Refs.~\cite{Schwaller:2015gea,CMS:EJ}.
+
+\begin{table}[tb]
+  \centering
+  \caption{The observable basis. Each row pairs a nominal
+  (lifetime-blind) observable with its displacement-weighted
+  counterpart; the union of the ``nominal'' column is the
+  anomaly-detection input basis $S$, and adding the ``weighted'' column
+  gives $S{+}D$ (Sec.~\ref{sec:anomaly}).}
+  \label{tab:observables}
+  \begin{tabular}{lll}
+    \hline
+    family & nominal & displacement-weighted \\
+    \hline
+    angularities
+      & $\lambda^\kappa_\beta = \sum_i z_i^\kappa \theta_i^\beta$
+      & $\lambda^\kappa_\beta(w) = \sum_i w_i z_i^\kappa \theta_i^\beta$ \\
+    \quad anchors
+      & girth, mass ang., $n_{\mathrm{trk}}$, $(\pT^D)^2$
+      & displ.\ $\pT$ frac., displ.\ girth, displ.\ mass \\
+    2-point correlator
+      & $\mathrm{ECF}_2(\beta)$
+      & $\mathrm{dEEC}(\beta)$, $g = w_i w_j$ or $\min(w_i, w_j)$ \\
+    3-point correlators
+      & $\mathrm{ECF}_3$, $C_2$, $D_2$
+      & --- (future work) \\
+    prong structure
+      & $\tau_1$, $\tau_{21}$, $\tau_{32}$, jet mass
+      & --- \\
+    lifetime moments
+      & $L_0 = \sum_i z_i$ (trivial)
+      & $L_n = \sum_i z_i |d_{0,i}|^n$, $L_2 L_0/L_1^2$ \\
+    baselines
+      & ---
+      & $\langle |\dnought|/\sigma \rangle$, prompt $\pT$ fraction \\
+    \hline
+  \end{tabular}
+\end{table}
+
+% =====================================================================
+\section{Simulation and event selection}
+\label{sec:simulation}
+
+\subsection{Signal and background samples}
+
+Signal events are generated with \textsc{Pythia}~8.312
+\cite{Bierlich:2022pfr} using the Hidden Valley
+module~\cite{Carloni:2010tw}: $s$-channel production
+$pp \to Z' \to \qD\bar{\qD}$ at $\sqrt{s} = 13.6$~TeV with
+$m_{Z'} = 1.5$~TeV, followed by a dark shower and hadronization with
+$N_{\mathrm{gauge}} = 3$, running dark coupling with
+$\Lambda_{\mathrm{D}} = 10$~GeV, $m_{\qD} = 10$~GeV,
+$m_{\pid} = 5$~GeV, $m_{\rho_{\mathrm{D}}} = 20$~GeV, and vector
+fraction $0.75$, following the unflavored benchmark of the Dark Showers
+Task Force~\cite{Albouy:2022cin} and the original emerging-jets
+proposal~\cite{Schwaller:2015gea}. Dark rhos decay promptly to dark
+pion pairs; dark pions decay to $d\bar d$ with proper lifetime scanned
+over $\ctau(\pid) \in \{0, 1, 3, 10, 30, 100, 300\}$~mm, where $0$
+denotes the prompt limit. One alternate mediator portal is deferred to
+Appendix~\ref{app:portal}.
+
+The background is QCD dijet production in the same $\hat p_T$ regime,
+split by jet flavor at analysis level: a jet is labeled $b$ ($c$) if a
+weakly-decaying bottom (charm) hadron with $\pT > 5$~GeV lies within
+$\dR < 0.4$ of the jet axis. A dedicated hard-$b\bar b$ sample
+augments the $b$-jet statistics; per-flavor results are shape-based, so
+the samples are combined freely. \todo{hard-$c\bar c$ sample}
+
+\subsection{Jet and track selection}
+
+Jets: anti-$k_t$, $R=0.4$, built from all visible final-state
+particles; the two leading jets with
+$500 < \pT < 1000$~GeV and $|\eta| < 2.5$ are analyzed.
+Tracks: charged constituents with $\pT > 1$~GeV, $|\eta| < 2.5$, and
+truth $|\dnought| < 300$~mm. The truth impact parameter is computed
+from the production vertex in the straight-line approximation,
+$\dnought = (v_x p_y - v_y p_x)/\pT$. \todo{quote $\pT$-reweighting
+procedure once implemented}
+
+\subsection{Parametrized tracking response}
+\label{sec:tracking}
+
+Detector effects are applied as a parametrized transform of the truth
+track collection, so identical observable code runs on truth-level and
+smeared inputs. The impact-parameter resolution is
+\begin{equation}
+  \sigma(\dnought) = a \oplus b/\pT, \qquad
+  a = 10~\mu\mathrm{m}, \quad b = 70~\mu\mathrm{m}\,\mathrm{GeV},
+\end{equation}
+and $\sigma_i$ in Eq.~(\ref{eq:weight}) always refers to this
+parametrization, including at truth level. Reconstruction efficiency
+falls with production radius $r$ as
+$\varepsilon(r) = \varepsilon_0 / (1 + (r/r_{1/2})^2)$ with a hard
+acceptance ceiling $r < r_{\max}$. Two scenarios bracket realistic
+tracking: \emph{standard} ($r_{1/2} = 40$~mm, $r_{\max} = 120$~mm) and
+\emph{standard + large-radius tracking}
+($r_{1/2} = 150$~mm, $r_{\max} = 300$~mm).
+
+\stub{Tracking-scenario results: observable degradation vs $\ctau$
+under standard vs standard+LRT; this comparison is itself a physics
+result. Samples and code exist; run \texttt{pixi run plots --scenario
+standard / standard\_lrt}.}
+
+\stub{Pileup overlay: parametrized soft prompt tracks and/or real
+minimum-bias overlay with $z_0$ association; demonstrate that the
+significance weighting of Eq.~(\ref{eq:weight}) self-suppresses prompt
+pileup, and quantify the strange-hadron (displaced) pileup component.}
+
+% =====================================================================
+\section{Truth-level results}
+\label{sec:results}
+
+\subsection{Distributions}
+
+Figure~\ref{fig:dists} shows the two flagship observable pairs side by
+side: nominal girth against displaced girth, and $\mathrm{ECF}_2$
+against dEEC. In each nominal panel (left column) the signal
+distributions at different lifetimes lie nearly on top of one another
+and inside the QCD envelope; inserting the displacement weight (right
+column) fans the same jets out by lifetime and separates every
+$\ctau \geq 1$~mm point from all QCD flavors, with $b$ jets closest to
+signal. This left-column/right-column contrast is the paper's central
+construction: the columns differ by nothing but the per-track weight
+of Eq.~(\ref{eq:weight}).
+
+\begin{figure}[tb]
+  \centering
+  \includegraphics[width=0.49\textwidth]{dist_girth_truth.png}
+  \includegraphics[width=0.49\textwidth]{dist_ang_11_truth.png}\\
+  \includegraphics[width=0.49\textwidth]{dist_eec_b1_truth.png}
+  \includegraphics[width=0.49\textwidth]{dist_deec_min_truth.png}
+  \caption{Nominal observables (left column) and their
+  displacement-weighted counterparts (right column), for QCD jets by
+  flavor and signal at representative lifetimes, truth-level tracking.
+  Top: girth $\lambda^1_1$ vs displaced girth $\lambda^1_1(w)$.
+  Bottom: $\mathrm{ECF}_2(\beta{=}1)$ vs
+  $\mathrm{dEEC}(\beta{=}1, \min)$.}
+  \label{fig:dists}
+\end{figure}
+
+\begin{figure}[tb]
+  \centering
+  \includegraphics[width=0.62\textwidth]{wij_profile_truth.png}
+  \caption{Energy-weighted profile of the pair displacement correlation
+  $\langle w_i w_j\rangle$ versus pair separation $\dR_{ij}$. The
+  small-$\dR$ enhancement in signal reflects track pairs from common
+  dark-pion decay vertices; QCD $b$ jets show a much smaller
+  enhancement from the single $B$-decay chain.}
+  \label{fig:wij}
+\end{figure}
+
+\subsection{Discrimination power versus lifetime}
+
+Figure~\ref{fig:rejection} shows the background rejection at 50\%
+signal efficiency as a function of $\ctau(\pid)$, per background
+flavor. Three qualitative results emerge:
+
+\begin{enumerate}
+  \item \textbf{Pairwise beats single-track at short lifetime.} At
+  $\ctau = 3$~mm the dEEC observables reach $b$-jet rejections of
+  $\mathcal{O}(300)$, versus $\mathcal{O}(5)$ for the single-track
+  baselines $\langle|\dnought|/\sigma\rangle$ and $L_1$, and
+  $\mathcal{O}(10\text{--}30)$ for the weighted angularities. Even at
+  $\ctau = 1$~mm --- barely twice the $B$-hadron lifetime --- the dEEC
+  retains $\mathcal{O}(100)$ rejection. The angular pair correlation,
+  not the total displacement, is what distinguishes a 3~mm dark pion
+  from a $B$ hadron.
+  \item \textbf{Standard substructure carries no lifetime information.}
+  All lifetime-blind observables sit at rejections of $2$--$5$,
+  independent of $\ctau$, confirming that the discrimination above is
+  attributable entirely to the displacement weighting. This is the
+  quantitative statement of the anomaly-detection blind spot motivated
+  in Sec.~\ref{sec:intro}: in any input basis built from these
+  observables, emerging jets are at most mildly atypical, and no
+  unsupervised method --- however expressive --- can recover
+  information absent from its inputs.
+  \item \textbf{The long-lifetime regime saturates.} For
+  $\ctau \gtrsim 30$~mm several observables, including the simple
+  prompt-$\pT$-fraction baseline, reject all background jets in the
+  current samples; distinguishing among them requires larger samples
+  or tighter working points. \todo{high-statistics production;
+  quote lower bounds properly (clipped markers)}
+\end{enumerate}
+
+\begin{figure}[tb]
+  \centering
+  \includegraphics[width=0.49\textwidth]{rejection_QCD_b_truth.png}
+  \includegraphics[width=0.49\textwidth]{rejection_QCD_light_truth.png}
+  \caption{Background rejection at 50\% signal efficiency versus
+  $\ctau(\pid)$ for $b$ jets (left) and light jets (right).
+  Solid: displacement-weighted observables; dashed: their nominal
+  partners. Missing points indicate rejection exceeding the sample
+  statistics. Truth-level tracking.}
+  \label{fig:rejection}
+\end{figure}
+
+\stub{$(\kappa,\beta)$ angularity scan: which moments carry the
+lifetime information; motivate the 2--3 observables carried into the
+interpretability-gap study.}
+
+\stub{Working-point tables at $\varepsilon_s = 50\%$ and $90\%$;
+$\pT$-reweighted ROCs.}
+
+% =====================================================================
+\section{Robustness under realistic tracking}
+\label{sec:robustness}
+
+\stub{Redo Sec.~\ref{sec:results} under the standard and standard+LRT
+scenarios of Sec.~\ref{sec:tracking}: rejection vs $\ctau$ per
+scenario, degradation summary, pileup dependence, and the in-situ
+negative-tail calibration. The LRT-vs-standard difference as a function
+of $\ctau$ quantifies the physics value of large-radius tracking for
+emerging-jet searches.}
+
+% =====================================================================
+\section{Displacement-aware anomaly detection}
+\label{sec:anomaly}
+
+The central application of the observable family is to extend the
+generality of substructure-based anomaly detection to the lifetime
+frontier. The proposed protocol is deliberately minimal, so that the
+comparison isolates the input basis rather than the architecture:
+
+\begin{enumerate}
+  \item \textbf{Background model.} Train a (variational) autoencoder on
+  QCD jets only (signal-free training sample; in data this would be a
+  control region or the bulk of an inclusive jet sample), with a
+  per-jet feature vector as input.
+  \item \textbf{Two input bases.} Basis $S$ (``standard''): the
+  nominal column of Table~\ref{tab:observables} --- angularities,
+  $\mathrm{ECF}_n$ and ratios, $\tau_N$ and ratios, $\pT^D$,
+  $n_{\mathrm{trk}}$, jet mass. Basis $S{+}D$: the same vector
+  augmented with the displacement-weighted column (anchor weighted
+  angularities, dEEC with both pairings, low lifetime moments and
+  ratio).
+  \item \textbf{Evaluation.} Anomaly score = reconstruction error (AE)
+  or a combination with the KL term (VAE). Compare ROC curves of the
+  anomaly score against emerging-jet signal, per $\ctau$ point and per
+  background flavor, for $S$ versus $S{+}D$. The figure of merit is
+  the improvement in signal efficiency at fixed background anomaly
+  rate (e.g.\ $10^{-3}$), as a function of $\ctau$.
+  \item \textbf{Background-model stability.} Verify that augmenting
+  the basis does not degrade the background model itself: the QCD
+  anomaly-score distribution and its flavor composition should be
+  statistically unchanged between $S$ and $S{+}D$ trainings, since for
+  background the added observables are concentrated near the prompt
+  pedestal $w \simeq \ln 2$ (with $b$ jets populating a mild tail ---
+  itself a useful in-situ validation region).
+\end{enumerate}
+
+The expectation from Sec.~\ref{sec:results} is unambiguous: since the
+supervised separation in basis $S$ is bounded by rejections of
+$2$--$5$ while basis $S{+}D$ supports rejections of
+$\mathcal{O}(10^2$--$10^3)$, the unsupervised ROC must improve
+dramatically once displacement enters the input basis; the
+quantitative question is how much of the supervised gain the
+autoencoder realizes, and how stably across $\ctau$.
+
+\stub{Train AE and VAE on bases $S$ and $S{+}D$; anomaly-score ROC per
+$\ctau$ and flavor; efficiency gain at fixed anomaly rate vs $\ctau$
+(money plot); background-model stability checks. Repeat under the
+tracking scenarios of Sec.~\ref{sec:tracking}.}
+
+% =====================================================================
+\section{The interpretability gap}
+\label{sec:gap}
+
+\stub{Constituent-level transformer trained on identical inputs
+$(z_i, \theta_i, \phi_i, d_{0,i}/\sigma_i, q_i)$ as the fully
+supervised ceiling; fraction of the ceiling captured by the best 2--3
+observables (and a small BDT of them) as a function of $\ctau$;
+per-flavor. Positions the anomaly-detection gain of
+Sec.~\ref{sec:anomaly} between the cut-based floor and the supervised
+ceiling.}
+
+% =====================================================================
+\section{Conclusions}
+\label{sec:conclusions}
+
+\stub{Summarize: substructure-based anomaly detection is blind to
+displacement, and a small interpretable observable set closes the blind
+spot; dEEC as the key observable at short lifetime; (V)AE ROC gain from
+the augmented basis; X\% of the supervised ceiling; robustness
+statements; outlook paragraph (other portals, SUEP regime,
+trigger-level application, event-level anomaly detection).}
+
+% =====================================================================
+\appendix
+
+\section{Alternate mediator portal}
+\label{app:portal}
+\stub{One alternate portal (e.g.\ $t$-channel bifundamental as in the
+original emerging-jets model), MadGraph + Pythia HV chain; show the
+observable family is portal-independent.}
+
+\section{Pythia Hidden Valley settings}
+\label{app:settings}
+\todo{full card listing for reproducibility (cards/pythia/ in the code
+release)}
+
+% =====================================================================
+\begin{thebibliography}{99}
+
+\bibitem{Schwaller:2015gea}
+P.~Schwaller, D.~Stolarski and A.~Weiler,
+\emph{Emerging Jets},
+JHEP \textbf{05} (2015) 059, [\texttt{arXiv:1502.05409}].
+
+\bibitem{Albouy:2022cin}
+G.~Albouy et al.,
+\emph{Theory, phenomenology, and experimental avenues for dark showers:
+a Snowmass 2021 report},
+Eur.\ Phys.\ J.\ C \textbf{82} (2022) 1132, [\texttt{arXiv:2203.09503}].
+
+\bibitem{ATLAS:EJ}
+ATLAS Collaboration,
+\emph{Search for emerging jets},
+\todo{cite the ATLAS emerging-jets search}.
+
+\bibitem{CMS:EJ}
+CMS Collaboration,
+\emph{Search for new particles decaying to a jet and an emerging jet},
+JHEP \textbf{02} (2019) 179, [\texttt{arXiv:1810.10069}].
+
+\bibitem{Farina:2018fyg}
+M.~Farina, Y.~Nakai and D.~Shih,
+\emph{Searching for New Physics with Deep Autoencoders},
+Phys.\ Rev.\ D \textbf{101} (2020) 075021, [\texttt{arXiv:1808.08992}].
+
+\bibitem{Heimel:2018mkt}
+T.~Heimel, G.~Kasieczka, T.~Plehn and J.~M.~Thompson,
+\emph{QCD or What?},
+SciPost Phys.\ \textbf{6} (2019) 030, [\texttt{arXiv:1808.08979}].
+
+\bibitem{Kasieczka:2021xcg}
+G.~Kasieczka et al.,
+\emph{The LHC Olympics 2020: A Community Challenge for Anomaly
+Detection in High Energy Physics},
+Rept.\ Prog.\ Phys.\ \textbf{84} (2021) 124201,
+[\texttt{arXiv:2101.08320}].
+
+\bibitem{ATLAS:dijetAD}
+ATLAS Collaboration,
+\emph{Dijet resonance search with weak supervision using
+$\sqrt{s}=13$~TeV pp collisions},
+Phys.\ Rev.\ Lett.\ \textbf{125} (2020) 131801,
+[\texttt{arXiv:2005.02983}].
+
+\bibitem{Chang:2013rca}
+H.-M.~Chang, M.~Procura, J.~Thaler and W.~J.~Waalewijn,
+\emph{Calculating Track-Based Observables for the LHC},
+Phys.\ Rev.\ Lett.\ \textbf{111} (2013) 102002,
+[\texttt{arXiv:1303.6637}].
+
+\bibitem{Li:2021zcf}
+Y.~Li, I.~Moult, S.~S.~van Velzen, W.~J.~Waalewijn and H.~X.~Zhu,
+\emph{Extending Precision Perturbative QCD with Track Functions},
+Phys.\ Rev.\ Lett.\ \textbf{128} (2022) 182001,
+[\texttt{arXiv:2108.01674}].
+
+\bibitem{Lee:2023npz}
+\todo{energy correlators on tracks reference (Moult et al.)}
+
+\bibitem{Cacciari:2008gp}
+M.~Cacciari, G.~P.~Salam and G.~Soyez,
+\emph{The anti-$k_t$ jet clustering algorithm},
+JHEP \textbf{04} (2008) 063, [\texttt{arXiv:0802.1189}].
+
+\bibitem{Larkoski:2014pca}
+A.~J.~Larkoski, J.~Thaler and W.~J.~Waalewijn,
+\emph{Gaining (Mutual) Information about Quark/Gluon Discrimination},
+JHEP \textbf{11} (2014) 129, [\texttt{arXiv:1408.3122}].
+
+\bibitem{Larkoski:2013eya}
+A.~J.~Larkoski, G.~P.~Salam and J.~Thaler,
+\emph{Energy Correlation Functions for Jet Substructure},
+JHEP \textbf{06} (2013) 108, [\texttt{arXiv:1305.0007}].
+
+\bibitem{Thaler:2010tr}
+J.~Thaler and K.~Van Tilburg,
+\emph{Identifying Boosted Objects with N-subjettiness},
+JHEP \textbf{03} (2011) 015, [\texttt{arXiv:1011.2268}].
+
+\bibitem{Bierlich:2022pfr}
+C.~Bierlich et al.,
+\emph{A comprehensive guide to the physics and usage of PYTHIA 8.3},
+SciPost Phys.\ Codeb.\ \textbf{2022} (2022) 8,
+[\texttt{arXiv:2203.11601}].
+
+\bibitem{Carloni:2010tw}
+L.~Carloni, J.~Rathsman and T.~Sj\"ostrand,
+\emph{Discerning Secluded Sector gauge structures},
+JHEP \textbf{04} (2011) 091, [\texttt{arXiv:1102.3795}].
+
+\end{thebibliography}
+
+\end{document}
