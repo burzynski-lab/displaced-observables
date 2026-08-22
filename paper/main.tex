@@ -53,11 +53,13 @@ heavy-flavor} QCD jets. The pairwise correlators, which exploit the
 angular correlation of displacement among tracks from a common decay
 vertex, dominate the single-track observables precisely in the
 short-lifetime regime where dark pions must be distinguished from $B$
-hadrons. \todo{final numbers} Augmenting a (variational) autoencoder's
-substructure input basis with these observables extends the generality
-of anomaly detection to lifetime-frontier signatures: the
-anomaly-score ROC against emerging jets improves \todo{by X across the
-$\ctau$ grid} while the QCD background model is unaffected. We further
+hadrons. Augmenting a (variational) autoencoder's substructure input basis with
+these observables extends the generality of anomaly detection to
+lifetime-frontier signatures: at a fixed $1\%$ QCD anomaly rate, the
+signal efficiency rises from the background-consistent $\lesssim 2\%$
+(standard basis, at every lifetime) to $49\%$ at $\ctau = 1$~mm and
+$\geq 86\%$ for $\ctau \geq 10$~mm, with the QCD background model
+unaffected. We further
 quantify the fraction of the fully-supervised discrimination ceiling,
 defined by a constituent-level transformer, that the observable family
 captures, and demonstrate robustness under a parametrized tracking
@@ -666,10 +668,38 @@ dramatically once displacement enters the input basis; the
 quantitative question is how much of the supervised gain the
 autoencoder realizes, and how stably across $\ctau$.
 
-\stub{Train AE and VAE on bases $S$ and $S{+}D$; anomaly-score ROC per
-$\ctau$ and flavor; efficiency gain at fixed anomaly rate vs $\ctau$
-(money plot); background-model stability checks. Repeat under the
-tracking scenarios of Sec.~\ref{sec:tracking}.}
+Figure~\ref{fig:vae} shows the result at truth level, for a
+fully-connected (V)AE trained on inclusive QCD jets only
+(60/20/20 train/validation/test split; anomaly thresholds set on the
+QCD test sample). The blind spot is total: in basis $S$ the anomaly
+detector tags emerging jets at $0.5$--$2\%$ efficiency for a $1\%$ QCD
+anomaly rate --- consistent with flagging signal at the background rate
+--- \emph{independent of lifetime}, and at a $10^{-3}$ anomaly rate the
+efficiency is zero to sample precision. Augmenting the input basis to
+$S{+}D$, with the architecture, training, and working points unchanged,
+lifts the efficiency at the $1\%$ working point to $49\%$ at
+$\ctau = 1$~mm, $71\%$ at 3~mm, $86\%$ at 10~mm, and $\geq 95\%$ for
+$\ctau \geq 30$~mm (VAE; the deterministic AE is comparable, slightly
+weaker at short lifetime). The background model is stable under the
+augmentation: the $b$-jet anomaly rate at the $1\%$ inclusive working
+point rises only from $\sim 0.5\%$ to $\sim 1.5\%$, the anticipated
+mild heavy-flavor tail that furnishes an in-situ validation region.
+
+\begin{figure}[tb]
+  \centering
+  \includegraphics[width=0.85\textwidth]{vae_efficiency_truth.png}
+  \caption{Signal efficiency of the (V)AE anomaly score at a fixed QCD
+  anomaly rate of $10^{-2}$ (left) and $10^{-3}$ (right), versus
+  $\ctau(\pid)$. Gray dashed: standard substructure basis $S$; red
+  solid: augmented basis $S{+}D$. Identical architecture and training
+  in all cases; truth-level tracking.}
+  \label{fig:vae}
+\end{figure}
+
+\stub{Repeat under the standard and standard+LRT tracking scenarios;
+per-flavor efficiency curves; latent-space and reconstruction
+diagnostics; cross-check with the reco-level set-based architectures
+(deep-set / DETR) of the companion framework.}
 
 % =====================================================================
 \section{The interpretability gap}

@@ -46,5 +46,12 @@ displaced-observables = { path = ".", editable = true }
 mg5amcnlo = ">=3.5"
 lhapdf = "*"
 
+# torch stack for the AE/VAE anomaly-detection study (design mirrors the
+# ej-vae framework: plain FC VAENet, MSE+KLD ELBO, z-score InputNorm)
+[feature.ml.dependencies]
+pytorch = ">=2.4"
+h5py = "*"
+
 [environments]
 mg5 = { features = ["mg5"], no-default-feature = true }
+ml = { features = ["ml"] }
