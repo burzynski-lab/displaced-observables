@@ -22,7 +22,7 @@ import numpy as np
 
 from .jets import truth_d0
 
-TRACK_FIELDS = ("pt", "eta", "phi", "d0", "z0", "r_prod")
+TRACK_FIELDS = ("pt", "eta", "phi", "q", "d0", "z0", "r_prod")
 
 
 def build_library(
@@ -50,6 +50,7 @@ def build_library(
         "pt": ak.to_numpy(ak.flatten(p.pt)),
         "eta": ak.to_numpy(ak.flatten(p.eta)),
         "phi": ak.to_numpy(ak.flatten(p.phi)),
+        "q": ak.to_numpy(ak.flatten(p.q)),
         "d0": ak.to_numpy(ak.flatten(d0)),
         "z0": ak.to_numpy(ak.flatten(z0)),
         "r_prod": ak.to_numpy(ak.flatten(np.sqrt(p.vx**2 + p.vy**2))),
@@ -116,7 +117,7 @@ def overlay_pileup(
     true_flags = ak.values_astype(jag["pt"] * 0 + 1, bool)
 
     pu_trk = ak.zip({
-        "pt": jag["pt"], "eta": jag["eta"], "phi": jag["phi"],
+        "pt": jag["pt"], "eta": jag["eta"], "phi": jag["phi"], "q": jag["q"],
         "z": z, "dr": jag["dr"],
         "d0": jag["d0"], "d0_abs": np.abs(jag["d0"]), "z0": jag["z0"],
         "r_prod": jag["r_prod"],

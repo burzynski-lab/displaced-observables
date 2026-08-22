@@ -121,6 +121,7 @@ def build_jet_table(
         "pt": cons.pt,
         "eta": cons.eta,
         "phi": cons.phi,
+        "q": cons.q,
         "z": cons.pt / jets.pt,
         "dr": _delta_r(cons.eta, cons.phi, jets.eta, jets.phi),
         "d0": d0_jetsign,

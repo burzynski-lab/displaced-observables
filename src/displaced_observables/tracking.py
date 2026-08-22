@@ -106,7 +106,8 @@ def apply_tracking(
         keep = keep & (pv_assoc | displaced)
 
     new_trk = ak.zip({
-        "pt": trk.pt, "eta": trk.eta, "phi": trk.phi, "z": trk.z, "dr": trk.dr,
+        "pt": trk.pt, "eta": trk.eta, "phi": trk.phi, "q": trk.q,
+        "z": trk.z, "dr": trk.dr,
         "d0": d0, "d0_abs": np.abs(d0), "z0": z0,
         "sigma_d0": sig, "sigma_z0": sig_z, "r_prod": trk.r_prod,
         "from_b": trk.from_b, "from_c": trk.from_c, "from_dark": trk.from_dark,

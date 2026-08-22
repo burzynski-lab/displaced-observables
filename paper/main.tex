@@ -705,13 +705,49 @@ diagnostics; cross-check with the reco-level set-based architectures
 \section{The interpretability gap}
 \label{sec:gap}
 
-\stub{Constituent-level transformer trained on identical inputs
-$(z_i, \theta_i, \phi_i, d_{0,i}/\sigma_i, q_i)$ as the fully
-supervised ceiling; fraction of the ceiling captured by the best 2--3
-observables (and a small BDT of them) as a function of $\ctau$;
-per-flavor. Positions the anomaly-detection gain of
-Sec.~\ref{sec:anomaly} between the cut-based floor and the supervised
-ceiling.}
+To bound what the observable family might be leaving on the table, we
+train a fully supervised constituent-level classifier per $\ctau$
+point: a permutation-invariant transformer (two encoder layers, four
+heads, masked mean pooling) over the jet's tracks with per-track inputs
+$(z_i, \Delta\eta_i, \Delta\phi_i,\allowbreak
+\mathrm{sgn}(d_{0,i})\ln(1+|d_{0,i}|/\sigma_i), q_i)$ --- the identical
+information content available to the observables. It is compared, on
+the same jet splits, against a gradient-boosted tree on the $S{+}D$
+observable basis, a tree on the nominal basis $S$, and the single best
+observable $\mathrm{dEEC}(\min)$.
+
+Figure~\ref{fig:gap} shows the outcome. At the present sample sizes the
+interpretability gap is \emph{consistent with zero}: the $S{+}D$ tree
+matches or exceeds the transformer at every lifetime, both saturating
+the test-sample rejection ceiling for $\ctau \gtrsim 3$--$10$~mm, and
+the single dEEC observable alone captures $70$--$88\%$ of the ceiling's
+log-rejection for $\ctau \geq 1$~mm. The nominal-basis tree is the
+supervised counterpart of the anomaly-detection blind spot: supervised
+training does extract a lifetime-\emph{independent} $\sim 50\times$
+$b$-jet rejection from shape information alone, but the curve never
+rises with $\ctau$ --- displacement is where all the lifetime
+discrimination lives, and the analytic family transmits essentially all
+of it. Two caveats qualify the null gap: rejections at long lifetime
+are capped by test statistics (open saturation in
+Fig.~\ref{fig:gap}), and a compact transformer trained on
+$\mathcal{O}(10^4)$ jets need not realize the true information ceiling.
+Both are addressed by the high-statistics production; at development
+scale the defensible statement is that the observable basis loses
+nothing relative to a constituent-level learner trained under identical
+conditions. \todo{high-statistics rerun; seed ensembles for error
+bands}
+
+\begin{figure}[tb]
+  \centering
+  \includegraphics[width=0.95\textwidth]{interpretability_gap_truth.png}
+  \caption{Left: $b$-jet rejection at 50\% signal efficiency versus
+  $\ctau(\pid)$ for the supervised constituent transformer, the
+  gradient-boosted trees on bases $S{+}D$ and $S$, and the single best
+  observable. Plateaus at $8.2\times 10^3$ reflect the test-sample
+  statistics. Right: fraction of the transformer's log-rejection
+  captured by each interpretable proxy. Truth-level tracking.}
+  \label{fig:gap}
+\end{figure}
 
 % =====================================================================
 \section{Conclusions}

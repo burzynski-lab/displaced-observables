@@ -9,7 +9,7 @@ from displaced_observables import observables as obs
 
 def make_jet(tracks):
     """Build a one-jet table from a list of track dicts."""
-    defaults = dict(pt=10.0, eta=0.0, phi=0.0, z=0.1, dr=0.1,
+    defaults = dict(pt=10.0, eta=0.0, phi=0.0, q=1.0, z=0.1, dr=0.1,
                     d0=0.0, d0_abs=0.0, z0=0.0, sigma_d0=0.01, sigma_z0=0.02,
                     r_prod=0.0, from_b=False, from_c=False, from_dark=False,
                     from_pu=False)
@@ -182,6 +182,7 @@ def test_pileup_overlay():
         "pt": np.array([5.0, 5.0]),
         "eta": np.array([0.1, 2.0]),
         "phi": np.array([0.0, 1.0]),
+        "q": np.array([1.0, -1.0]),
         "d0": np.array([0.0, 0.0]),
         "z0": np.array([0.0, 0.0]),
         "r_prod": np.array([0.0, 0.0]),
