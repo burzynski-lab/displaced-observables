@@ -114,6 +114,8 @@ def build_jet_table(
     ay = cons.vy - vdotp * py / cons.pt
     jx, jy = np.cos(jets.phi), np.sin(jets.phi)
     d0_jetsign = np.abs(d0) * np.sign(ax * jx + ay * jy)
+    # longitudinal IP at the transverse PCA (straight-line approximation)
+    z0 = cons.vz - vdotp * np.sinh(cons.eta)
 
     trk = ak.zip({
         "pt": cons.pt,
@@ -123,10 +125,12 @@ def build_jet_table(
         "dr": _delta_r(cons.eta, cons.phi, jets.eta, jets.phi),
         "d0": d0_jetsign,
         "d0_abs": np.abs(d0),
+        "z0": z0,
         "r_prod": np.sqrt(cons.vx**2 + cons.vy**2),
         "from_b": cons.from_b,
         "from_c": cons.from_c,
         "from_dark": cons.from_dark,
+        "from_pu": ak.zeros_like(cons.pt, dtype=bool),
     })
     keep = (
         (cons.q != 0)

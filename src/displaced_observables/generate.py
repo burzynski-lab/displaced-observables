@@ -154,6 +154,9 @@ def generate_sample(
     elif sample == "qcd_bb":
         card = CARD_DIR / "qcd_bbbar.cmnd"
         tag = "qcdbb"
+    elif sample == "minbias":
+        card = CARD_DIR / "minbias.cmnd"
+        tag = "minbias"
     else:
         raise ValueError(f"unknown sample {sample!r}")
 

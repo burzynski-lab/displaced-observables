@@ -1,0 +1,17 @@
+! Minimum-bias sample for pileup overlay: inclusive inelastic pp.
+! Contains the physically important displaced pileup component (K_S,
+! Lambda, photon conversions are absent at truth level but strange decays
+! are in) that a parametrized prompt overlay misses.
+! Random seed is set programmatically.
+
+Beams:idA = 2212
+Beams:idB = 2212
+Beams:eCM = 13600.
+
+SoftQCD:inelastic = on
+
+Random:setSeed = on
+Next:numberShowEvent = 0
+Next:numberShowProcess = 0
+Next:numberShowInfo = 0
+Print:quiet = on

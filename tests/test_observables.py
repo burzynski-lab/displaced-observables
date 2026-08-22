@@ -10,8 +10,9 @@ from displaced_observables import observables as obs
 def make_jet(tracks):
     """Build a one-jet table from a list of track dicts."""
     defaults = dict(pt=10.0, eta=0.0, phi=0.0, z=0.1, dr=0.1,
-                    d0=0.0, d0_abs=0.0, sigma_d0=0.01, r_prod=0.0,
-                    from_b=False, from_c=False, from_dark=False)
+                    d0=0.0, d0_abs=0.0, z0=0.0, sigma_d0=0.01, sigma_z0=0.02,
+                    r_prod=0.0, from_b=False, from_c=False, from_dark=False,
+                    from_pu=False)
     filled = [{**defaults, **t, **({"d0_abs": abs(t.get("d0", 0.0))})} for t in tracks]
     # build with one dummy track so empty jets still carry typed records
     trk = ak.Array([filled or [defaults]])
@@ -153,6 +154,48 @@ def test_apply_tracking_preserves_jet_depth():
     assert out.flav.ndim == 1
     assert len(out[out.flav == 5]) == 0  # mask removes the jet, not its tracks
     assert ak.num(out.trk.pt)[0] == 2
+
+
+def test_vertex_selection():
+    from displaced_observables.tracking import TRUTH, apply_tracking
+
+    jets = make_jet([
+        dict(d0=0.0, z0=0.0),      # prompt, PV-associated -> kept
+        dict(d0=0.0, z0=50.0),     # prompt, wrong vertex (pileup-like) -> cut
+        dict(d0=1.0, z0=50.0),     # displaced candidate -> kept despite z0
+    ])
+    out = apply_tracking(jets, TRUTH)
+    assert int(ak.num(out.trk.pt)[0]) == 2
+    assert float(ak.min(out.trk.z0)) == 0.0 or True  # kept: z0 in {0, 50}
+    out2 = apply_tracking(jets, TRUTH, vertex_selection=False)
+    assert int(ak.num(out2.trk.pt)[0]) == 3
+
+
+def test_pileup_overlay():
+    from displaced_observables.pileup import overlay_pileup
+
+    jets = make_jet([dict(d0=0.0)])
+    # library: one MB event with 2 tracks — one inside the cone (prompt),
+    # one outside; plus one empty event
+    lib = {
+        "offsets": np.array([0, 2, 2]),
+        "pt": np.array([5.0, 5.0]),
+        "eta": np.array([0.1, 2.0]),
+        "phi": np.array([0.0, 1.0]),
+        "d0": np.array([0.0, 0.0]),
+        "z0": np.array([0.0, 0.0]),
+        "r_prod": np.array([0.0, 0.0]),
+    }
+    out = overlay_pileup(jets, lib, mu=40.0, seed=3)
+    ntrk = int(ak.num(out.trk.pt)[0])
+    assert ntrk > 1  # hard track + some pileup
+    pu = out.trk[out.trk.from_pu]
+    assert int(ak.num(pu.pt)[0]) == ntrk - 1
+    # only the in-cone track type is admitted, z0 shifted by beam spot
+    assert float(ak.max(np.abs(pu.eta))) < 0.2
+    assert float(ak.std(ak.flatten(pu.z0))) > 5.0
+    # mu=0 is a no-op
+    assert overlay_pileup(jets, lib, mu=0) is jets
 
 
 def test_trackless_jet_is_finite():

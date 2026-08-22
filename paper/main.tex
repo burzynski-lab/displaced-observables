@@ -402,7 +402,10 @@ smeared inputs. The impact-parameter resolution is
   a = 10~\mu\mathrm{m}, \quad b = 70~\mu\mathrm{m}\,\mathrm{GeV},
 \end{equation}
 and $\sigma_i$ in Eq.~(\ref{eq:weight}) always refers to this
-parametrization, including at truth level. Reconstruction efficiency
+parametrization, including at truth level. The longitudinal impact
+parameter $z_0$, computed at the transverse point of closest approach,
+is smeared analogously with
+$\sigma(z_0) = 20~\mu\mathrm{m} \oplus 100~\mu\mathrm{m}\,\mathrm{GeV}/\pT$. Reconstruction efficiency
 falls with production radius $r$ as
 $\varepsilon(r) = \varepsilon_0 / (1 + (r/r_{1/2})^2)$ with a hard
 acceptance ceiling $r < r_{\max}$. Two scenarios bracket realistic
@@ -415,10 +418,16 @@ under standard vs standard+LRT; this comparison is itself a physics
 result. Samples and code exist; run \texttt{pixi run plots --scenario
 standard / standard\_lrt}.}
 
-\stub{Pileup overlay: parametrized soft prompt tracks and/or real
-minimum-bias overlay with $z_0$ association; demonstrate that the
-significance weighting of Eq.~(\ref{eq:weight}) self-suppresses prompt
-pileup, and quantify the strange-hadron (displaced) pileup component.}
+Pileup is modeled by overlaying Poisson($\mu$) minimum-bias events
+(\textsc{Pythia} \texttt{SoftQCD:inelastic}) per jet before the tracking
+transform, with each overlaid vertex displaced longitudinally by the
+beam-spot spread ($\sigma_z = 45$~mm); overlaid tracks receive the
+identical smearing, efficiency, and selection as hard-scatter tracks.
+Track selection follows LLP-search practice: a track is kept if it is
+primary-vertex associated ($|z_0 \sin\theta| < 1.5$~mm) \emph{or} is a
+displaced candidate ($|\dnought|/\sigma > 3$). Prompt pileup from other
+vertices fails both conditions; the surviving contamination is the
+genuinely displaced pileup component from strange-hadron decays.
 
 % =====================================================================
 \section{Truth-level results}
@@ -581,8 +590,37 @@ Secs.~\ref{sec:anomaly}--\ref{sec:gap} are performed per scenario.
   \label{fig:scenarios}
 \end{figure}
 
-\stub{Pileup dependence and the in-situ negative-tail calibration
-(signed-$\dnought$ variants) under each scenario.}
+\paragraph{Pileup.} Figure~\ref{fig:pileup} shows the flagship
+observables under the standard+LRT scenario with and without minimum-bias
+overlay at $\mu = 60$. The rejection curves are statistically
+indistinguishable across the full lifetime grid. The mechanism is
+twofold: the $z_0$ association removes the prompt pileup bulk, and the
+significance weighting caps what leaks through at the resolution
+pedestal $w \simeq \ln 2$. After selection, pileup constitutes only
+$\sim 4\%$ of signal-jet tracks at $\mu = 60$, and while roughly half
+of that residual is genuinely displaced (strange-hadron daughters,
+Fig.~\ref{fig:pileup} right), it is angularly uncorrelated and too rare
+to populate displaced \emph{pairs}: the dEEC is entirely unaffected.
+Displacement-weighted substructure is therefore pileup-robust by
+construction, in contrast to track-counting variables whose
+denominators grow with every soft track.
+
+\begin{figure}[tb]
+  \centering
+  \includegraphics[width=0.49\textwidth]{pileup_rejection_QCD_b_standard_lrt.png}
+  \includegraphics[width=0.49\textwidth]{pileup_composition_standard_lrt.png}
+  \caption{Left: $b$-jet rejection versus $\ctau(\pid)$ for the flagship
+  observables with (dotted, $\mu = 60$) and without (solid) minimum-bias
+  pileup overlay, standard+LRT tracking. Right: post-selection
+  $|\dnought|/\sigma$ of hard-scatter versus pileup tracks in signal
+  jets ($\ctau = 10$~mm); the displaced pileup tail from strange-hadron
+  decays survives the selection but is too small and uncorrelated to
+  affect the observables.}
+  \label{fig:pileup}
+\end{figure}
+
+\stub{In-situ negative-tail calibration (signed-$\dnought$ variants)
+under each scenario.}
 
 % =====================================================================
 \section{Displacement-aware anomaly detection}
