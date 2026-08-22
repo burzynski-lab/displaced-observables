@@ -309,9 +309,11 @@ its ratios $\tau_{21}$, $\tau_{32}$, and the jet mass. Second, the
 search-style single-track baselines against which any new displaced
 observable must be compared: the mean impact-parameter significance
 $\langle |\dnought|/\sigma \rangle$ and the prompt $\pT$ fraction
-(fraction of track $\pT$ carried by tracks with
-$|\dnought|/\sigma < 3$), the latter analogous to the $\alpha$-type
-variables of Refs.~\cite{Schwaller:2015gea,CMS:EJ}.
+(fraction of the \emph{summed track} $\pT$ carried by tracks with
+$|\dnought|/\sigma < 3$ --- normalized track-to-track rather than to
+the jet $\pT$, so jet-by-jet fluctuations of the neutral fraction
+cancel), the latter analogous to the $\alpha$-type variables of
+Refs.~\cite{Schwaller:2015gea,CMS:EJ}.
 
 \begin{table}[tb]
   \centering
@@ -451,13 +453,12 @@ of Eq.~(\ref{eq:weight}).
 
 \begin{figure}[tb]
   \centering
-  \includegraphics[width=0.49\textwidth]{dist_girth_truth.png}
-  \includegraphics[width=0.49\textwidth]{dist_ang_11_truth.png}\\
-  \includegraphics[width=0.49\textwidth]{dist_eec_b1_truth.png}
-  \includegraphics[width=0.49\textwidth]{dist_deec_min_truth.png}
+  \includegraphics[width=0.95\textwidth]{paired_dists_truth.png}
   \caption{Nominal observables (left column) and their
-  displacement-weighted counterparts (right column), for QCD jets by
-  flavor and signal at representative lifetimes, truth-level tracking.
+  displacement-weighted counterparts (right column), truth-level
+  tracking. Filled gray: QCD light jets; hatched orange: QCD $b$ jets
+  (both $\pT$-reweighted to the signal spectrum); lines: signal at
+  $\ctau = 1$, 10, and 100~mm.
   Top: girth $\lambda^1_1$ vs displaced girth $\lambda^1_1(w)$.
   Bottom: $\mathrm{ECF}_2(\beta{=}1)$ vs
   $\mathrm{dEEC}(\beta{=}1, \min)$.}
@@ -782,12 +783,13 @@ Three further observations:
 
 \begin{figure}[tb]
   \centering
-  \includegraphics[width=0.95\textwidth]{vae_recon_VAE_SpD_truth.png}
-  \caption{Per-feature input and reconstruction distributions of the
-  VAE trained on QCD only (basis $S{+}D$), for the QCD test sample and
-  for signal at $\ctau = 10$~mm. QCD is reconstructed faithfully;
-  signal reconstructions are pulled onto the QCD manifold, producing
-  the large anomaly score.}
+  \includegraphics[width=0.98\textwidth]{vae_recon_VAE_SpD_truth_displaced.png}
+  \caption{Input and reconstructed distributions of the 12 displaced
+  features for the VAE trained on QCD only (basis $S{+}D$), for the QCD
+  test sample (solid) and signal at $\ctau = 10$~mm (dashed). QCD is
+  reconstructed faithfully; signal reconstructions are pulled onto the
+  QCD manifold, producing the large anomaly score. The nominal features
+  are shown in Appendix~\ref{app:recon}.}
   \label{fig:vaerecon}
 \end{figure}
 
@@ -810,12 +812,7 @@ background-model fidelity at the direct expense of exactly that
 anomaly contrast. For displacement-aware anomaly detection the
 heavy-tailed features should enter the autoencoder untransformed.
 
-\stub{Repeat under the standard and standard+LRT tracking scenarios;
-per-flavor efficiency curves; latent-space diagnostics; cross-check
-with reco-level set-based architectures (deep-set / DETR).}
-
-% =====================================================================
-\section{Comparison with fully supervised classifiers}
+\subsection{Comparison with fully supervised classifiers}
 \label{sec:supervised}
 
 To quantify how much of the family's combined discrimination a single
@@ -860,6 +857,11 @@ interpretable observables transmit most of it.
   \label{fig:gap}
 \end{figure}
 
+\stub{Repeat under the standard and standard+LRT tracking scenarios;
+per-flavor efficiency curves; latent-space diagnostics; cross-check
+with reco-level set-based architectures (deep-set / DETR).}
+
+
 % =====================================================================
 \section{Conclusions}
 \label{sec:conclusions}
@@ -874,6 +876,53 @@ trigger-level application, event-level anomaly detection).}
 % =====================================================================
 \appendix
 
+\section{Input feature distributions}
+\label{app:inputs}
+
+Figures~\ref{fig:appS} and~\ref{fig:appD} show every observable used
+as an anomaly-detection input (Sec.~\ref{sec:addata}): the 12 nominal
+features of basis $S$ and the 12 displacement-weighted features of
+basis $D$.
+
+\begin{figure}[p]
+  \centering
+  \includegraphics[width=\textwidth]{appendix_inputs_S_truth.png}
+  \caption{The 12 nominal input features (basis $S$). Filled gray: QCD
+  light; hatched orange: QCD $b$ (both $\pT$-reweighted to the signal
+  spectrum); lines: signal at $\ctau = 1$, 10, 100~mm. Truth-level
+  tracking.}
+  \label{fig:appS}
+\end{figure}
+
+\begin{figure}[p]
+  \centering
+  \includegraphics[width=\textwidth]{appendix_inputs_D_truth.png}
+  \caption{The 12 displacement-weighted input features (basis $D$).
+  Conventions as in Fig.~\ref{fig:appS}.}
+  \label{fig:appD}
+\end{figure}
+
+\clearpage
+\section{Autoencoder reconstruction distributions}
+\label{app:recon}
+
+Figure~\ref{fig:appreconS} shows the input and reconstructed
+distributions of the 12 nominal features for the VAE of
+Sec.~\ref{sec:adtrain}; the displaced features are shown in
+Fig.~\ref{fig:vaerecon}. QCD is reconstructed faithfully in every
+feature, while signal reconstructions are pulled onto the learned QCD
+manifold.
+
+\begin{figure}[p]
+  \centering
+  \includegraphics[width=\textwidth]{vae_recon_VAE_SpD_truth_nominal.png}
+  \caption{VAE (basis $S{+}D$) input and reconstructed distributions of
+  the 12 nominal features, for the QCD test sample (solid) and signal
+  at $\ctau = 10$~mm (dashed). Truth-level tracking.}
+  \label{fig:appreconS}
+\end{figure}
+
+\clearpage
 \section{Alternate mediator portal}
 \label{app:portal}
 \stub{One alternate portal (e.g.\ $t$-channel bifundamental as in the

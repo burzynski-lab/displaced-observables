@@ -162,30 +162,35 @@ def plot_reconstruction(model, x_te, basis, norm, kind, basis_name,
                    (f"{sig_label} recon", s_rec, "C2", "--")]
     tag = f"{kind}_{basis_name.replace('+', 'p')}_{scenario}"
 
-    ncol = 6 if len(basis) > 12 else 4
-    nrow = int(np.ceil(len(basis) / ncol))
-    fig, axes = plt.subplots(nrow, ncol, figsize=(3.2 * ncol, 2.6 * nrow))
-    for k, (ax, var) in enumerate(zip(axes.ravel(), basis)):
-        allv = np.concatenate([s[1][:, k] for s in series])
-        lo, hi = np.quantile(allv, [0.001, 0.999])
-        if hi <= lo:
-            hi = lo + 1
-        bins = np.linspace(lo, hi, 50)
-        for label, arr, color, ls in series:
-            ax.hist(np.clip(arr[:, k], lo, hi), bins=bins, histtype="step",
-                    lw=1.1, label=label, color=color, ls=ls, density=True)
-        ax.set_yscale("log")
-        ax.set_xlabel(var, fontsize=9)
-        ax.tick_params(labelsize=7)
-        if k == 0:
-            ax.legend(fontsize=7)
-    for ax in axes.ravel()[len(basis):]:
-        ax.set_visible(False)
-    fig.suptitle(f"{kind}, basis {basis_name} — input vs reconstruction",
-                 fontsize=12)
-    fig.tight_layout()
-    fig.savefig(out_dir / f"vae_recon_{tag}.png", dpi=140)
-    plt.close(fig)
+    # one grid for the nominal features, one for the displaced features
+    # (single grid when the basis has no displaced block); legend on every
+    # panel
+    blocks = ([("", basis, range(len(basis)))] if len(basis) <= 12 else
+              [("_nominal", basis[:12], range(12)),
+               ("_displaced", basis[12:], range(12, len(basis)))])
+    for suffix, vars_blk, idx_blk in blocks:
+        fig, axes = plt.subplots(3, 4, figsize=(19, 13))
+        for ax, var, k in zip(axes.ravel(), vars_blk, idx_blk):
+            allv = np.concatenate([s[1][:, k] for s in series])
+            hi_q = 0.98 if var in ("dd2", "d2") else 0.999
+            lo, hi = np.quantile(allv, [0.001, hi_q])
+            if hi <= lo:
+                hi = lo + 1
+            bins = np.linspace(lo, hi, 50)
+            for label, arr, color, ls in series:
+                ax.hist(np.clip(arr[:, k], lo, hi), bins=bins, histtype="step",
+                        lw=1.3, label=label, color=color, ls=ls, density=True)
+            ax.set_yscale("log")
+            ax.set_ylim(top=ax.get_ylim()[1] * 1e3)
+            ax.set_xlabel(var, fontsize=14)
+            ax.set_ylabel("density", fontsize=12)
+            ax.tick_params(labelsize=10)
+            ax.legend(fontsize=9, loc="upper right")
+        for ax in axes.ravel()[len(vars_blk):]:
+            ax.set_visible(False)
+        fig.tight_layout()
+        fig.savefig(out_dir / f"vae_recon_{tag}{suffix}.png", dpi=140)
+        plt.close(fig)
 
     # normalized residual summary (bias and spread per feature)
     diff = rec - inp
