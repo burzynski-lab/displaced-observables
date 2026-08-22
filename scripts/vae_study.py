@@ -169,7 +169,7 @@ def plot_reconstruction(model, x_te, basis, norm, kind, basis_name,
               [("_nominal", basis[:12], range(12)),
                ("_displaced", basis[12:], range(12, len(basis)))])
     for suffix, vars_blk, idx_blk in blocks:
-        fig, axes = plt.subplots(3, 4, figsize=(19, 13))
+        fig, axes = plt.subplots(4, 3, figsize=(17, 19))
         for ax, var, k in zip(axes.ravel(), vars_blk, idx_blk):
             allv = np.concatenate([s[1][:, k] for s in series])
             hi_q = 0.98 if var in ("dd2", "d2") else 0.999
@@ -181,15 +181,16 @@ def plot_reconstruction(model, x_te, basis, norm, kind, basis_name,
                 ax.hist(np.clip(arr[:, k], lo, hi), bins=bins, histtype="step",
                         lw=1.3, label=label, color=color, ls=ls, density=True)
             ax.set_yscale("log")
-            ax.set_ylim(top=ax.get_ylim()[1] * 1e3)
-            ax.set_xlabel(var, fontsize=14)
+            ax.set_ylim(top=ax.get_ylim()[1] * 3e3)
+            ax.set_xlabel(var, fontsize=16)
             ax.set_ylabel("density", fontsize=12)
             ax.tick_params(labelsize=10)
             ax.legend(fontsize=9, loc="upper right")
         for ax in axes.ravel()[len(vars_blk):]:
             ax.set_visible(False)
         fig.tight_layout()
-        fig.savefig(out_dir / f"vae_recon_{tag}{suffix}.png", dpi=140)
+        for _ext in ("png", "pdf"):
+            fig.savefig(out_dir / f"vae_recon_{tag}{suffix}.{_ext}", dpi=140)
         plt.close(fig)
 
     # normalized residual summary (bias and spread per feature)
@@ -209,7 +210,8 @@ def plot_reconstruction(model, x_te, basis, norm, kind, basis_name,
     fig.suptitle(f"{kind}, basis {basis_name} — reconstruction residual summary",
                  fontsize=12)
     fig.tight_layout()
-    fig.savefig(out_dir / f"vae_recon_summary_{tag}.png", dpi=140)
+    for _ext in ("png", "pdf"):
+        fig.savefig(out_dir / f"vae_recon_summary_{tag}.{_ext}", dpi=140)
     plt.close(fig)
 
 
@@ -334,7 +336,8 @@ def main() -> None:
         ax.legend(fontsize=8, loc="upper right")
     decorate(axes[0], extra=f"tracking: {args.scenario}, QCD-only training")
     fig.tight_layout()
-    fig.savefig(out_dir / f"vae_efficiency_{args.scenario}.png", dpi=150)
+    for _ext in ("png", "pdf"):
+        fig.savefig(out_dir / f"vae_efficiency_{args.scenario}.{_ext}", dpi=150)
     plt.close(fig)
 
     # anomaly-score distributions at ctau = 10 mm (log-x)
@@ -358,7 +361,8 @@ def main() -> None:
         ax.legend(fontsize=8, loc="upper right")
     decorate(axes[0], extra=f"tracking: {args.scenario}")
     fig.tight_layout()
-    fig.savefig(out_dir / f"vae_scores_{args.scenario}.png", dpi=150)
+    for _ext in ("png", "pdf"):
+        fig.savefig(out_dir / f"vae_scores_{args.scenario}.{_ext}", dpi=150)
     plt.close(fig)
 
     print(f"\nplots written to {out_dir}/")

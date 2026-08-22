@@ -72,7 +72,8 @@ def main() -> None:
     decorate(ax1, extra=f"tracking: {args.scenario}")
     fig.tight_layout()
     out = Path(args.out) / f"track_ip_{args.scenario}.png"
-    fig.savefig(out, dpi=150)
+    for _ext in ("png", "pdf"):
+        fig.savefig(str(out).replace(".png", "." + _ext), dpi=150)
     print(f"wrote {out}")
 
 

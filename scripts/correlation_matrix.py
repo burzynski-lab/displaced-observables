@@ -62,7 +62,8 @@ def main() -> None:
         f"signal $c\\tau = {args.ctau:g}$ mm")
     fig.colorbar(im, ax=axes, label="Pearson correlation", fraction=0.025, pad=0.02)
     out = Path(args.out) / f"correlations_D_{args.scenario}.png"
-    fig.savefig(out, dpi=150, bbox_inches="tight")
+    for _ext in ("png", "pdf"):
+        fig.savefig(str(out).replace(".png", "." + _ext), dpi=150, bbox_inches="tight")
     print(f"wrote {out}")
 
 

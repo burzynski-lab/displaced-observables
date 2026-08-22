@@ -26,6 +26,10 @@ pixi run python scripts/pileup_study.py > plots/pileup_study.log 2>&1
 echo "=== feature export ==="
 pixi run -e ml python scripts/export_features.py --scenario truth > plots/export_features.log 2>&1
 
+echo "=== appendix input distributions + correlations ==="
+pixi run -e ml python scripts/appendix_inputs.py --scenario truth > plots/appendix_inputs.log 2>&1
+pixi run -e ml python scripts/correlation_matrix.py --scenario truth > plots/correlations.log 2>&1
+
 echo "=== AE/VAE study ==="
 pixi run -e ml python scripts/vae_study.py --scenario truth > plots/vae_study.log 2>&1
 

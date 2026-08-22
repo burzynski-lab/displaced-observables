@@ -127,7 +127,8 @@ def main() -> None:
         ax.legend(fontsize=8, loc="upper right")
     decorate(axes[0], extra=f"tracking: {args.scenario}, supervised per $c\\tau$")
     fig.tight_layout()
-    fig.savefig(out_dir / f"interpretability_gap_{args.scenario}.png", dpi=150)
+    for _ext in ("png", "pdf"):
+        fig.savefig(out_dir / f"interpretability_gap_{args.scenario}.{_ext}", dpi=150)
     plt.close(fig)
     print(f"wrote {out_dir}/interpretability_gap_{args.scenario}.png")
 

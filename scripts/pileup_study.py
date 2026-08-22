@@ -117,8 +117,9 @@ def main() -> None:
         ax.legend(fontsize=7, loc="upper right")
         decorate(ax, extra=f"tracking: {args.scenario}, MB overlay"
                  "\nopen $\\triangle$: statistics lower bound")
-        fig.savefig(out_dir / f"pileup_rejection_{bname.replace(' ', '_')}_{args.scenario}.png",
-                    dpi=150)
+        for _ext in ("png", "pdf"):
+            fig.savefig(out_dir / f"pileup_rejection_{bname.replace(' ', '_')}_{args.scenario}.{_ext}",
+                        dpi=150)
         plt.close(fig)
 
     # |d0|/sigma composition after selection (signal jets, ctau=10)
@@ -139,7 +140,8 @@ def main() -> None:
     ax.set_ylim(top=ax.get_ylim()[1] * 300)
     ax.legend(fontsize=8, loc="upper right")
     decorate(ax, extra=f"tracking: {args.scenario}, MB overlay")
-    fig.savefig(out_dir / f"pileup_composition_{args.scenario}.png", dpi=150)
+    for _ext in ("png", "pdf"):
+        fig.savefig(out_dir / f"pileup_composition_{args.scenario}.{_ext}", dpi=150)
     plt.close(fig)
 
     print(f"plots written to {out_dir}/")

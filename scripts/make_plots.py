@@ -136,7 +136,8 @@ def main() -> None:
         axm.legend(fontsize=8, loc="upper right")
         decorate(axm, extra=f"tracking: {args.scenario}")
         fig.tight_layout()
-        fig.savefig(out_dir / f"dist_{key}_{args.scenario}.png", dpi=150)
+        for _ext in ("png", "pdf"):
+            fig.savefig(out_dir / f"dist_{key}_{args.scenario}.{_ext}", dpi=150)
         plt.close(fig)
 
     # differential <w_i w_j> vs dR profile (energy-weighted) — money-plot candidate
@@ -159,7 +160,8 @@ def main() -> None:
     ax.legend(fontsize=8, loc="upper right")
     decorate(ax, extra=f"tracking: {args.scenario}")
     fig.tight_layout()
-    fig.savefig(out_dir / f"wij_profile_{args.scenario}.png", dpi=150)
+    for _ext in ("png", "pdf"):
+        fig.savefig(out_dir / f"wij_profile_{args.scenario}.{_ext}", dpi=150)
     plt.close(fig)
 
     # rejection tables + rejection-vs-ctau plots (per background, per eff)
@@ -203,8 +205,9 @@ def main() -> None:
             decorate(ax, extra=f"tracking: {args.scenario}"
                      "\nopen $\\triangle$: statistics lower bound")
             tag = f"eff{eff:.0%}".replace("%", "")
-            fig.savefig(out_dir / f"rejection_{bname.replace(' ', '_')}_{args.scenario}_{tag}.png",
-                        dpi=150)
+            for _ext in ("png", "pdf"):
+                fig.savefig(out_dir / f"rejection_{bname.replace(' ', '_')}_{args.scenario}_{tag}.{_ext}",
+                            dpi=150)
             plt.close(fig)
 
     print(f"\nplots written to {out_dir}/")

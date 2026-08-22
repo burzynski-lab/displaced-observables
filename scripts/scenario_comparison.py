@@ -89,7 +89,8 @@ def main() -> None:
         ax.set_ylim(top=ax.get_ylim()[1] * 500)
         ax.legend(fontsize=7, loc="upper right")
         decorate(ax, extra="open $\\triangle$: statistics lower bound")
-        fig.savefig(out_dir / f"scenario_comparison_{bname.replace(' ', '_')}.png", dpi=150)
+        for _ext in ("png", "pdf"):
+            fig.savefig(out_dir / f"scenario_comparison_{bname.replace(' ', '_')}.{_ext}", dpi=150)
         plt.close(fig)
         print(f"wrote scenario_comparison_{bname.replace(' ', '_')}.png")
 

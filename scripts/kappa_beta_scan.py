@@ -87,7 +87,8 @@ def main() -> None:
                      fontsize=10)
             fig.tight_layout()
             name = f"kb_scan_{bname.replace(' ', '_')}_ctau{ctau:g}_{args.scenario}.png"
-            fig.savefig(out_dir / name, dpi=150)
+            for _ext in ("png", "pdf"):
+                fig.savefig(str(out_dir / name).replace(".png", "." + _ext), dpi=150)
             plt.close(fig)
             best = np.unravel_index(np.argmax(grid), grid.shape)
             print(f"ctau={ctau:g}mm {bname}: best (kappa,beta)="

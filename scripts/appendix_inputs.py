@@ -90,24 +90,22 @@ def main() -> None:
         ax.set_ylabel("density", fontsize=label_fs - 2)
         ax.tick_params(labelsize=label_fs - 4)
         if annotate:
-            ax.legend(fontsize=label_fs - 4, loc="upper right")
-            ax.set_ylim(top=ax.get_ylim()[1] * 3e3)
+            ax.legend(fontsize=label_fs - 5, loc="upper right")
+            ax.set_ylim(top=ax.get_ylim()[1] * 3e4)
             ax.text(0.04, 0.97,
                     f"Pythia {PYTHIA_VERSION}, $\\sqrt{{s}}=13.6$ TeV\n"
                     "$Z'(1.5\\,\\mathrm{TeV})\\to q_D\\bar{q}_D$\n"
                     "anti-$k_t$ $R=1.0$, tracking: " + args.scenario,
-                    transform=ax.transAxes, va="top", fontsize=label_fs - 4)
+                    transform=ax.transAxes, va="top", fontsize=label_fs - 5)
 
     for tag, basis in (("S", BASIS_S), ("D", BASIS_D)):
-        fig, axes = plt.subplots(3, 4, figsize=(19, 13))
-        for k, (ax, var) in enumerate(zip(axes.ravel(), basis)):
-            plot_panel(ax, var, annotate=(k == 0))
-            if k != 0:
-                ax.legend(fontsize=9, loc="upper right")
-                ax.set_ylim(top=ax.get_ylim()[1] * 1e3)
+        fig, axes = plt.subplots(4, 3, figsize=(17, 19))
+        for ax, var in zip(axes.ravel(), basis):
+            plot_panel(ax, var, annotate=True, label_fs=16)
         fig.tight_layout()
         out = Path(args.out) / f"appendix_inputs_{tag}_{args.scenario}.png"
-        fig.savefig(out, dpi=140)
+        for _ext in ("png", "pdf"):
+            fig.savefig(str(out).replace(".png", "." + _ext), dpi=140)
         plt.close(fig)
         print(f"wrote {out}")
 
@@ -118,7 +116,8 @@ def main() -> None:
         plot_panel(ax, var, annotate=(k == 0), label_fs=17)
     fig.tight_layout()
     out = Path(args.out) / f"paired_dists_{args.scenario}.png"
-    fig.savefig(out, dpi=150)
+    for _ext in ("png", "pdf"):
+        fig.savefig(str(out).replace(".png", "." + _ext), dpi=150)
     plt.close(fig)
     print(f"wrote {out}")
 
