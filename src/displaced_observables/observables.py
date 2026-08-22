@@ -77,6 +77,43 @@ def wij_vs_dr(jets):
     )
 
 
+def decf(jets, n: int = 2, beta: float = 1.0, g: str = "prod") -> ak.Array:
+    """Displaced energy correlation functions:
+    dECF1 = sum_i z_i w_i,  dECF2 = dEEC(beta, g),
+    dECF3 = sum_{i<j<k} z_i z_j z_k (dR_ij dR_ik dR_jk)^beta g(w_i,w_j,w_k),
+    with g the product ('prod') or minimum ('min') of the leg weights.
+    Sensitive to MULTIPLE displaced vertices per jet (dark showers have
+    many; a B-decay chain has one)."""
+    trk = jets.trk
+    if n == 1:
+        return ak.sum(trk.z * weight(trk), axis=1)
+    if n == 2:
+        return deec(jets, beta, g)
+    if n == 3:
+        t = ak.combinations(trk, 3, axis=1, fields=["i", "j", "k"])
+        wi, wj, wk = (np.log1p(p.d0_abs / p.sigma_d0) for p in (t.i, t.j, t.k))
+        gijk = wi * wj * wk if g == "prod" else np.minimum(np.minimum(wi, wj), wk)
+        dij = _pair_dr(ak.zip({"i": t.i, "j": t.j}))
+        dik = _pair_dr(ak.zip({"i": t.i, "j": t.k}))
+        djk = _pair_dr(ak.zip({"i": t.j, "j": t.k}))
+        return ak.sum(t.i.z * t.j.z * t.k.z * (dij * dik * djk) ** beta * gijk, axis=1)
+    raise ValueError("decf supports n = 1, 2, 3")
+
+
+def dc2(jets, beta: float = 1.0) -> ak.Array:
+    """Displaced C2 = dECF3 dECF1 / dECF2^2 (product weighting: the powers
+    of w cancel exactly as the powers of z do, so the ratio is normalized
+    to the amount of displacement and probes its angular/vertex structure)."""
+    e1, e2, e3 = (decf(jets, n, beta, "prod") for n in (1, 2, 3))
+    return ak.where(e2 > 0, e3 * e1 / ak.where(e2 > 0, e2, 1) ** 2, 0.0)
+
+
+def dd2(jets, beta: float = 1.0) -> ak.Array:
+    """Displaced D2 = dECF3 dECF1^3 / dECF2^3 (product weighting)."""
+    e1, e2, e3 = (decf(jets, n, beta, "prod") for n in (1, 2, 3))
+    return ak.where(e2 > 0, e3 * e1**3 / ak.where(e2 > 0, e2, 1) ** 3, 0.0)
+
+
 # ---------------------------------------------------------------- tier 3
 
 def lifetime_moment(jets, n: int) -> ak.Array:

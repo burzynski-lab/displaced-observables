@@ -12,3 +12,4 @@ paper/main.pdf
 paper/*.log
 paper/*.xdv
 paper/*.aux
+.DS_Store

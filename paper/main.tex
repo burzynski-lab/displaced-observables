@@ -234,13 +234,32 @@ Fig.~\ref{fig:wij}, exhibits the vertex pair correlation directly and
 connects to the energy-correlator-on-tracks literature
 \cite{Chang:2013rca,Lee:2023npz}.
 
-At higher point count we use the nominal
-$\mathrm{ECF}_3(\beta) = \sum_{i<j<k} z_i z_j z_k
-(\dR_{ij}\dR_{ik}\dR_{jk})^\beta$ and the ratios
-$C_2 = \mathrm{ECF}_3 \mathrm{ECF}_1 / \mathrm{ECF}_2^2$ and
-$D_2 = \mathrm{ECF}_3 \mathrm{ECF}_1^3 / \mathrm{ECF}_2^3$; weighted
-three-point correlators (sensitive to \emph{multiple} displaced
-vertices per jet) are a natural extension left to future work.
+The construction extends to higher point count. Writing
+$\mathrm{dECF}_1 = \sum_i z_i w_i$ and
+$\mathrm{dECF}_2 = \mathrm{dEEC}$, the displaced three-point correlator
+is
+\begin{equation}
+  \mathrm{dECF}_3(\beta) \;=\; \sum_{i<j<k} z_i z_j z_k \,
+      (\dR_{ij}\dR_{ik}\dR_{jk})^\beta \; g(w_i, w_j, w_k),
+\end{equation}
+alongside the nominal $\mathrm{ECF}_3$ and ratios
+$C_2 = \mathrm{ECF}_3 \mathrm{ECF}_1 / \mathrm{ECF}_2^2$,
+$D_2 = \mathrm{ECF}_3 \mathrm{ECF}_1^3 / \mathrm{ECF}_2^3$. With the
+product pairing $g = w_i w_j w_k$, each $\mathrm{dECF}_n$ carries $n$
+powers of the weight, so in the displaced ratios
+\begin{equation}
+  C_2(w) = \frac{\mathrm{dECF}_3\,\mathrm{dECF}_1}{\mathrm{dECF}_2^2},
+  \qquad
+  D_2(w) = \frac{\mathrm{dECF}_3\,\mathrm{dECF}_1^3}{\mathrm{dECF}_2^3},
+\end{equation}
+the powers of $w$ cancel exactly as the powers of $z$ do: for a jet in
+which all tracks share a common weight, $C_2(w)$ and $D_2(w)$ reduce
+identically to their nominal partners. They are therefore
+\emph{displacement-normalized} shape variables --- insensitive to the
+overall amount of displacement, and sensitive instead to its
+angular and vertex \emph{structure}: a dark shower distributes
+displacement over many vertices across the jet, while a $B$-decay
+chain concentrates it in one.
 
 \subsection{Lifetime moments}
 \label{sec:tier3}
@@ -314,7 +333,7 @@ variables of Refs.~\cite{Schwaller:2015gea,CMS:EJ}.
       & $\mathrm{dEEC}(\beta)$, $g = w_i w_j$ or $\min(w_i, w_j)$ \\
     3-point correlators
       & $\mathrm{ECF}_3$, $C_2$, $D_2$
-      & --- (future work) \\
+      & $\mathrm{dECF}_3$, $C_2(w)$, $D_2(w)$ \\
     prong structure
       & $\tau_1$, $\tau_{21}$, $\tau_{32}$, jet mass
       & --- \\
@@ -459,7 +478,15 @@ flavor. Three qualitative results emerge:
   $\ctau = 1$~mm --- barely twice the $B$-hadron lifetime --- the dEEC
   retains $\mathcal{O}(100)$ rejection. The angular pair correlation,
   not the total displacement, is what distinguishes a 3~mm dark pion
-  from a $B$ hadron.
+  from a $B$ hadron. The three-point $\mathrm{dECF}_3$ sharpens the
+  coincidence requirement further and is the strongest single
+  observable at short lifetime, while the displacement-normalized
+  ratio $C_2(w)$ shows a distinct and complementary behavior: its
+  rejection is nearly \emph{independent of lifetime}
+  ($\approx 20$--$25\times$ against $b$ jets for
+  $1 \le \ctau \le 300$~mm), as expected for a variable sensitive to
+  the vertex structure of the displacement rather than its amount ---
+  a uniform working point across the entire lifetime grid.
   \item \textbf{Standard substructure carries no lifetime information.}
   All lifetime-blind observables sit at rejections of $2$--$5$,
   independent of $\ctau$, confirming that the discrimination above is

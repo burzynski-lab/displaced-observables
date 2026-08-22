@@ -103,6 +103,29 @@ def test_ecf3_three_tracks():
     assert np.isclose(obs.c2(jets)[0], e3 * e1 / e2**2)
 
 
+def test_displaced_ecf_and_ratios():
+    # equilateral triangle, all tracks displaced with equal weight w
+    t = dict(z=0.2, d0=1.0, sigma_d0=0.01)
+    h = 0.1 * np.sqrt(3) / 2
+    jets = make_jet([
+        {**t, "eta": -0.1, "phi": 0.0},
+        {**t, "eta": 0.1, "phi": 0.0},
+        {**t, "eta": 0.0, "phi": 2 * h},
+    ])
+    w = np.log1p(100.0)
+    e1, e2, e3 = 0.6 * w, 3 * 0.2**2 * 0.2 * w**2, 0.2**3 * 0.2**3 * w**3
+    assert np.isclose(obs.decf(jets, 1)[0], e1)
+    assert np.isclose(obs.decf(jets, 2)[0], e2)
+    assert np.isclose(obs.decf(jets, 3)[0], e3)
+    assert np.isclose(obs.decf(jets, 3, g="min")[0], 0.2**3 * 0.2**3 * w)
+    assert np.isclose(obs.dc2(jets)[0], e3 * e1 / e2**2)
+    assert np.isclose(obs.dd2(jets)[0], e3 * e1**3 / e2**3)
+    # equal weights: the w-dependence cancels in the ratios -> displaced
+    # ratios equal their nominal partners exactly
+    assert np.isclose(obs.dc2(jets)[0], obs.c2(jets)[0])
+    assert np.isclose(obs.dd2(jets)[0], obs.d2(jets)[0])
+
+
 def test_nsubjettiness_limits():
     # 2 tracks: tau2 = 0 exactly (each axis lands on a track); tau1 > 0
     t = dict(z=0.5, d0=0.0)
