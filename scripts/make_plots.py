@@ -1,17 +1,17 @@
 #!/usr/bin/env python
-"""First-pass money plots from generated parquet samples.
+"""Money plots from generated parquet samples.
 
-    pixi run plots [--scenario truth] [--data data] [--out plots]
+    pixi run plots [--scenario truth|standard|standard_lrt] [--data data] [--out plots]
 
-Produces, for each observable: normalized distributions (QCD light / b / c
-vs signal at each available ctau) and a background-rejection table at 50%
-signal efficiency, per background flavor.
+Produces per-observable normalized distributions (backgrounds pT-reweighted
+to the signal spectrum), the <w_i w_j> vs dR profile, and background
+rejection vs ctau at 50% and 90% signal efficiency with sample-statistics
+lower bounds where the background is fully rejected.
 """
 
 from __future__ import annotations
 
 import argparse
-import re
 from pathlib import Path
 
 import awkward as ak
@@ -20,6 +20,10 @@ import mplhep as hep
 import numpy as np
 
 from displaced_observables import observables as obs
+from displaced_observables.analysis import (
+    load_raw_tables, pt_weights, rejection, with_scenario,
+)
+from displaced_observables.tracking import SCENARIOS
 
 plt.style.use(hep.style.ATLAS)
 
@@ -34,25 +38,10 @@ def _pythia_version() -> str:
 
 PYTHIA_VERSION = _pythia_version()
 
-
-def decorate(ax, extra: str | None = None):
-    """ATLAS-style plot annotation (no experiment label): generator,
-    CoM energy, and the BSM process."""
-    lines = [
-        f"Pythia {PYTHIA_VERSION}, $\\sqrt{{s}} = 13.6$ TeV",
-        "$Z'(1.5\\,\\mathrm{TeV}) \\to q_{\\mathrm{D}}\\bar{q}_{\\mathrm{D}}$ dark shower",
-        "anti-$k_t$ $R=0.4$, $500 < p_T^{jet} < 1000$ GeV",
-    ]
-    if extra:
-        lines.append(extra)
-    ax.text(0.04, 0.96, "\n".join(lines), transform=ax.transAxes,
-            ha="left", va="top", fontsize=14)
-from displaced_observables.jets import build_jet_table
-from displaced_observables.tracking import SCENARIOS, apply_tracking
-
-# key: (label, fn, group) — group "disp" (lifetime-weighted) vs "std" (no
-# lifetime information; isolates what the displacement weighting buys)
+# key: (label, fn, group) — group "disp" (lifetime-weighted) vs "std"
+# (nominal partner, no lifetime information)
 OBSERVABLES = {
+    "ang_00": ("disp. multiplicity  $\\Sigma_i w_i$", lambda j: obs.angularity(j, 0, 0), "disp"),
     "ang_10": ("disp. pT fraction  $\\lambda^{1}_{0}(w)$", lambda j: obs.angularity(j, 1, 0), "disp"),
     "ang_11": ("disp. girth  $\\lambda^{1}_{1}(w)$", lambda j: obs.angularity(j, 1, 1), "disp"),
     "ang_12": ("disp. mass  $\\lambda^{1}_{2}(w)$", lambda j: obs.angularity(j, 1, 2), "disp"),
@@ -76,24 +65,21 @@ OBSERVABLES = {
     "tau32": ("$\\tau_{32}$", lambda j: obs.tau_ratio(j, 3, 2), "std"),
 }
 
-
-def rejection_at(sig_vals, bkg_vals, eff: float = 0.5) -> float:
-    """1/eff_bkg at the cut giving `eff` signal efficiency. Cut direction is
-    chosen automatically (upper vs lower tail, whichever rejects more)."""
-    s = np.asarray(sig_vals, dtype=float)
-    b = np.asarray(bkg_vals, dtype=float)
-    out = []
-    for sgn in (1.0, -1.0):
-        cut = np.quantile(sgn * s, 1 - eff)
-        eff_b = np.mean(sgn * b > cut)
-        out.append(1.0 / eff_b if eff_b > 0 else np.inf)
-    return max(out)
+EFFS = (0.5, 0.9)
 
 
-def load_jets(path: Path, scenario: str):
-    events = ak.from_parquet(path)
-    jets = build_jet_table(events)
-    return apply_tracking(jets, SCENARIOS[scenario])
+def decorate(ax, extra: str | None = None):
+    """ATLAS-style plot annotation (no experiment label): generator,
+    CoM energy, and the BSM process."""
+    lines = [
+        f"Pythia {PYTHIA_VERSION}, $\\sqrt{{s}} = 13.6$ TeV",
+        "$Z'(1.5\\,\\mathrm{TeV}) \\to q_{\\mathrm{D}}\\bar{q}_{\\mathrm{D}}$ dark shower",
+        "anti-$k_t$ $R=0.4$, $500 < p_T^{jet} < 1000$ GeV",
+    ]
+    if extra:
+        lines.append(extra)
+    ax.text(0.04, 0.96, "\n".join(lines), transform=ax.transAxes,
+            ha="left", va="top", fontsize=14)
 
 
 def main() -> None:
@@ -103,34 +89,15 @@ def main() -> None:
     ap.add_argument("--scenario", default="truth", choices=list(SCENARIOS))
     args = ap.parse_args()
 
-    data_dir, out_dir = Path(args.data), Path(args.out)
+    out_dir = Path(args.out)
     out_dir.mkdir(exist_ok=True)
 
-    qcd_files = sorted(data_dir.glob("qcd_seed*.parquet"))
-    bb_files = sorted(data_dir.glob("qcdbb_seed*.parquet"))
-    sig_files = sorted(
-        data_dir.glob("signal_ctau*_seed*.parquet"),
-        key=lambda p: float(re.search(r"ctau([\d.]+)mm", p.name)[1]),
-    )
-    if not qcd_files or not sig_files:
-        raise SystemExit(f"need qcd and signal parquet files in {data_dir}/ — run generation first")
+    tables = with_scenario(load_raw_tables(args.data), args.scenario)
+    backgrounds, signals = tables["backgrounds"], tables["signals"]
 
-    # light/c from the inclusive sample; b from inclusive + b-enriched
-    # (per-flavor ROCs are shape-only, so mixing samples is legitimate)
-    qcd = ak.concatenate([load_jets(f, args.scenario) for f in qcd_files])
-    qcd_b = qcd[qcd.flav == 5]
-    if bb_files:
-        bb = ak.concatenate([load_jets(f, args.scenario) for f in bb_files])
-        qcd_b = ak.concatenate([qcd_b, bb[bb.flav == 5]])
-    backgrounds = {
-        "QCD light": qcd[qcd.flav == 0],
-        "QCD c": qcd[qcd.flav == 4],
-        "QCD b": qcd_b,
-    }
-    signals = {}
-    for f in sig_files:
-        ctau = float(re.search(r"ctau([\d.]+)mm", f.name)[1])
-        signals[ctau] = load_jets(f, args.scenario)
+    # pT-reweight each background to the (ctau-independent) signal spectrum
+    ref_pt = np.concatenate([np.asarray(j.pt) for j in signals.values()])
+    bkg_w = {n: pt_weights(ref_pt, np.asarray(j.pt)) for n, j in backgrounds.items()}
 
     print(f"scenario={args.scenario}")
     print("jets:", {k: len(v) for k, v in backgrounds.items()},
@@ -141,23 +108,25 @@ def main() -> None:
         fig, axm = plt.subplots(figsize=(8, 6))
         vals_b = {n: np.asarray(fn(j)) for n, j in backgrounds.items() if len(j)}
         allv = np.concatenate(
-            [v for v in vals_b.values()]
+            list(vals_b.values())
             + [np.asarray(fn(j)) for j in signals.values() if len(j)]
         )
         lo, hi = np.quantile(allv, [0.001, 0.999])
         bins = np.linspace(lo, hi if hi > lo else lo + 1, 60)
         for name, v in vals_b.items():
-            axm.hist(v, bins=bins, density=True, histtype="step", ls="--", label=name)
+            axm.hist(v, bins=bins, density=True, histtype="step", ls="--",
+                     weights=bkg_w[name], label=name)
         for ctau, j in signals.items():
             if len(j) == 0:
                 continue
             v = np.asarray(fn(j))
             axm.hist(v, bins=bins, density=True, histtype="step",
                      label=f"signal $c\\tau$={ctau:g} mm")
-            rej_rows.append({
-                "obs": key, "ctau": ctau,
-                **{n: rejection_at(v, vb) for n, vb in vals_b.items()},
-            })
+            row = {"obs": key, "ctau": ctau}
+            for eff in EFFS:
+                for n, vb in vals_b.items():
+                    row[(n, eff)] = rejection(v, vb, eff=eff, bkg_weights=bkg_w[n])
+            rej_rows.append(row)
         axm.set_xlabel(label); axm.set_ylabel("density")
         axm.set_yscale("log")
         axm.set_ylim(top=axm.get_ylim()[1] * 300)  # headroom for annotation
@@ -190,31 +159,50 @@ def main() -> None:
     fig.savefig(out_dir / f"wij_profile_{args.scenario}.png", dpi=150)
     plt.close(fig)
 
-    # rejection table + rejection-vs-ctau plot per background
-    print("\nbackground rejection @ 50% signal efficiency")
-    hdr = f"{'observable':12s} {'ctau':>6s} " + " ".join(f"{n:>10s}" for n in backgrounds)
-    print(hdr)
-    for r in rej_rows:
-        print(f"{r['obs']:12s} {r['ctau']:6g} "
-              + " ".join(f"{r.get(n, float('nan')):10.1f}" for n in backgrounds))
+    # rejection tables + rejection-vs-ctau plots (per background, per eff)
+    for eff in EFFS:
+        print(f"\nbackground rejection @ {eff:.0%} signal efficiency"
+              " (pT-reweighted; '>' = statistics lower bound)")
+        print(f"{'observable':12s} {'ctau':>6s} "
+              + " ".join(f"{n:>12s}" for n in backgrounds))
+        for r in rej_rows:
+            cells = []
+            for n in backgrounds:
+                val, sat = r[(n, eff)]
+                cells.append(f"{'>' if sat else ' '}{val:11.1f}")
+            print(f"{r['obs']:12s} {r['ctau']:6g} " + " ".join(cells))
 
-    for bname in backgrounds:
-        fig, ax = plt.subplots(figsize=(8, 6))
-        for key, (label, _, group) in OBSERVABLES.items():
-            pts = [(r["ctau"], r[bname]) for r in rej_rows if r["obs"] == key and bname in r]
-            if pts and any(np.isfinite(p[1]) for p in pts):
-                x, y = zip(*sorted(pts))
+    for eff in EFFS:
+        for bname in backgrounds:
+            fig, ax = plt.subplots(figsize=(8, 6))
+            for key, (label, _, group) in OBSERVABLES.items():
+                pts = sorted(
+                    (r["ctau"], *r[(bname, eff)])
+                    for r in rej_rows if r["obs"] == key
+                )
+                if not pts:
+                    continue
+                x = [p[0] for p in pts]
+                y = [p[1] for p in pts]
+                sat = [p[2] for p in pts]
                 marker, ls = ("o", "-") if group == "disp" else ("s", "--")
-                ax.plot(x, y, marker=marker, ls=ls, label=label, lw=1, ms=3)
-        ax.set_xscale("symlog", linthresh=1); ax.set_yscale("log")
-        ax.set_xlabel("$c\\tau(\\pi_d)$ [mm]")
-        ax.set_ylabel(f"{bname} rejection @ $\\epsilon_s$=50%")
-        ax.set_ylim(top=ax.get_ylim()[1] * 500)  # headroom for annotation
-        ax.legend(fontsize=7, ncol=2, loc="upper right")
-        decorate(ax, extra=f"tracking: {args.scenario}")
-        fig.tight_layout()
-        fig.savefig(out_dir / f"rejection_{bname.replace(' ', '_')}_{args.scenario}.png", dpi=150)
-        plt.close(fig)
+                line, = ax.plot(x, y, marker=marker, ls=ls, label=label, lw=1, ms=3)
+                xs = [xi for xi, si in zip(x, sat) if si]
+                ys = [yi for yi, si in zip(y, sat) if si]
+                if xs:
+                    ax.plot(xs, ys, ls="none", marker="^", ms=7,
+                            markerfacecolor="none", color=line.get_color())
+            ax.set_xscale("symlog", linthresh=1); ax.set_yscale("log")
+            ax.set_xlabel("$c\\tau(\\pi_d)$ [mm]")
+            ax.set_ylabel(f"{bname} rejection @ $\\epsilon_s$={eff:.0%}")
+            ax.set_ylim(top=ax.get_ylim()[1] * 500)  # headroom for annotation
+            ax.legend(fontsize=7, ncol=2, loc="upper right")
+            decorate(ax, extra=f"tracking: {args.scenario}"
+                     "\nopen $\\triangle$: statistics lower bound")
+            tag = f"eff{eff:.0%}".replace("%", "")
+            fig.savefig(out_dir / f"rejection_{bname.replace(' ', '_')}_{args.scenario}_{tag}.png",
+                        dpi=150)
+            plt.close(fig)
 
     print(f"\nplots written to {out_dir}/")
 
