@@ -663,6 +663,40 @@ $\mathrm{dEEC}(\mathrm{prod})$, $\mathrm{dEEC}(\min)$,
 $\mathrm{dECF}_3$, $C_2(w)$, $D_2(w)$, $L_1$, $L_2L_0/L_1^2$,
 $\langle|\dnought|/\sigma\rangle$, and the prompt-$\pT$ fraction.
 
+Figures~\ref{fig:appS} and~\ref{fig:appD} show the distributions of
+every input feature for both backgrounds and signal at three
+representative lifetimes: the nominal basis is nearly
+lifetime-independent panel by panel, while every displaced feature
+fans out with $\ctau$.
+
+\begin{figure}[p]
+  \centering
+  \includegraphics[width=\textwidth]{appendix_inputs_S_truth.png}
+  \caption{The 12 nominal input features (basis $S$). Filled gray: QCD
+  light; hatched orange: QCD $b$ (both $\pT$-reweighted to the signal
+  spectrum); lines: signal at $\ctau = 1$, 10, 100~mm. Truth-level
+  tracking.}
+  \label{fig:appS}
+\end{figure}
+
+\begin{figure}[p]
+  \centering
+  \includegraphics[width=\textwidth]{appendix_inputs_S_truth.png}
+  \caption{The 12 nominal input features (basis $S$). Filled gray: QCD
+  light; hatched orange: QCD $b$ (both $\pT$-reweighted to the signal
+  spectrum); lines: signal at $\ctau = 1$, 10, 100~mm. Truth-level
+  tracking.}
+  \label{fig:appS}
+\end{figure}
+
+\begin{figure}[p]
+  \centering
+  \includegraphics[width=\textwidth]{appendix_inputs_D_truth.png}
+  \caption{The 12 displacement-weighted input features (basis $D$).
+  Conventions as in Fig.~\ref{fig:appS}.}
+  \label{fig:appD}
+\end{figure}
+
 Every feature is z-score normalized, $\hat x = (x - \mu)/\sigma$, with
 $\mu$ and $\sigma$ computed \emph{on the inclusive QCD sample only};
 signal jets are normalized with the same constants, so displaced jets
@@ -876,33 +910,6 @@ trigger-level application, event-level anomaly detection).}
 % =====================================================================
 \appendix
 
-\section{Input feature distributions}
-\label{app:inputs}
-
-Figures~\ref{fig:appS} and~\ref{fig:appD} show every observable used
-as an anomaly-detection input (Sec.~\ref{sec:addata}): the 12 nominal
-features of basis $S$ and the 12 displacement-weighted features of
-basis $D$.
-
-\begin{figure}[p]
-  \centering
-  \includegraphics[width=\textwidth]{appendix_inputs_S_truth.png}
-  \caption{The 12 nominal input features (basis $S$). Filled gray: QCD
-  light; hatched orange: QCD $b$ (both $\pT$-reweighted to the signal
-  spectrum); lines: signal at $\ctau = 1$, 10, 100~mm. Truth-level
-  tracking.}
-  \label{fig:appS}
-\end{figure}
-
-\begin{figure}[p]
-  \centering
-  \includegraphics[width=\textwidth]{appendix_inputs_D_truth.png}
-  \caption{The 12 displacement-weighted input features (basis $D$).
-  Conventions as in Fig.~\ref{fig:appS}.}
-  \label{fig:appD}
-\end{figure}
-
-\clearpage
 \section{Autoencoder reconstruction distributions}
 \label{app:recon}
 
