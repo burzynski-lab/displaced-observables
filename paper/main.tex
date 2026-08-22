@@ -705,6 +705,37 @@ No other preprocessing is applied --- in particular no compression of
 heavy-tailed features, for the reason quantified in
 Sec.~\ref{sec:tails}.
 
+Figure~\ref{fig:corr} shows the Pearson correlations of the displaced
+features for QCD and signal. Three aspects are relevant for the
+anomaly detection. First, the correlation \emph{structure} is itself
+lifetime-sensitive: the angular-correlator block ($\lambda^1_1(w)$,
+dEEC, $\mathrm{dECF}_3$) tightens markedly from QCD to signal
+(e.g.\ $\rho[\lambda^1_1(w), \mathrm{dEEC}]$: $0.73 \to 0.90$),
+because in signal these observables are fed by the same displaced
+vertices --- and since an autoencoder models the joint density, signal
+jets that violate the learned QCD correlation pattern accrue
+reconstruction error beyond their marginal outliers. Second, the
+ratio observables ($C_2(w)$, $D_2(w)$, $L_2L_0/L_1^2$) are largely
+decorrelated ($|\rho| \lesssim 0.4$) from the absolute-displacement
+block in both samples, confirming that the vertex-structure
+information enters the basis orthogonally. Third, two near-duplicate
+pairs --- $\mathrm{dEEC}(\mathrm{prod})/\mathrm{dEEC}(\min)$
+($\rho \simeq 0.96$--$0.99$) and
+$L_1/\langle|\dnought|/\sigma\rangle$ ($\rho \simeq 0.75$) ---
+justify carrying only one of each into the flagship observable set,
+while the redundancy is harmless for the autoencoder inputs. (The
+near-zero QCD correlations of $D_2(w)$ reflect its extreme tail
+dominating the Pearson estimator rather than genuine independence.)
+
+\begin{figure}[tb]
+  \centering
+  \includegraphics[width=0.98\textwidth]{correlations_D_truth.png}
+  \caption{Pearson correlations of the 12 displacement-weighted input
+  features for inclusive QCD (left) and signal at $\ctau = 10$~mm
+  (right). Truth-level tracking.}
+  \label{fig:corr}
+\end{figure}
+
 \subsection{Architecture, loss, and training}
 \label{sec:adtrain}
 
