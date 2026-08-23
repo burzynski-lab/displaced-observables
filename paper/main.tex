@@ -1,14 +1,9 @@
-% Displacement-weighted jet substructure observables — draft
-% Target: SciPost Physics / PRD (~15 pages). Plain article class for the
-% draft; port to the journal class at submission.
-% Build: pixi run paper   (tectonic paper/main.tex)
-\documentclass[11pt]{article}
-
-\usepackage[margin=2.5cm]{geometry}
-\usepackage{amsmath,amssymb}
-\usepackage{graphicx}
+% Displacement-aware jet substructure for anomaly detection - draft
+% JHEP preprint style (jheppub.sty). Build: pixi run paper
+\documentclass[a4paper,11pt]{article}
+\usepackage{jheppub}
+\usepackage{amssymb}
 \usepackage{xcolor}
-\usepackage{hyperref}
 \usepackage{subcaption}
 
 \graphicspath{{../plots/}}
@@ -27,49 +22,43 @@
 
 \title{Displacement-aware jet substructure\\
 for anomaly detection at the lifetime frontier}
-\author{Jackson Burzynski\thanks{\texttt{jackson.carl.burzynski@cern.ch}}
-\and \todo{student} \and \todo{optional theorist}}
-\date{\today\ (\textbf{DRAFT})}
+\author{Jackson Burzynski}
+\emailAdd{jackson.carl.burzynski@cern.ch}
+
+\abstract{Dark-sector models with confining hidden dynamics predict emerging
+jets: QCD-like jets whose constituents originate from displaced
+dark-pion decays. Model-agnostic anomaly-detection searches built on
+jet substructure, such as autoencoders trained on calorimeter- or
+momentum-based observables, are largely blind to this signature. We
+show that the standard substructure basis of angularities, energy
+correlation functions, and $N$-subjettiness carries essentially no
+lifetime information, so an anomalous sector whose only distinguishing
+feature is displacement would evade substructure-based anomaly
+detection. We introduce an interpretable, analytic family of
+displacement-weighted jet substructure observables, comprising
+$d_0$-weighted angularities, displaced energy--energy correlators, and
+lifetime moments, and characterize their discrimination power as a
+function of the dark-pion proper lifetime,
+$c\tau(\pi_{\mathrm{D}}) \in [1, 300]$~mm, against light-flavor and
+heavy-flavor QCD jets separately. The displacement-weighted track
+multiplicity and the pairwise correlators dominate the single-track
+observables precisely in the short-lifetime regime where dark pions
+must be distinguished from $B$ hadrons. Augmenting the input basis of
+an otherwise unchanged variational autoencoder with these observables
+raises the signal efficiency at a fixed $1\%$ QCD anomaly rate from
+below the percent level to $44\%$ at $c\tau = 1$~mm and above $88\%$
+for $c\tau \geq 10$~mm, leaving the QCD background model unaffected,
+and realizes about half to all of the fully supervised ceiling defined
+by a boosted-decision-tree classifier on the complete observable
+basis. The observables are robust against impact-parameter resolution
+and pileup, and are inexpensive to add to existing anomaly-detection
+architectures.}
 
 \begin{document}
 \maketitle
 
-\begin{abstract}
-Dark-sector models with confining hidden dynamics predict ``emerging
-jets'': QCD-like jets whose constituents originate from displaced
-dark-pion decays. Model-agnostic anomaly-detection searches built on
-jet substructure, such as autoencoders and related unsupervised
-architectures trained on calorimeter- or momentum-based observables,
-are largely \emph{blind} to this signature: we show that the standard
-substructure basis (angularities, energy correlation functions,
-$N$-subjettiness) carries essentially no lifetime information, so an
-anomalous sector whose only distinguishing feature is displacement
-would evade substructure-based anomaly detection.
-We introduce an interpretable, analytic family of
-\emph{displacement-weighted} jet substructure observables, comprising
-$\dnought$-weighted angularities, displaced energy--energy correlators,
-and lifetime moments, and characterize their discrimination power as
-a function of the dark-pion proper lifetime,
-$\ctau(\pid) \in [1, 300]$~mm, against light-flavor \emph{and
-heavy-flavor} QCD jets. The displacement-weighted track multiplicity
-and the pairwise correlators, the latter exploiting the angular
-correlation of displacement among tracks from a common decay vertex,
-dominate the single-track observables precisely in the short-lifetime
-regime where dark pions must be distinguished from $B$ hadrons. Augmenting a (variational) autoencoder's substructure input basis with
-these observables extends the generality of anomaly detection to
-lifetime-frontier signatures: at a fixed $1\%$ QCD anomaly rate, the
-signal efficiency rises from the background-consistent $\lesssim 2\%$
-(standard basis, at every lifetime) to $44\%$ at $\ctau = 1$~mm and
-$\geq 88\%$ for $\ctau \geq 10$~mm, with the QCD background model
-unaffected. We further
-quantify the fraction of the fully supervised discrimination ceiling,
-defined by a per-lifetime boosted-decision-tree classifier on the
-complete observable basis, that individual observables capture, and
-demonstrate robustness of the observables against
-impact-parameter resolution and pileup.
-\end{abstract}
 
-\tableofcontents
+
 
 % =====================================================================
 \section{Introduction}
