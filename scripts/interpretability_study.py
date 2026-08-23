@@ -131,10 +131,10 @@ def main() -> None:
     axes[1].axhline(1.0, color="k", lw=0.8)
     axes[1].set_ylabel("fraction of ceiling log-rejection")
     axes[1].set_ylim(0, 1.3)
-    for ax in axes:
+    for k, ax in enumerate(axes):
         ax.set_xscale("symlog", linthresh=1)
         ax.set_xlabel("$c\\tau(\\pi_d)$ [mm]")
-        ax.legend(fontsize=13, loc="upper right")
+        ax.legend(fontsize=13, loc="lower right" if k == 0 else "upper right")
     decorate(axes[0], extra="supervised per $c\\tau$")
     fig.tight_layout()
     for _ext in ("png", "pdf"):
