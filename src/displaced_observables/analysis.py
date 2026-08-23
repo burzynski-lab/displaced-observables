@@ -63,6 +63,25 @@ def with_scenario(tables: dict, scenario: str) -> dict:
     }
 
 
+def load_or_compute(cache_file, compute_fn, recompute: bool = False):
+    """Compute/plot separation: expensive stages persist their plotting
+    inputs to data/cache/ and cosmetic plot edits reuse them. Pass
+    --recompute (recompute=True) after any physics or selection change."""
+    import pickle
+
+    path = Path(cache_file)
+    if path.exists() and not recompute:
+        with open(path, "rb") as f:
+            print(f"[cache] loaded {path}")
+            return pickle.load(f)
+    result = compute_fn()
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with open(path, "wb") as f:
+        pickle.dump(result, f)
+    print(f"[cache] wrote {path}")
+    return result
+
+
 def chunked(fn, jets, chunk_size: int = 5_000) -> np.ndarray:
     """Evaluate a per-jet observable in chunks. The combination observables
     (dEEC, ECF3, dECF3) allocate O(n_jets * n_trk^2..3) transients, so

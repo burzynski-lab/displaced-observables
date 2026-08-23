@@ -43,31 +43,41 @@ def main() -> None:
     ap.add_argument("--data", default="data")
     ap.add_argument("--out", default="plots")
     ap.add_argument("--eff", type=float, default=0.5)
+    ap.add_argument("--recompute", action="store_true")
     args = ap.parse_args()
 
     out_dir = Path(args.out)
     out_dir.mkdir(exist_ok=True)
 
-    raw = load_raw_tables(args.data)
-    print("computing rejections per scenario...")
-    results = {}  # (scenario, key, bname) -> [(ctau, val, sat)]
-    for scenario in SCENARIO_STYLE:
-        t = with_scenario(raw, scenario)
-        backgrounds, signals = t["backgrounds"], t["signals"]
-        ref_pt = np.concatenate([np.asarray(j.pt) for j in signals.values()])
-        bkg_w = {n: pt_weights(ref_pt, np.asarray(j.pt)) for n, j in backgrounds.items()}
-        vals_b = {
-            key: {n: chunked(fn, j) for n, j in backgrounds.items() if len(j)}
-            for key, (_, fn) in FLAGSHIP.items()
-        }
-        for key, (_, fn) in FLAGSHIP.items():
-            for ctau, j in signals.items():
-                v = chunked(fn, j)
-                for n, vb in vals_b[key].items():
-                    val, sat = rejection(v, vb, eff=args.eff, bkg_weights=bkg_w[n])
-                    results.setdefault((scenario, key, n), []).append((ctau, val, sat))
+    def compute():
+        raw = load_raw_tables(args.data)
+        print("computing rejections per scenario...")
+        res = {}
+        for scenario in SCENARIO_STYLE:
+            tt = with_scenario(raw, scenario)
+            backgrounds, signals = tt["backgrounds"], tt["signals"]
+            ref_pt = np.concatenate([np.asarray(j.pt) for j in signals.values()])
+            bkg_w = {n: pt_weights(ref_pt, np.asarray(j.pt))
+                     for n, j in backgrounds.items()}
+            vals_b = {
+                key: {n: chunked(fn, j) for n, j in backgrounds.items() if len(j)}
+                for key, (_, fn) in FLAGSHIP.items()
+            }
+            for key, (_, fn) in FLAGSHIP.items():
+                for ctau, j in signals.items():
+                    v = chunked(fn, j)
+                    for n, vb in vals_b[key].items():
+                        val, sat = rejection(v, vb, eff=args.eff,
+                                             bkg_weights=bkg_w[n])
+                        res.setdefault((scenario, key, n), []).append((ctau, val, sat))
+        return res
 
-    for bname in raw["backgrounds"]:
+    from displaced_observables.analysis import load_or_compute
+    results = load_or_compute(
+        Path(args.data) / "cache" / f"scenario_comparison_eff{args.eff:g}.pkl",
+        compute, args.recompute)
+
+    for bname in ("QCD light", "QCD c", "QCD b"):
         fig, ax = plt.subplots(figsize=(8, 6))
         colors = plt.rcParams["axes.prop_cycle"].by_key()["color"]
         for ci, (key, (label, _)) in enumerate(FLAGSHIP.items()):
@@ -119,7 +129,7 @@ def main() -> None:
         ax.set_ylabel(f"QCD b rejection @ $\\epsilon_s$={args.eff:.0%}")
         ax.set_ylim(top=ax.get_ylim()[1] * 2e3)
         ax.set_title(label, fontsize=15)
-        ax.legend(fontsize=13, loc="upper left")
+        ax.legend(fontsize=13, loc="upper right")
     fig.tight_layout()
     for _ext in ("png", "pdf"):
         fig.savefig(out_dir / f"scenario_comparison_paper.{_ext}", dpi=150)

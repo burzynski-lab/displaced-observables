@@ -138,30 +138,11 @@ def reconstruct(model, x, device):
     return recon.cpu().numpy()
 
 
-def plot_reconstruction(model, x_te, basis, norm, kind, basis_name,
-                        out_dir, scenario, device, x_sig=None,
-                        sig_label="signal 10 mm"):
-    """Diagnostics mirroring ej-vae plot/recon.py jet-level plots:
-    input-vs-recon overlay per feature (physical units) for the QCD test
-    sample and, when given, for signal — the signal reconstruction is
-    pulled onto the QCD manifold, which is exactly why its per-sample
-    loss is large. Plus the normalized residual bias/spread summary."""
-    means = np.array([norm[v]["mean"] for v in basis])
-    stds = np.array([norm[v]["std"] for v in basis])
-
-    def phys(x_n):
-        return x_n * stds + means
-
-    inp = phys(x_te.numpy())
-    rec = phys(reconstruct(model, x_te, device))
-    # (label, array, color, linestyle, filled)
-    series = [("QCD input", inp, "#7f8fa6", "-", True),
-              ("QCD recon", rec, "#1f77b4", "-", False)]
-    if x_sig is not None:
-        s_inp = phys(x_sig.numpy())
-        s_rec = phys(reconstruct(model, x_sig, device))
-        series += [(f"{sig_label} input", s_inp, "#d62728", "--", False),
-                   (f"{sig_label} recon", s_rec, "#ff7f0e", "-.", False)]
+def plot_reconstruction(series, basis, kind, basis_name, out_dir, scenario):
+    """Diagnostics mirroring ej-vae plot/recon.py jet-level plots, drawn
+    from cached physical-unit input/reconstruction arrays."""
+    inp = series[0][1]
+    rec = series[1][1]
     tag = f"{kind}_{basis_name.replace('+', 'p')}_{scenario}"
 
     # one grid for the nominal features, one for the displaced features
@@ -233,19 +214,11 @@ def plot_reconstruction(model, x_te, basis, norm, kind, basis_name,
     plt.close(fig)
 
 
-def main() -> None:
-    ap = argparse.ArgumentParser(description=__doc__)
-    ap.add_argument("--data", default="data")
-    ap.add_argument("--out", default="plots")
-    ap.add_argument("--scenario", default="truth")
-    ap.add_argument("--seed", type=int, default=17)
-    args = ap.parse_args()
-
+def compute(args) -> dict:
+    """Expensive stage: train the four (V)AEs and the supervised BDTs,
+    score every sample, and assemble all plotting inputs."""
     torch.manual_seed(args.seed)
-    rng = np.random.default_rng(args.seed)
     device = "cpu"
-    out_dir = Path(args.out)
-    out_dir.mkdir(exist_ok=True)
 
     with h5py.File(Path(args.data) / f"features_{args.scenario}.h5") as f:
         jets = f["jets"][:]
@@ -262,7 +235,6 @@ def main() -> None:
     is_bb = labels["sample"] == 1
     ctaus = sorted(set(labels["ctau"][labels["sample"] == 2]))
 
-    # 60/20/20 splits (deterministic, shared convention with transformer_study)
     def split(idx):
         idx = idx.copy()
         np.random.default_rng(args.seed).shuffle(idx)
@@ -272,15 +244,22 @@ def main() -> None:
 
     idx = np.where(is_qcd)[0]
     tr, va, te = split(idx)
-    n = len(idx)
-    print(f"QCD jets: {n} (train {len(tr)} / val {len(va)} / test {len(te)}); "
-          f"b-enriched: {is_bb.sum()}; signal ctau points: {[f'{c:g}' for c in ctaus]}")
+    print(f"QCD jets: {len(idx)} (train {len(tr)} / val {len(va)} / test {len(te)}), "
+          f"b-enriched: {is_bb.sum()}, signal ctau points: {[f'{c:g}' for c in ctaus]}")
 
-    results = {}   # (model_kind, basis, ctau, fpr) -> eff
+    results = {}
     score_store = {}
+    recon_store = {}
+    sig10 = np.where((labels["sample"] == 2) & (labels["ctau"] == 10.0))[0]
     for basis_name, basis in BASES.items():
         x_tr, x_va = matrix(tr, basis), matrix(va, basis)
         x_te = matrix(te, basis)
+        means = np.array([norm[v]["mean"] for v in basis])
+        stds = np.array([norm[v]["std"] for v in basis])
+
+        def phys(x_n):
+            return x_n * stds + means
+
         for kind in ("AE", "VAE"):
             torch.manual_seed(args.seed + hash((basis_name, kind)) % 1000)
             model = VAENet(len(basis), HIDDEN, LATENT, variational=(kind == "VAE"))
@@ -288,10 +267,17 @@ def main() -> None:
             s_qcd = scores(model, x_te, device)
             s_bb = scores(model, matrix(np.where(is_bb)[0], basis), device)
             print(f"{kind:3s} [{basis_name:3s}]: {n_ep} epochs, val loss {val:.4f}")
-            sig10 = np.where((labels["sample"] == 2) & (labels["ctau"] == 10.0))[0]
-            plot_reconstruction(model, x_te, basis, norm, kind, basis_name,
-                                out_dir, args.scenario, device,
-                                x_sig=matrix(sig10, basis))
+
+            x_s10 = matrix(sig10, basis)
+            recon_store[(kind, basis_name)] = {
+                "basis": list(basis),
+                "series": [
+                    ("QCD input", phys(x_te.numpy()), "#7f8fa6", "-", True),
+                    ("QCD recon", phys(reconstruct(model, x_te, device)), "#1f77b4", "-", False),
+                    ("signal 10 mm input", phys(x_s10.numpy()), "#d62728", "--", False),
+                    ("signal 10 mm recon", phys(reconstruct(model, x_s10, device)), "#ff7f0e", "-.", False),
+                ],
+            }
             thresholds = {fpr: np.quantile(s_qcd, 1 - fpr) for fpr in FPRS}
             bb_flav5 = labels["flav"][is_bb] == 5
             for fpr, thr in thresholds.items():
@@ -307,8 +293,7 @@ def main() -> None:
                                                {"qcd": s_qcd, "bb": s_bb, "sig": {}})
                     d["sig"][ctau] = s_sig
 
-    # supervised ceiling on the same S+D basis: per-ctau BDT (XGBoost),
-    # evaluated at the identical fixed-QCD-anomaly-rate working points
+    # supervised ceiling on the same S+D basis
     from xgboost import XGBClassifier
 
     basis_sd = BASES["S+D"]
@@ -332,6 +317,34 @@ def main() -> None:
             thr = np.quantile(sc_qcd, 1 - fpr)
             results[("BDT-sup", "S+D", ctau, fpr)] = np.mean(sc_sig > thr)
     print("supervised BDT(S+D) ceiling computed")
+    return {"results": results, "score_store": score_store,
+            "recon_store": recon_store, "ctaus": ctaus}
+
+
+def main() -> None:
+    ap = argparse.ArgumentParser(description=__doc__)
+    ap.add_argument("--data", default="data")
+    ap.add_argument("--out", default="plots")
+    ap.add_argument("--scenario", default="truth")
+    ap.add_argument("--seed", type=int, default=17)
+    ap.add_argument("--recompute", action="store_true",
+                    help="retrain instead of using the cached results")
+    args = ap.parse_args()
+
+    from displaced_observables.analysis import load_or_compute
+
+    out_dir = Path(args.out)
+    out_dir.mkdir(exist_ok=True)
+    data = load_or_compute(
+        Path(args.data) / "cache" / f"vae_{args.scenario}.pkl",
+        lambda: compute(args), args.recompute)
+    results = data["results"]
+    score_store = data["score_store"]
+    ctaus = data["ctaus"]
+
+    for (kind, basis_name), rd in data["recon_store"].items():
+        plot_reconstruction(rd["series"], rd["basis"], kind, basis_name,
+                            out_dir, args.scenario)
 
     # money plot: signal efficiency at fixed QCD anomaly rate vs ctau
     fig, axes = plt.subplots(1, 2, figsize=(14, 6))
@@ -348,13 +361,13 @@ def main() -> None:
                         label=f"{kind}, basis {basis_name}")
         y = [results[("BDT-sup", "S+D", c, fpr)] for c in ctaus]
         ax.plot(ctaus, y, marker="^", ms=5, lw=1.4, ls="-", color="black",
-                label="supervised BDT, S+D (ceiling)")
+                label="BDT, S+D")
         ax.set_xscale("symlog", linthresh=1)
         ax.set_yscale("log")
         ax.set_xlabel("$c\\tau(\\pi_d)$ [mm]")
         ax.set_ylabel(f"signal efficiency @ QCD anomaly rate {fpr:g}")
         ax.set_ylim(1e-4, 3e2)
-        ax.legend(fontsize=13, loc="center right")
+        ax.legend(fontsize=13, loc="upper right")
         decorate(ax, extra=f"tracking: {args.scenario}, QCD-only training")
     fig.tight_layout()
     for _ext in ("png", "pdf"):

@@ -76,7 +76,7 @@ def decorate(ax, extra: str | None = None):
     CoM energy, and the BSM process."""
     lines = [
         f"Pythia {PYTHIA_VERSION}, $\\sqrt{{s}} = 13.6$ TeV",
-        "$Z'(1.5\\,\\mathrm{TeV}) \\to q_{\\mathrm{D}}\\bar{q}_{\\mathrm{D}}$ dark shower",
+        "$Z'(1.5\\,\\mathrm{TeV}) \\to q_{\\mathrm{D}}\\bar{q}_{\\mathrm{D}}$",
         "anti-$k_t$ $R=1.0$, $500 < p_T^{jet} < 1000$ GeV",
     ]
     if extra:
@@ -90,39 +90,67 @@ def main() -> None:
     ap.add_argument("--data", default="data")
     ap.add_argument("--out", default="plots")
     ap.add_argument("--scenario", default="truth", choices=list(SCENARIOS))
+    ap.add_argument("--recompute", action="store_true",
+                    help="rebuild observables instead of using the cache")
     args = ap.parse_args()
 
     out_dir = Path(args.out)
     out_dir.mkdir(exist_ok=True)
 
-    tables = with_scenario(load_raw_tables(args.data), args.scenario)
-    backgrounds, signals = tables["backgrounds"], tables["signals"]
+    def compute():
+        tables = with_scenario(load_raw_tables(args.data), args.scenario)
+        backgrounds, signals = tables["backgrounds"], tables["signals"]
+        ref_pt = np.concatenate([np.asarray(j.pt) for j in signals.values()])
+        bkg_w = {n: pt_weights(ref_pt, np.asarray(j.pt))
+                 for n, j in backgrounds.items()}
+        vals = {}
+        for key, (_, fn, _g) in OBSERVABLES.items():
+            vals[key] = {
+                "bkg": {n: chunked(fn, j) for n, j in backgrounds.items() if len(j)},
+                "sig": {c: chunked(fn, j) for c, j in signals.items() if len(j)},
+            }
+        # <w_i w_j> profile histograms (pair-level arrays are too large to cache)
+        dr_bins = np.linspace(0, 1.0, 26)
+        wij = {}
+        for name, jcoll, style in (
+            [("QCD light", backgrounds["QCD light"], "--"),
+             ("QCD b", backgrounds["QCD b"], "--")]
+            + [(f"signal $c\\tau$={c:g} mm", j, "-") for c, j in signals.items()]
+        ):
+            if len(jcoll) == 0:
+                continue
+            dr, wv, zv = (np.asarray(x) for x in obs.wij_vs_dr(jcoll))
+            num, _ = np.histogram(dr, dr_bins, weights=zv * wv)
+            den, _ = np.histogram(dr, dr_bins, weights=zv)
+            wij[name] = (num, den, style)
+        counts = {"bkg": {k: len(v) for k, v in backgrounds.items()},
+                  "sig": {c: len(v) for c, v in signals.items()}}
+        return {"vals": vals, "bkg_w": bkg_w, "wij": wij,
+                "dr_bins": dr_bins, "counts": counts}
 
-    # pT-reweight each background to the (ctau-independent) signal spectrum
-    ref_pt = np.concatenate([np.asarray(j.pt) for j in signals.values()])
-    bkg_w = {n: pt_weights(ref_pt, np.asarray(j.pt)) for n, j in backgrounds.items()}
-
+    from displaced_observables.analysis import load_or_compute
+    data = load_or_compute(
+        Path(args.data) / "cache" / f"plots_{args.scenario}.pkl",
+        compute, args.recompute)
+    vals, bkg_w = data["vals"], data["bkg_w"]
+    bkg_names = list(data["counts"]["bkg"])
     print(f"scenario={args.scenario}")
-    print("jets:", {k: len(v) for k, v in backgrounds.items()},
-          {f"sig {c:g}mm": len(v) for c, v in signals.items()})
+    print("jets:", data["counts"]["bkg"],
+          {f"sig {c:g}mm": n for c, n in data["counts"]["sig"].items()})
 
     rej_rows = []
     for key, (label, fn, group) in OBSERVABLES.items():
         fig, axm = plt.subplots(figsize=(8, 6))
-        vals_b = {n: chunked(fn, j) for n, j in backgrounds.items() if len(j)}
+        vals_b = vals[key]["bkg"]
         allv = np.concatenate(
-            list(vals_b.values())
-            + [chunked(fn, j) for j in signals.values() if len(j)]
+            list(vals_b.values()) + list(vals[key]["sig"].values())
         )
         lo, hi = np.quantile(allv, [0.001, 0.999])
         bins = np.linspace(lo, hi if hi > lo else lo + 1, 60)
         for name, v in vals_b.items():
             axm.hist(v, bins=bins, density=True, histtype="step", ls="--",
                      weights=bkg_w[name], label=name)
-        for ctau, j in signals.items():
-            if len(j) == 0:
-                continue
-            v = chunked(fn, j)
+        for ctau, v in vals[key]["sig"].items():
             axm.hist(v, bins=bins, density=True, histtype="step",
                      label=f"signal $c\\tau$={ctau:g} mm")
             row = {"obs": key, "ctau": ctau}
@@ -140,18 +168,10 @@ def main() -> None:
             fig.savefig(out_dir / f"dist_{key}_{args.scenario}.{_ext}", dpi=150)
         plt.close(fig)
 
-    # differential <w_i w_j> vs dR profile (energy-weighted) — money-plot candidate
+    # differential <w_i w_j> vs dR profile (energy-weighted)
     fig, ax = plt.subplots(figsize=(8, 6))
-    dr_bins = np.linspace(0, 1.0, 26)
-    for name, jcoll, style in (
-        [("QCD light", backgrounds["QCD light"], "--"), ("QCD b", backgrounds["QCD b"], "--")]
-        + [(f"signal $c\\tau$={c:g} mm", j, "-") for c, j in signals.items()]
-    ):
-        if len(jcoll) == 0:
-            continue
-        dr, wij, zij = (np.asarray(x) for x in obs.wij_vs_dr(jcoll))
-        num, _ = np.histogram(dr, dr_bins, weights=zij * wij)
-        den, _ = np.histogram(dr, dr_bins, weights=zij)
+    dr_bins = data["dr_bins"]
+    for name, (num, den, style) in data["wij"].items():
         prof = np.divide(num, den, out=np.zeros_like(num), where=den > 0)
         ax.stairs(prof, dr_bins, ls=style, label=name)
     ax.set_xlabel("$\\Delta R_{ij}$")
@@ -169,16 +189,16 @@ def main() -> None:
         print(f"\nbackground rejection @ {eff:.0%} signal efficiency"
               " (pT-reweighted; '>' = statistics lower bound)")
         print(f"{'observable':12s} {'ctau':>6s} "
-              + " ".join(f"{n:>12s}" for n in backgrounds))
+              + " ".join(f"{n:>12s}" for n in bkg_names))
         for r in rej_rows:
             cells = []
-            for n in backgrounds:
+            for n in bkg_names:
                 val, sat = r[(n, eff)]
                 cells.append(f"{'>' if sat else ' '}{val:11.1f}")
             print(f"{r['obs']:12s} {r['ctau']:6g} " + " ".join(cells))
 
     for eff in EFFS:
-        for bname in backgrounds:
+        for bname in bkg_names:
             fig, ax = plt.subplots(figsize=(8, 6))
             for key, (label, _, group) in OBSERVABLES.items():
                 pts = sorted(
@@ -213,7 +233,7 @@ def main() -> None:
     # curated paper version (50% eff): flagship displaced + nominal refs
     PAPER_SET = ["ang_00", "deec_min", "decf3", "dc2", "ip2d", "promptfrac",
                  "girth", "ntrk"]
-    for bname in backgrounds:
+    for bname in bkg_names:
         fig, ax = plt.subplots(figsize=(9, 7))
         for key in PAPER_SET:
             label, _, group = OBSERVABLES[key]
