@@ -162,7 +162,7 @@ def main() -> None:
         axm.set_yscale("log")
         axm.set_ylim(top=axm.get_ylim()[1] * 300)  # headroom for annotation
         axm.legend(fontsize=8, loc="upper right")
-        decorate(axm, extra=f"tracking: {args.scenario}")
+        decorate(axm)
         fig.tight_layout()
         for _ext in ("png", "pdf"):
             fig.savefig(out_dir / f"dist_{key}_{args.scenario}.{_ext}", dpi=150)
@@ -178,7 +178,7 @@ def main() -> None:
     ax.set_ylabel("$\\langle w_i w_j \\rangle$ (z-weighted)")
     ax.set_ylim(top=ax.get_ylim()[1] * 1.45)
     ax.legend(fontsize=8, loc="upper right")
-    decorate(ax, extra=f"tracking: {args.scenario}")
+    decorate(ax)
     fig.tight_layout()
     for _ext in ("png", "pdf"):
         fig.savefig(out_dir / f"wij_profile_{args.scenario}.{_ext}", dpi=150)
@@ -222,8 +222,7 @@ def main() -> None:
             ax.set_ylabel(f"{bname} rejection @ $\\epsilon_s$={eff:.0%}")
             ax.set_ylim(top=ax.get_ylim()[1] * 500)  # headroom for annotation
             ax.legend(fontsize=7, ncol=2, loc="upper right")
-            decorate(ax, extra=f"tracking: {args.scenario}"
-                     "\nopen $\\triangle$: statistics lower bound")
+            decorate(ax, extra="open $\\triangle$: statistics lower bound")
             tag = f"eff{eff:.0%}".replace("%", "")
             for _ext in ("png", "pdf"):
                 fig.savefig(out_dir / f"rejection_{bname.replace(' ', '_')}_{args.scenario}_{tag}.{_ext}",
@@ -260,8 +259,7 @@ def main() -> None:
         ax.set_ylabel(f"{bname} rejection @ $\\epsilon_s$=50%")
         ax.set_ylim(top=ax.get_ylim()[1] * 5e3)
         ax.legend(fontsize=12, loc="upper right")
-        decorate(ax, extra=f"tracking: {args.scenario}"
-                 "\nopen $\\triangle$: statistics lower bound")
+        decorate(ax, extra="open $\\triangle$: statistics lower bound")
         for _ext in ("png", "pdf"):
             fig.savefig(out_dir / f"rejection_paper_{bname.replace(' ', '_')}_{args.scenario}.{_ext}",
                         dpi=150)

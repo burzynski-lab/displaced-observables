@@ -69,7 +69,7 @@ def main() -> None:
         ax.set_yscale("log")
         ax.set_ylim(top=ax.get_ylim()[1] * 2e3)
         ax.legend(fontsize=8, loc="upper right")
-    decorate(ax1, extra=f"tracking: {args.scenario}")
+    decorate(ax1)
     fig.tight_layout()
     out = Path(args.out) / f"track_ip_{args.scenario}.png"
     for _ext in ("png", "pdf"):

@@ -116,7 +116,7 @@ def main() -> None:
             ax.set_ylabel(f"{bname} rejection @ $\\epsilon_s$={args.eff:.0%}")
             ax.set_ylim(top=ax.get_ylim()[1] * 500)
             ax.legend(fontsize=7, loc="upper right")
-            decorate(ax, extra=f"tracking: {args.scenario}, MB overlay"
+            decorate(ax, extra="MB overlay"
                      "\nopen $\\triangle$: statistics lower bound")
             for _ext in ("png", "pdf"):
                 fig.savefig(out_dir / f"pileup_rejection_{bname.replace(' ', '_')}_{args.scenario}.{_ext}",
@@ -177,7 +177,7 @@ def main() -> None:
     ax.set_ylabel("tracks")
     ax.set_ylim(top=ax.get_ylim()[1] * 300)
     ax.legend(fontsize=8, loc="upper right")
-    decorate(ax, extra=f"tracking: {args.scenario}, MB overlay")
+    decorate(ax, extra="MB overlay")
     for _ext in ("png", "pdf"):
         fig.savefig(out_dir / f"pileup_composition_{args.scenario}.{_ext}", dpi=150)
     plt.close(fig)

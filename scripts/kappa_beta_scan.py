@@ -78,7 +78,7 @@ def main() -> None:
             ax.set_ylabel("$\\kappa$ ($p_T$ exponent)")
             ax.set_title(
                 f"$\\lambda^\\kappa_\\beta(w)$: {bname} rejection @ "
-                f"$\\epsilon_s$={args.eff:.0%}, $c\\tau$={ctau:g} mm, {args.scenario}",
+                f"$\\epsilon_s$={args.eff:.0%}, $c\\tau$={ctau:g} mm",
                 fontsize=13)
             fig.colorbar(im, ax=ax, label="$\\log_{10}$ rejection")
             fig.text(0.13, 0.005,

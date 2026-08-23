@@ -180,7 +180,7 @@ def plot_reconstruction(series, basis, kind, basis_name, out_dir, scenario):
             ax.text(0.04, 0.97,
                     f"Pythia {PYTHIA_VERSION}, $\\sqrt{{s}}=13.6$ TeV\n"
                     "$Z'(1.5\\,\\mathrm{TeV})\\to q_D\\bar{q}_D$\n"
-                    "anti-$k_t$ $R=1.0$, tracking: " + scenario,
+                    "anti-$k_t$ $R=1.0$",
                     transform=ax.transAxes, va="top", fontsize=10)
             ax.set_ylabel("density", fontsize=12)
             ax.tick_params(labelsize=10)
@@ -191,6 +191,42 @@ def plot_reconstruction(series, basis, kind, basis_name, out_dir, scenario):
         for _ext in ("png", "pdf"):
             fig.savefig(out_dir / f"vae_recon_{tag}{suffix}.{_ext}", dpi=140)
         plt.close(fig)
+
+    # standalone example panels for the paper body (VAE, S+D)
+    if kind == "VAE" and basis_name == "S+D":
+        from make_plots import PYTHIA_VERSION
+        for var in ("ang_00", "deec_min"):
+            k = basis.index(var)
+            fig, ax = plt.subplots(figsize=(8, 6))
+            allv = np.concatenate([s[1][:, k] for s in series])
+            lo, hi = np.quantile(allv, [0.001, 0.999])
+            if hi <= lo:
+                hi = lo + 1
+            bins = np.linspace(lo, hi, 50)
+            for label, arr, color, ls, filled in series:
+                if filled:
+                    ax.hist(np.clip(arr[:, k], lo, hi), bins=bins,
+                            histtype="stepfilled", alpha=0.45, color=color,
+                            label=label, density=True)
+                else:
+                    ax.hist(np.clip(arr[:, k], lo, hi), bins=bins,
+                            histtype="step", lw=1.5, label=label, color=color,
+                            ls=ls, density=True)
+            ax.set_yscale("log")
+            ax.set_ylim(top=ax.get_ylim()[1] * 3e4)
+            ax.set_xlabel(var, fontsize=17)
+            ax.set_ylabel("density", fontsize=15)
+            ax.legend(fontsize=12, loc="upper right")
+            ax.text(0.04, 0.97,
+                    f"Pythia {PYTHIA_VERSION}, $\\sqrt{{s}}=13.6$ TeV\n"
+                    "$Z'(1.5\\,\\mathrm{TeV})\\to q_D\\bar{q}_D$\n"
+                    "anti-$k_t$ $R=1.0$",
+                    transform=ax.transAxes, va="top", fontsize=12)
+            fig.tight_layout()
+            for _ext in ("png", "pdf"):
+                fig.savefig(out_dir / f"vae_recon_example_{var}_{scenario}.{_ext}",
+                            dpi=150)
+            plt.close(fig)
 
     # normalized residual summary (bias and spread per feature)
     diff = rec - inp
@@ -368,7 +404,7 @@ def main() -> None:
         ax.set_ylabel(f"signal efficiency @ QCD anomaly rate {fpr:g}")
         ax.set_ylim(1e-4, 3e2)
         ax.legend(fontsize=13, loc="upper right")
-        decorate(ax, extra=f"tracking: {args.scenario}, QCD-only training")
+        decorate(ax, extra="QCD-only training")
     fig.tight_layout()
     for _ext in ("png", "pdf"):
         fig.savefig(out_dir / f"vae_efficiency_{args.scenario}.{_ext}", dpi=150)
@@ -409,7 +445,7 @@ def main() -> None:
             ax.text(0.04, 0.97,
                     f"Pythia {PYTHIA_VERSION}, $\\sqrt{{s}}=13.6$ TeV\n"
                     "$Z'(1.5\\,\\mathrm{TeV})\\to q_D\\bar{q}_D$\n"
-                    "anti-$k_t$ $R=1.0$, tracking: " + args.scenario,
+                    "anti-$k_t$ $R=1.0$",
                     transform=ax.transAxes, va="top", fontsize=11)
     fig.tight_layout()
     for _ext in ("png", "pdf"):

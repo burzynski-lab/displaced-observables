@@ -135,7 +135,7 @@ def main() -> None:
         ax.set_xscale("symlog", linthresh=1)
         ax.set_xlabel("$c\\tau(\\pi_d)$ [mm]")
         ax.legend(fontsize=8, loc="upper right")
-    decorate(axes[0], extra=f"tracking: {args.scenario}, supervised per $c\\tau$")
+    decorate(axes[0], extra="supervised per $c\\tau$")
     fig.tight_layout()
     for _ext in ("png", "pdf"):
         fig.savefig(out_dir / f"interpretability_gap_{args.scenario}.{_ext}", dpi=150)

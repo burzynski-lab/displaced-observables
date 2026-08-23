@@ -65,9 +65,8 @@ unaffected. We further
 quantify the fraction of the fully supervised discrimination ceiling,
 defined by a per-lifetime boosted-decision-tree classifier on the
 complete observable basis, that individual observables capture, and
-demonstrate robustness under a parametrized tracking response
-including impact-parameter resolution, efficiency loss with production
-radius, large-radius tracking, and pileup.
+demonstrate robustness of the observables against
+impact-parameter resolution and pileup.
 \end{abstract}
 
 \tableofcontents
@@ -167,8 +166,7 @@ Task Force~\cite{Albouy:2022cin} and the original emerging-jets
 proposal~\cite{Schwaller:2015gea}. Dark rhos decay promptly to dark
 pion pairs, and dark pions decay to $d\bar d$ with proper lifetime scanned
 over $\ctau(\pid) \in \{0, 1, 3, 10, 30, 100, 300\}$~mm, where $0$
-denotes the prompt limit. One alternate mediator portal is deferred to
-Appendix~\ref{app:portal}.
+denotes the prompt limit.
 
 The background is QCD dijet production in the same $\hat p_T$ regime,
 split by jet flavor at analysis level: a jet is labeled $b$ ($c$) if a
@@ -206,18 +204,14 @@ and $\sigma_i$ in Eq.~(\ref{eq:weight}) always refers to this
 parametrization, including at truth level. The longitudinal impact
 parameter $z_0$, computed at the transverse point of closest approach,
 is smeared analogously with
-$\sigma(z_0) = 20~\mu\mathrm{m} \oplus 100~\mu\mathrm{m}\,\mathrm{GeV}/\pT$. Reconstruction efficiency
-falls with production radius $r$ as
-$\varepsilon(r) = \varepsilon_0 / (1 + (r/r_{1/2})^2)$ with a hard
-acceptance ceiling $r < r_{\max}$. Two scenarios span the range of realistic
-tracking performance: \emph{standard} ($r_{1/2} = 40$~mm, $r_{\max} = 120$~mm) and
-\emph{standard + large-radius tracking}
-($r_{1/2} = 150$~mm, $r_{\max} = 300$~mm).
-
-\stub{Tracking-scenario results: observable degradation vs $\ctau$
-under standard vs standard+LRT. This comparison is itself a physics
-result. Samples and code exist (run \texttt{pixi run plots --scenario
-standard / standard\_lrt}).}
+$\sigma(z_0) = 20~\mu\mathrm{m} \oplus 100~\mu\mathrm{m}\,\mathrm{GeV}/\pT$.
+Reconstruction-efficiency effects, in particular the loss of efficiency
+with increasing production radius and the role of dedicated
+large-radius tracking, depend strongly on detector and reconstruction
+details. A careful treatment of these efficiency considerations is
+left to future work, and the results presented here include the
+resolution smearing and the track selection below but assume fully
+efficient tracking within the $|\dnought| < 300$~mm acceptance.
 
 Pileup is modeled by overlaying Poisson($\mu$) minimum-bias events
 (\textsc{Pythia} \texttt{SoftQCD:inelastic}) per jet before the tracking
@@ -772,13 +766,21 @@ Three further observations:
 
 \begin{figure}[tb]
   \centering
-  \includegraphics[width=0.98\textwidth]{vae_recon_VAE_SpD_truth_displaced.pdf}
-  \caption{Input and reconstructed distributions of the 12 displaced
-  features for the VAE trained on QCD only (basis $S{+}D$), for the QCD
-  test sample (solid) and signal at $\ctau = 10$~mm (dashed). QCD is
-  reconstructed faithfully, while signal reconstructions are pulled onto the
-  QCD manifold, producing the large anomaly score. The nominal features
-  are shown in Appendix~\ref{app:recon}.}
+  \begin{subfigure}{0.49\textwidth}
+    \includegraphics[width=\textwidth]{vae_recon_example_ang_00_truth.pdf}
+    \caption{}
+  \end{subfigure}
+  \begin{subfigure}{0.49\textwidth}
+    \includegraphics[width=\textwidth]{vae_recon_example_deec_min_truth.pdf}
+    \caption{}
+  \end{subfigure}
+  \caption{Input and reconstructed distributions of the VAE trained on
+  QCD only (basis $S{+}D$) for two example displaced observables,
+  (a) $\Sigma_i w_i$ and (b) $\mathrm{dEEC}(\min)$, for the QCD test
+  sample and signal at $\ctau = 10$~mm. QCD is reconstructed
+  faithfully, while signal reconstructions are pulled onto the QCD
+  manifold, producing the large anomaly score. The complete feature set
+  is shown in Appendix~\ref{app:recon}.}
   \label{fig:vaerecon}
 \end{figure}
 
@@ -846,9 +848,8 @@ interpretable observables transmit most of it.
   \label{fig:gap}
 \end{figure}
 
-\stub{Repeat under the standard and standard+LRT tracking scenarios.
-Per-flavor efficiency curves. Latent-space diagnostics. Cross-check
-with reco-level set-based architectures (deep-set / DETR).}
+\stub{Per-flavor efficiency curves. Latent-space diagnostics.
+Cross-check with reco-level set-based architectures (deep-set / DETR).}
 
 
 % =====================================================================
@@ -1003,81 +1004,38 @@ JHEP \textbf{04} (2011) 091, [\texttt{arXiv:1102.3795}].
 \appendix
 
 % =====================================================================
-\section{Robustness under realistic tracking}
+\section{Pileup robustness}
 \label{app:robustness}
-\label{sec:robustness}
 
-Figure~\ref{fig:scenarios} compares the benchmark observables across the
-three tracking scenarios of Sec.~\ref{sec:tracking}. Three lessons
-emerge. First, the pairwise dEEC pays an \emph{efficiency-squared}
-penalty: under standard tracking its short-lifetime advantage largely
-collapses (at $\ctau = 3$~mm the $b$-jet rejection falls from
-$\mathcal{O}(100)$ at truth level to $\mathcal{O}(3)$), because a pair
-observable requires both decay products to be reconstructed. Second,
-large-radius tracking restores much of the pairwise information for
-$\ctau \gtrsim 10$~mm, and the LRT-vs-standard gap as a function of
-$\ctau$ directly quantifies the physics value of LRT for emerging-jet
-searches. Third, counting-type observables (prompt $\pT$ fraction,
-weighted multiplicity) are the most tracking-robust at short lifetime:
-losing a displaced track degrades them linearly rather than
-quadratically. A realistic search should therefore combine a
-counting observable (robust) with the dEEC (maximal truth-level
-information), and the ML studies of
-Secs.~\ref{sec:anomaly}--\ref{sec:supervised} are performed per scenario.
-\todo{quantitative degradation table}
-
-\begin{figure}[tb]
-  \centering
-  \includegraphics[width=0.95\textwidth]{scenario_comparison_paper.pdf}
-  \caption{$b$-jet rejection at 50\% signal efficiency versus
-  $\ctau(\pid)$ for the weighted multiplicity (left) and the dEEC
-  (right) under the three tracking scenarios: truth (black), standard
-  tracking (red), and standard + large-radius tracking (blue). Open
-  triangles are sample-statistics lower bounds.}
-  \label{fig:scenarios}
-\end{figure}
-
-\paragraph{Pileup.} Figure~\ref{fig:pileup} shows the benchmark
-observables under the standard+LRT scenario with and without minimum-bias
-overlay at $\mu = 60$. The weighted-observable curves shift
-only mildly across the lifetime grid, while the prompt-$\pT$ fraction
-(whose denominator grows with every accepted soft track) degrades
-visibly, a further argument for the self-suppressing significance
-weighting. The mechanism is
-twofold: the $z_0$ association removes the prompt pileup bulk, and the
+Figure~\ref{fig:pileup} shows the benchmark observables with and
+without minimum-bias pileup overlay at $\mu = 60$, using the
+methodology of Sec.~\ref{sec:tracking}. The rejection curves are
+nearly unchanged across the lifetime grid. The mechanism is twofold.
+The $z_0$ association removes the prompt pileup bulk, and the
 significance weighting caps what leaks through at the resolution
-pedestal $w \simeq \ln 2$. After selection, pileup constitutes
-$\sim 14\%$ of signal-jet tracks at $\mu = 60$ for $R = 1.0$ jets
-(scaling with the cone area), and while roughly half
-of that residual is genuinely displaced (strange-hadron daughters), it
-is angularly uncorrelated and too rare
-to populate displaced \emph{pairs}: the dEEC is entirely unaffected.
-Displacement-weighted substructure is therefore pileup-robust by
-construction, in contrast to track-counting variables whose
-denominators grow with every soft track.
+pedestal $w \simeq \ln 2$. The surviving displaced pileup component
+from strange-hadron decays is angularly uncorrelated and too rare to
+populate displaced pairs, so the pairwise correlators are essentially
+unaffected. Displacement-weighted substructure is therefore
+pileup-robust by construction, in contrast to track-counting variables
+whose denominators grow with every accepted soft track.
 
 \begin{figure}[tb]
   \centering
-  \includegraphics[width=0.95\textwidth]{pileup_paper_standard_lrt.pdf}
+  \includegraphics[width=0.95\textwidth]{pileup_paper_truth.pdf}
   \caption{$b$-jet rejection versus $\ctau(\pid)$ for the weighted
   multiplicity (left) and the dEEC (right), with ($\mu = 60$, red) and
-  without ($\mu = 0$, black) minimum-bias pileup overlay, standard+LRT
-  tracking. Open triangles are sample-statistics lower bounds.}
+  without ($\mu = 0$, black) minimum-bias pileup overlay. Open
+  triangles are sample-statistics lower bounds.}
   \label{fig:pileup}
 \end{figure}
-
-\stub{In-situ negative-tail calibration (signed-$\dnought$ variants)
-under each scenario.}
-
-
 
 \section{Autoencoder reconstruction distributions}
 \label{app:recon}
 
-Figure~\ref{fig:appreconS} shows the input and reconstructed
-distributions of the 12 nominal features for the VAE of
-Sec.~\ref{sec:adtrain}, while the displaced features are shown in
-Fig.~\ref{fig:vaerecon}. QCD is reconstructed faithfully in every
+Figures~\ref{fig:appreconS} and~\ref{fig:appreconD} show the input
+and reconstructed distributions of all 24 features for the VAE of
+Sec.~\ref{sec:adtrain}. QCD is reconstructed faithfully in every
 feature, while signal reconstructions are pulled onto the learned QCD
 manifold.
 
@@ -1090,19 +1048,72 @@ manifold.
   \label{fig:appreconS}
 \end{figure}
 
-\clearpage
-\section{Alternate mediator portal}
-\label{app:portal}
-\stub{One alternate portal (e.g.\ $t$-channel bifundamental as in the
-original emerging-jets model), MadGraph + Pythia HV chain. Show the
-observable family is portal-independent.}
+\begin{figure}[p]
+  \centering
+  \includegraphics[width=\textwidth]{vae_recon_VAE_SpD_truth_displaced.pdf}
+  \caption{VAE (basis $S{+}D$) input and reconstructed distributions of
+  the 12 displaced features, for the QCD test sample (solid) and signal
+  at $\ctau = 10$~mm (dashed). Truth-level tracking.}
+  \label{fig:appreconD}
+\end{figure}
 
+\clearpage
 \section{Pythia Hidden Valley settings}
 \label{app:settings}
-\todo{full card listing for reproducibility (cards/pythia/ in the code
-release)}
 
-% =====================================================================
+The signal configuration used for all results in this paper is listed
+below. The dark-pion lifetime (\texttt{4900111:tau0}, in mm) and the
+random seed are set per grid point at run time. The background samples
+use the same beam settings with \texttt{HardQCD:all} (inclusive
+dijets) or \texttt{HardQCD:hardbbbar} ($b$-enriched) and
+\texttt{PhaseSpace:pTHatMin = 450}, and the pileup library uses
+\texttt{SoftQCD:inelastic}.
 
+{\small
+\begin{verbatim}
+! Hidden Valley emerging-jet signal: s-channel Z' -> qv qvbar
+! Benchmark following Schwaller-Stolarski-Weiler (1502.05409) / Dark Showers
+! Task Force unflavored scenario, ATLAS emerging-jets-like mediator mass.
+! ctau(pi_d) [4900111:tau0] and the random seed are set programmatically.
+
+Beams:idA = 2212
+Beams:idB = 2212
+Beams:eCM = 13600.
+
+! ---- hard process: s-channel Zv ----
+HiddenValley:ffbar2Zv = on
+4900023:m0 = 1500.
+4900023:mWidth = 15.
+4900023:onMode = off
+4900023:onIfAny = 4900101
+
+! ---- dark sector: SU(3), one light flavor, running coupling ----
+HiddenValley:Ngauge = 3
+HiddenValley:alphaOrder = 1
+HiddenValley:Lambda = 10.
+HiddenValley:FSR = on
+HiddenValley:fragment = on
+HiddenValley:pTminFSR = 11.
+HiddenValley:probVector = 0.75
+
+! ---- dark sector masses ----
+4900101:m0 = 10.     ! dark quark qv
+4900111:m0 = 5.      ! dark pion pi_d
+4900113:m0 = 20.     ! dark rho rho_d (rho -> pi pi open)
+
+! ---- decays back to SM ----
+! rho_d -> pi_d pi_d (prompt); pi_d -> d dbar with lifetime set at runtime
+4900113:oneChannel = 1 1.0 0 4900111 4900111
+4900111:oneChannel = 1 1.0 91 1 -1
+4900111:mayDecay = on
+
+! ---- generic settings ----
+Random:setSeed = on
+Next:numberShowEvent = 0
+Next:numberShowProcess = 0
+Next:numberShowInfo = 0
+Print:quiet = on
+\end{verbatim}
+}
 
 \end{document}

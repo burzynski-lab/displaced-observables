@@ -99,7 +99,7 @@ def main() -> None:
             ax.text(0.04, 0.97,
                     f"Pythia {PYTHIA_VERSION}, $\\sqrt{{s}}=13.6$ TeV\n"
                     "$Z'(1.5\\,\\mathrm{TeV})\\to q_D\\bar{q}_D$\n"
-                    "anti-$k_t$ $R=1.0$, tracking: " + args.scenario,
+                    "anti-$k_t$ $R=1.0$",
                     transform=ax.transAxes, va="top", fontsize=label_fs - 5)
 
     for tag, basis in (("S", BASIS_S), ("D", BASIS_D)):
