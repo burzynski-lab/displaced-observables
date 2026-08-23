@@ -73,7 +73,11 @@ def main() -> None:
         lo, hi = np.quantile(allv, [0.001, hi_q])
         if hi <= lo:
             hi = lo + 1
-        bins = np.linspace(lo, hi, 45)
+        if var == "ntrk":  # integer-centered bins
+            w = max(1, int(np.ceil((hi - lo) / 45)))
+            bins = np.arange(np.floor(lo) - 0.5, hi + w, w)
+        else:
+            bins = np.linspace(lo, hi, 45)
         ax.hist(np.clip(jets[var][light], lo, hi), bins=bins, density=True,
                 weights=w_light, histtype="stepfilled", alpha=0.45,
                 color="#7f8fa6", label="QCD light")
@@ -111,9 +115,8 @@ def main() -> None:
 
     # paper Figure 1: nominal (left) vs displacement-weighted (right) pairs
     fig, axes = plt.subplots(2, 2, figsize=(13, 10.5))
-    for k, (ax, var) in enumerate(zip(
-            axes.ravel(), ("girth", "ang_11", "eec_b1", "deec_min"))):
-        plot_panel(ax, var, annotate=(k == 0), label_fs=17)
+    for ax, var in zip(axes.ravel(), ("girth", "ang_11", "eec_b1", "deec_min")):
+        plot_panel(ax, var, annotate=True, label_fs=17)
     fig.tight_layout()
     out = Path(args.out) / f"paired_dists_{args.scenario}.png"
     for _ext in ("png", "pdf"):

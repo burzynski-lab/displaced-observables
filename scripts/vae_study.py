@@ -154,12 +154,14 @@ def plot_reconstruction(model, x_te, basis, norm, kind, basis_name,
 
     inp = phys(x_te.numpy())
     rec = phys(reconstruct(model, x_te, device))
-    series = [("QCD input", inp, "C0", "-"), ("QCD recon", rec, "C1", "-")]
+    # (label, array, color, linestyle, filled)
+    series = [("QCD input", inp, "#7f8fa6", "-", True),
+              ("QCD recon", rec, "#1f77b4", "-", False)]
     if x_sig is not None:
         s_inp = phys(x_sig.numpy())
         s_rec = phys(reconstruct(model, x_sig, device))
-        series += [(f"{sig_label} input", s_inp, "C3", "--"),
-                   (f"{sig_label} recon", s_rec, "C2", "--")]
+        series += [(f"{sig_label} input", s_inp, "#d62728", "--", False),
+                   (f"{sig_label} recon", s_rec, "#ff7f0e", "-.", False)]
     tag = f"{kind}_{basis_name.replace('+', 'p')}_{scenario}"
 
     # one grid for the nominal features, one for the displaced features
@@ -180,10 +182,15 @@ def plot_reconstruction(model, x_te, basis, norm, kind, basis_name,
             scale = 10.0 ** np.floor(np.log10(max(abs(hi), 1))) if abs(hi) > 1e4 else 1.0
             lo, hi = lo / scale, hi / scale
             bins = np.linspace(lo, hi, 50)
-            for label, arr, color, ls in series:
-                ax.hist(np.clip(arr[:, k] / scale, lo, hi), bins=bins,
-                        histtype="step", lw=1.3, label=label, color=color,
-                        ls=ls, density=True)
+            for label, arr, color, ls, filled in series:
+                if filled:
+                    ax.hist(np.clip(arr[:, k] / scale, lo, hi), bins=bins,
+                            histtype="stepfilled", alpha=0.45, color=color,
+                            label=label, density=True)
+                else:
+                    ax.hist(np.clip(arr[:, k] / scale, lo, hi), bins=bins,
+                            histtype="step", lw=1.5, label=label, color=color,
+                            ls=ls, density=True)
             ax.set_yscale("log")
             ax.set_ylim(top=ax.get_ylim()[1] * 3e3)
             xlab = var if scale == 1.0 else f"{var}  [$\\times 10^{{{int(np.log10(scale))}}}$]"
@@ -289,8 +296,10 @@ def main() -> None:
                 s_sig = scores(model, matrix(np.where(m)[0], basis), device)
                 for fpr, thr in thresholds.items():
                     results[(kind, basis_name, ctau, fpr)] = np.mean(s_sig > thr)
-                if ctau == 10.0:
-                    score_store[(kind, basis_name)] = (s_qcd, s_sig)
+                if ctau in (1.0, 10.0, 100.0):
+                    d = score_store.setdefault((kind, basis_name),
+                                               {"qcd": s_qcd, "bb": s_bb, "sig": {}})
+                    d["sig"][ctau] = s_sig
 
     # supervised ceiling on the same S+D basis: per-ctau BDT (XGBoost),
     # evaluated at the identical fixed-QCD-anomaly-rate working points
@@ -325,7 +334,7 @@ def main() -> None:
     for ax, fpr in zip(axes, FPRS):
         for kind in ("AE", "VAE"):
             for basis_name in BASES:
-                y = [results[(kind, basis_name, c, fpr)] for c in ctaus]
+                y = [max(results[(kind, basis_name, c, fpr)], 1.2e-4) for c in ctaus]
                 ax.plot(ctaus, y, marker=markers[kind], ms=5, lw=1.4,
                         ls="-" if basis_name == "S+D" else "--",
                         color=colors[basis_name],
@@ -335,36 +344,48 @@ def main() -> None:
         ax.plot(ctaus, y, marker="^", ms=5, lw=1.4, ls="-", color="black",
                 label="supervised BDT, S+D (ceiling)")
         ax.set_xscale("symlog", linthresh=1)
+        ax.set_yscale("log")
         ax.set_xlabel("$c\\tau(\\pi_d)$ [mm]")
         ax.set_ylabel(f"signal efficiency @ QCD anomaly rate {fpr:g}")
-        ax.set_ylim(0, 1.35)
-        ax.legend(fontsize=8, loc="upper right")
+        ax.set_ylim(1e-4, 30)
+        ax.legend(fontsize=14, loc="upper left")
     decorate(axes[0], extra=f"tracking: {args.scenario}, QCD-only training")
     fig.tight_layout()
     for _ext in ("png", "pdf"):
         fig.savefig(out_dir / f"vae_efficiency_{args.scenario}.{_ext}", dpi=150)
     plt.close(fig)
 
-    # anomaly-score distributions at ctau = 10 mm (log-x)
-    fig, axes = plt.subplots(1, 2, figsize=(14, 6))
-    for ax, basis_name in zip(axes, BASES):
-        for kind in ("AE", "VAE"):
-            s_qcd, s_sig = score_store[(kind, basis_name)]
-            allv = np.concatenate([s_qcd, s_sig])
+    # anomaly-score distributions: 4 panels (model x basis), shaded
+    # backgrounds, three signal lifetimes, log-log axes
+    fig, axes = plt.subplots(2, 2, figsize=(14, 11))
+    sig_colors = {1.0: "#d62728", 10.0: "#9467bd", 100.0: "#2ca02c"}
+    for r, kind in enumerate(("AE", "VAE")):
+        for c, basis_name in enumerate(BASES):
+            ax = axes[r][c]
+            d = score_store[(kind, basis_name)]
+            allv = np.concatenate([d["qcd"], d["bb"]] + list(d["sig"].values()))
             lo = max(np.quantile(allv, 0.001), 1e-4)
             hi = np.quantile(allv, 0.999)
-            bins = np.logspace(np.log10(lo), np.log10(hi if hi > lo else lo * 10), 60)
-            ax.hist(np.clip(s_qcd, lo, hi), bins=bins, density=True,
-                    histtype="step", ls="--", label=f"QCD test [{kind}]")
-            ax.hist(np.clip(s_sig, lo, hi), bins=bins, density=True,
-                    histtype="step", label=f"signal 10 mm [{kind}]")
-        ax.set_xlabel(f"anomaly score (basis {basis_name})")
-        ax.set_ylabel("density")
-        ax.set_xscale("log")
-        ax.set_yscale("log")
-        ax.set_ylim(top=ax.get_ylim()[1] * 200)
-        ax.legend(fontsize=8, loc="upper right")
-    decorate(axes[0], extra=f"tracking: {args.scenario}")
+            bins = np.logspace(np.log10(lo), np.log10(hi if hi > lo else lo * 10), 55)
+            ax.hist(np.clip(d["qcd"], lo, hi), bins=bins, density=True,
+                    histtype="stepfilled", alpha=0.45, color="#7f8fa6",
+                    label="QCD (test)")
+            ax.hist(np.clip(d["bb"], lo, hi), bins=bins, density=True,
+                    histtype="stepfilled", alpha=0.35, facecolor="#f5b041",
+                    hatch="///", edgecolor="#b9770e", lw=1.0, label="QCD b")
+            for ctau, col in sig_colors.items():
+                if ctau in d["sig"]:
+                    ax.hist(np.clip(d["sig"][ctau], lo, hi), bins=bins,
+                            density=True, histtype="step", lw=1.8, color=col,
+                            label=f"signal $c\\tau$={ctau:g} mm")
+            ax.set_xscale("log")
+            ax.set_yscale("log")
+            ax.set_ylim(top=ax.get_ylim()[1] * 3e3)
+            ax.set_xlabel(f"anomaly score  [{kind}, basis {basis_name}]",
+                          fontsize=16)
+            ax.set_ylabel("density", fontsize=14)
+            ax.tick_params(labelsize=11)
+            ax.legend(fontsize=11, loc="upper right")
     fig.tight_layout()
     for _ext in ("png", "pdf"):
         fig.savefig(out_dir / f"vae_scores_{args.scenario}.{_ext}", dpi=150)

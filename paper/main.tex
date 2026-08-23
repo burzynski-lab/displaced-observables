@@ -518,13 +518,13 @@ flavor. Three qualitative results emerge:
 
 \begin{figure}[tb]
   \centering
-  \includegraphics[width=0.49\textwidth]{rejection_QCD_b_truth_eff50.pdf}
-  \includegraphics[width=0.49\textwidth]{rejection_QCD_light_truth_eff50.pdf}
+  \includegraphics[width=0.49\textwidth]{rejection_paper_QCD_b_truth.pdf}
+  \includegraphics[width=0.49\textwidth]{rejection_paper_QCD_light_truth.pdf}
   \caption{Background rejection at 50\% signal efficiency versus
-  $\ctau(\pid)$ for $b$ jets (left) and light jets (right).
-  Solid: displacement-weighted observables; dashed: their nominal
-  partners. Missing points indicate rejection exceeding the sample
-  statistics. Truth-level tracking.}
+  $\ctau(\pid)$ for $b$ jets (left) and light jets (right), for the
+  flagship displacement-weighted observables (colored) and two nominal
+  references (gray dotted). Open triangles mark statistics lower
+  bounds. Truth-level tracking.}
   \label{fig:rejection}
 \end{figure}
 
@@ -584,12 +584,12 @@ Secs.~\ref{sec:anomaly}--\ref{sec:supervised} are performed per scenario.
 
 \begin{figure}[tb]
   \centering
-  \includegraphics[width=0.62\textwidth]{scenario_comparison_QCD_b.pdf}
+  \includegraphics[width=0.95\textwidth]{scenario_comparison_paper.pdf}
   \caption{$b$-jet rejection at 50\% signal efficiency versus
-  $\ctau(\pid)$ for the flagship observables under the three tracking
-  scenarios: truth (solid), standard tracking (dashed), and standard +
-  large-radius tracking (dash-dotted). Open triangles are
-  sample-statistics lower bounds.}
+  $\ctau(\pid)$ for the weighted multiplicity (left) and the dEEC
+  (right) under the three tracking scenarios: truth (black), standard
+  tracking (red), and standard + large-radius tracking (blue). Open
+  triangles are sample-statistics lower bounds.}
   \label{fig:scenarios}
 \end{figure}
 
@@ -605,8 +605,8 @@ significance weighting caps what leaks through at the resolution
 pedestal $w \simeq \ln 2$. After selection, pileup constitutes
 $\sim 14\%$ of signal-jet tracks at $\mu = 60$ for $R = 1.0$ jets
 (scaling with the cone area), and while roughly half
-of that residual is genuinely displaced (strange-hadron daughters,
-Fig.~\ref{fig:pileup} right), it is angularly uncorrelated and too rare
+of that residual is genuinely displaced (strange-hadron daughters), it
+is angularly uncorrelated and too rare
 to populate displaced \emph{pairs}: the dEEC is entirely unaffected.
 Displacement-weighted substructure is therefore pileup-robust by
 construction, in contrast to track-counting variables whose
@@ -614,15 +614,11 @@ denominators grow with every soft track.
 
 \begin{figure}[tb]
   \centering
-  \includegraphics[width=0.49\textwidth]{pileup_rejection_QCD_b_standard_lrt.pdf}
-  \includegraphics[width=0.49\textwidth]{pileup_composition_standard_lrt.pdf}
-  \caption{Left: $b$-jet rejection versus $\ctau(\pid)$ for the flagship
-  observables with (dotted, $\mu = 60$) and without (solid) minimum-bias
-  pileup overlay, standard+LRT tracking. Right: post-selection
-  $|\dnought|/\sigma$ of hard-scatter versus pileup tracks in signal
-  jets ($\ctau = 10$~mm); the displaced pileup tail from strange-hadron
-  decays survives the selection but is too small and uncorrelated to
-  affect the observables.}
+  \includegraphics[width=0.95\textwidth]{pileup_paper_standard_lrt.pdf}
+  \caption{$b$-jet rejection versus $\ctau(\pid)$ for the weighted
+  multiplicity (left) and the dEEC (right), with ($\mu = 60$, red) and
+  without ($\mu = 0$, black) minimum-bias pileup overlay, standard+LRT
+  tracking. Open triangles are sample-statistics lower bounds.}
   \label{fig:pileup}
 \end{figure}
 
@@ -815,11 +811,12 @@ Three further observations:
 
 \begin{figure}[tb]
   \centering
-  \includegraphics[width=0.95\textwidth]{vae_scores_truth.pdf}
-  \caption{Anomaly-score distributions (per-jet loss) for the QCD test
-  sample and signal at $\ctau = 10$~mm, for the nominal basis $S$
-  (left) and the augmented basis $S{+}D$ (right), AE and VAE.
-  Truth-level tracking.}
+  \includegraphics[width=0.9\textwidth]{vae_scores_truth.pdf}
+  \caption{Anomaly-score distributions (per-jet loss): AE (top) and
+  VAE (bottom) for the nominal basis $S$ (left) and the augmented basis
+  $S{+}D$ (right). Filled gray: inclusive QCD test sample; hatched
+  orange: $b$-enriched sample; lines: signal at $\ctau = 1$, 10, and
+  100~mm. Truth-level tracking.}
   \label{fig:vaescore}
 \end{figure}
 

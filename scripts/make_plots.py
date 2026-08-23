@@ -210,6 +210,43 @@ def main() -> None:
                             dpi=150)
             plt.close(fig)
 
+    # curated paper version (50% eff): flagship displaced + nominal refs
+    PAPER_SET = ["ang_00", "deec_min", "decf3", "dc2", "ip2d", "promptfrac",
+                 "girth", "ntrk"]
+    for bname in backgrounds:
+        fig, ax = plt.subplots(figsize=(9, 7))
+        for key in PAPER_SET:
+            label, _, group = OBSERVABLES[key]
+            pts = sorted((r["ctau"], *r[(bname, 0.5)])
+                         for r in rej_rows if r["obs"] == key)
+            if not pts:
+                continue
+            x = [pt[0] for pt in pts]
+            y = [pt[1] for pt in pts]
+            sat = [pt[2] for pt in pts]
+            if group == "std":
+                line, = ax.plot(x, y, marker="v", ls=":", color="#7f8fa6",
+                                lw=1.5, ms=5, label=label, alpha=0.9)
+            else:
+                line, = ax.plot(x, y, marker="o", ls="-", lw=1.8, ms=5,
+                                label=label)
+            xs = [xi for xi, si in zip(x, sat) if si]
+            ys = [yi for yi, si in zip(y, sat) if si]
+            if xs:
+                ax.plot(xs, ys, ls="none", marker="^", ms=9,
+                        markerfacecolor="none", color=line.get_color())
+        ax.set_xscale("symlog", linthresh=1); ax.set_yscale("log")
+        ax.set_xlabel("$c\\tau(\\pi_d)$ [mm]")
+        ax.set_ylabel(f"{bname} rejection @ $\\epsilon_s$=50%")
+        ax.set_ylim(top=ax.get_ylim()[1] * 5e3)
+        ax.legend(fontsize=12, loc="upper right")
+        decorate(ax, extra=f"tracking: {args.scenario}"
+                 "\nopen $\\triangle$: statistics lower bound")
+        for _ext in ("png", "pdf"):
+            fig.savefig(out_dir / f"rejection_paper_{bname.replace(' ', '_')}_{args.scenario}.{_ext}",
+                        dpi=150)
+        plt.close(fig)
+
     print(f"\nplots written to {out_dir}/")
 
 

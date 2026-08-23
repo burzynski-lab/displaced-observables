@@ -122,6 +122,35 @@ def main() -> None:
                         dpi=150)
         plt.close(fig)
 
+    # paper version: one panel per flagship observable, mu = 0 vs 60, vs b
+    mu_colors = {0: "black", 30: "#1f77b4", 60: "#d62728"}
+    fig, axes = plt.subplots(1, 2, figsize=(14, 6))
+    for ax, key in zip(axes, ("ang_00", "deec_min")):
+        label = FLAGSHIP[key][0]
+        for mu in args.mu:
+            pts = sorted(results.get((mu, key, "QCD b"), []))
+            if not pts:
+                continue
+            x, y, sat = zip(*pts)
+            ax.plot(x, y, ls=MU_STYLE.get(int(mu), "-."), marker="o", ms=5,
+                    lw=1.8, color=mu_colors.get(int(mu), "gray"),
+                    label=f"$\\mu$ = {mu:g}")
+            xs = [xi for xi, si in zip(x, sat) if si]
+            ys = [yi for yi, si in zip(y, sat) if si]
+            if xs:
+                ax.plot(xs, ys, ls="none", marker="^", ms=9,
+                        markerfacecolor="none", color=mu_colors.get(int(mu), "gray"))
+        ax.set_xscale("symlog", linthresh=1); ax.set_yscale("log")
+        ax.set_xlabel("$c\\tau(\\pi_d)$ [mm]")
+        ax.set_ylabel(f"QCD b rejection @ $\\epsilon_s$={args.eff:.0%}")
+        ax.set_ylim(top=ax.get_ylim()[1] * 2e3)
+        ax.set_title(label, fontsize=15)
+        ax.legend(fontsize=13, loc="upper left")
+    fig.tight_layout()
+    for _ext in ("png", "pdf"):
+        fig.savefig(out_dir / f"pileup_paper_{args.scenario}.{_ext}", dpi=150)
+    plt.close(fig)
+
     # |d0|/sigma composition after selection (signal jets, ctau=10)
     fig, ax = plt.subplots(figsize=(8, 6))
     bins = np.logspace(-1, 3, 50)

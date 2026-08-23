@@ -95,5 +95,37 @@ def main() -> None:
         print(f"wrote scenario_comparison_{bname.replace(' ', '_')}.png")
 
 
+
+    # paper version: one panel per flagship observable, one curve per scenario
+    scen_colors = {"truth": "black", "standard": "#d62728", "standard_lrt": "#1f77b4"}
+    fig, axes = plt.subplots(1, 2, figsize=(14, 6))
+    for ax, key in zip(axes, ("ang_00", "deec_min")):
+        label = FLAGSHIP[key][0]
+        for scenario, (ls, marker) in SCENARIO_STYLE.items():
+            pts = sorted(results.get((scenario, key, "QCD b"), []))
+            if not pts:
+                continue
+            x, y, sat = zip(*pts)
+            ax.plot(x, y, ls=ls, marker=marker, ms=5, lw=1.8,
+                    color=scen_colors[scenario],
+                    label=scenario.replace("_", "+"))
+            xs = [xi for xi, si in zip(x, sat) if si]
+            ys = [yi for yi, si in zip(y, sat) if si]
+            if xs:
+                ax.plot(xs, ys, ls="none", marker="^", ms=9,
+                        markerfacecolor="none", color=scen_colors[scenario])
+        ax.set_xscale("symlog", linthresh=1); ax.set_yscale("log")
+        ax.set_xlabel("$c\\tau(\\pi_d)$ [mm]")
+        ax.set_ylabel(f"QCD b rejection @ $\\epsilon_s$={args.eff:.0%}")
+        ax.set_ylim(top=ax.get_ylim()[1] * 2e3)
+        ax.set_title(label, fontsize=15)
+        ax.legend(fontsize=13, loc="upper left")
+    fig.tight_layout()
+    for _ext in ("png", "pdf"):
+        fig.savefig(out_dir / f"scenario_comparison_paper.{_ext}", dpi=150)
+    plt.close(fig)
+    print("wrote scenario_comparison_paper")
+
+
 if __name__ == "__main__":
     main()
