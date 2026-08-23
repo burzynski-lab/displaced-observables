@@ -275,10 +275,34 @@ $\lambda^\kappa_\beta(w) \to \ln 2 \cdot \lambda^\kappa_\beta$: the
 weighted observable degenerates to a rescaled copy of its nominal
 partner, and any \emph{shape} difference between the pair is a pure
 lifetime effect. A scan in $(\kappa, \beta)$ identifies which moments
-carry the lifetime information (Sec.~\ref{sec:kbscan}). The scan strongly
-favors the corner $\lambda^0_0(w) = \sum_i w_i$, the
-\emph{displacement-weighted track multiplicity}, which we promote to a
-benchmark observable.
+carry the lifetime information.
+Figure~\ref{fig:kbscan} shows the $(\kappa,\beta)$ scan of the weighted
+angularities: $b$-jet rejection at 50\% signal efficiency over the
+grid $\kappa, \beta \in [0, 2]$. The result is a monotone gradient
+toward the origin: the best moment is
+$\lambda^0_0(w) = \sum_i w_i$, the displacement-weighted track
+multiplicity, and every power of $z_i$ or $\theta_i$ \emph{dilutes} the
+discrimination. Physically, the lifetime information resides in the
+\emph{number} of significantly displaced tracks. Dark-pion decay
+products are numerous but soft and broadly distributed within the jet,
+so energy weighting suppresses exactly the tracks that carry the
+signal. The single-observable hierarchy is therefore: weighted multiplicity
+$\sum_i w_i$ $\gtrsim$ pairwise correlation (dEEC) $\gg$
+energy-weighted angularities $\gg$ single-track means, with the dEEC
+ahead against light jets at the shortest lifetimes. This motivates the benchmark set carried into
+Secs.~\ref{sec:anomaly}--\ref{sec:supervised}: $\{\mathrm{dEEC}(\min),\;
+\sum_i w_i,\; \lambda^1_0(w)\}$.
+
+\begin{figure}[tb]
+  \centering
+  \includegraphics[width=0.49\textwidth]{kb_scan_QCD_b_ctau3_truth.pdf}
+  \includegraphics[width=0.49\textwidth]{kb_scan_QCD_b_ctau30_truth.pdf}
+  \caption{$b$-jet rejection at 50\% signal efficiency for the
+  displacement-weighted angularities $\lambda^\kappa_\beta(w)$ over the
+  $(\kappa,\beta)$ grid, at $\ctau = 3$~mm (left) and 30~mm (right).
+  ``$>$'' marks sample-statistics lower bounds.}
+  \label{fig:kbscan}
+\end{figure}
 
 \obshead{Energy--energy correlators}
 
@@ -575,36 +599,7 @@ flavor. Three qualitative results emerge:
   \label{fig:rejection}
 \end{figure}
 
-\subsection{Which moments carry the lifetime information?}
-\label{sec:kbscan}
 
-Figure~\ref{fig:kbscan} shows the $(\kappa,\beta)$ scan of the weighted
-angularities: $b$-jet rejection at 50\% signal efficiency over the
-grid $\kappa, \beta \in [0, 2]$. The result is a monotone gradient
-toward the origin: the best moment is
-$\lambda^0_0(w) = \sum_i w_i$, the displacement-weighted track
-multiplicity, and every power of $z_i$ or $\theta_i$ \emph{dilutes} the
-discrimination. Physically, the lifetime information resides in the
-\emph{number} of significantly displaced tracks. Dark-pion decay
-products are numerous but soft and broadly distributed within the jet,
-so energy weighting suppresses exactly the tracks that carry the
-signal. The single-observable hierarchy is therefore: weighted multiplicity
-$\sum_i w_i$ $\gtrsim$ pairwise correlation (dEEC) $\gg$
-energy-weighted angularities $\gg$ single-track means, with the dEEC
-ahead against light jets at the shortest lifetimes. This motivates the benchmark set carried into
-Secs.~\ref{sec:anomaly}--\ref{sec:supervised}: $\{\mathrm{dEEC}(\min),\;
-\sum_i w_i,\; \lambda^1_0(w)\}$.
-
-\begin{figure}[tb]
-  \centering
-  \includegraphics[width=0.49\textwidth]{kb_scan_QCD_b_ctau3_truth.pdf}
-  \includegraphics[width=0.49\textwidth]{kb_scan_QCD_b_ctau30_truth.pdf}
-  \caption{$b$-jet rejection at 50\% signal efficiency for the
-  displacement-weighted angularities $\lambda^\kappa_\beta(w)$ over the
-  $(\kappa,\beta)$ grid, at $\ctau = 3$~mm (left) and 30~mm (right).
-  ``$>$'' marks sample-statistics lower bounds.}
-  \label{fig:kbscan}
-\end{figure}
 
 % =====================================================================
 \section{Anomaly detection with displacement-aware inputs}
