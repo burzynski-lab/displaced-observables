@@ -176,13 +176,18 @@ def plot_reconstruction(model, x_te, basis, norm, kind, basis_name,
             lo, hi = np.quantile(allv, [0.001, hi_q])
             if hi <= lo:
                 hi = lo + 1
+            # scale huge-valued axes into the label instead of an offset text
+            scale = 10.0 ** np.floor(np.log10(max(abs(hi), 1))) if abs(hi) > 1e4 else 1.0
+            lo, hi = lo / scale, hi / scale
             bins = np.linspace(lo, hi, 50)
             for label, arr, color, ls in series:
-                ax.hist(np.clip(arr[:, k], lo, hi), bins=bins, histtype="step",
-                        lw=1.3, label=label, color=color, ls=ls, density=True)
+                ax.hist(np.clip(arr[:, k] / scale, lo, hi), bins=bins,
+                        histtype="step", lw=1.3, label=label, color=color,
+                        ls=ls, density=True)
             ax.set_yscale("log")
             ax.set_ylim(top=ax.get_ylim()[1] * 3e3)
-            ax.set_xlabel(var, fontsize=16)
+            xlab = var if scale == 1.0 else f"{var}  [$\\times 10^{{{int(np.log10(scale))}}}$]"
+            ax.set_xlabel(xlab, fontsize=16)
             ax.set_ylabel("density", fontsize=12)
             ax.tick_params(labelsize=10)
             ax.legend(fontsize=9, loc="upper right")
