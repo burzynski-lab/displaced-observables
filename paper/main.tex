@@ -855,14 +855,55 @@ with reco-level set-based architectures (deep-set / DETR).}
 \section{Conclusions}
 \label{sec:conclusions}
 
-\stub{Summarize: substructure-based anomaly detection is blind to
-displacement, and a small interpretable observable set closes the blind
-spot. dEEC as the key observable at short lifetime. (V)AE ROC gain from
-the augmented basis. X\% of the supervised ceiling. Robustness
-statements. Outlook paragraph (other portals, SUEP regime,
-trigger-level application, event-level anomaly detection).}
+We have introduced an interpretable, analytic family of
+displacement-weighted jet substructure observables for dark-shower
+signatures, obtained from standard track-based substructure by a single
+insertion of the impact-parameter significance weight
+$w_i = \ln(1 + |d_{0,i}|/\sigma_i)$ per track. The family comprises
+weighted angularities, displaced energy--energy correlators, and
+lifetime moments, together with displacement-normalized ratios that
+probe the vertex structure of a jet independently of its overall
+displacement. Characterized across dark-pion lifetimes from the prompt
+limit to $\ctau = 300$~mm and against light-flavor and heavy-flavor
+QCD jets separately, the weighted track multiplicity $\Sigma_i w_i$
+and the pairwise correlators provide background rejections that reach
+several hundred against $b$ jets already at $\ctau = 3$~mm and exceed
+$10^4$ at long lifetime, while every nominal substructure observable
+remains at rejection factors of a few, independent of lifetime. A
+fully supervised classifier on the complete observable basis confirms
+that two interpretable observables transmit most of the available
+discrimination.
 
-% =====================================================================
+The lifetime-independence of the nominal substructure basis is the
+central cautionary result. A dark shower whose distinguishing feature
+is displacement is invisible to anomaly-detection architectures built
+on calorimeter- or momentum-based substructure alone, and no increase
+in model capacity can recover information that is absent from the
+inputs. Augmenting the input vector of an otherwise unchanged
+variational autoencoder with twelve displacement-weighted observables
+raises the signal efficiency at a fixed $1\%$ QCD anomaly rate from
+the background-consistent level to $44\%$ at $\ctau = 1$~mm and above
+$88\%$ for $\ctau \geq 10$~mm, realizing about half to all of the
+fully supervised ceiling depending on lifetime. The QCD background
+model is essentially unchanged by the augmentation, the heavy-flavor
+anomaly rate grows only mildly, and the heavy-tailed observables are
+most effective when supplied to the network untransformed.
+
+These results carry a simple practical message for the growing program
+of substructure-based anomaly detection at the LHC. The
+displacement-aware observables proposed here are inexpensive in every
+relevant sense. They are twelve numbers per jet, computed from track
+collections that already exist in standard event reconstruction, they
+require no new detector information, no architectural changes, and no
+retuning of the background model, and they add negligible
+computational cost to either training or inference. Including them in
+the input representations of autoencoder-based and related
+model-agnostic searches would extend the generality of those searches
+to the lifetime frontier, where some of the least constrained and most
+theoretically motivated hidden sectors reside. We encourage future
+anomaly-detection efforts to adopt displacement-aware inputs as a
+default.
+
 \begin{thebibliography}{99}
 
 \bibitem{Schwaller:2015gea}
