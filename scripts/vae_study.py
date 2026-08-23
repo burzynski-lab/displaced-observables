@@ -380,12 +380,18 @@ def main() -> None:
                             label=f"signal $c\\tau$={ctau:g} mm")
             ax.set_xscale("log")
             ax.set_yscale("log")
-            ax.set_ylim(top=ax.get_ylim()[1] * 3e3)
+            ax.set_ylim(top=ax.get_ylim()[1] * 3e4)
             ax.set_xlabel(f"anomaly score  [{kind}, basis {basis_name}]",
                           fontsize=16)
             ax.set_ylabel("density", fontsize=14)
             ax.tick_params(labelsize=11)
             ax.legend(fontsize=11, loc="upper right")
+            from make_plots import PYTHIA_VERSION
+            ax.text(0.04, 0.97,
+                    f"Pythia {PYTHIA_VERSION}, $\\sqrt{{s}}=13.6$ TeV\n"
+                    "$Z'(1.5\\,\\mathrm{TeV})\\to q_D\\bar{q}_D$\n"
+                    "anti-$k_t$ $R=1.0$, tracking: " + args.scenario,
+                    transform=ax.transAxes, va="top", fontsize=11)
     fig.tight_layout()
     for _ext in ("png", "pdf"):
         fig.savefig(out_dir / f"vae_scores_{args.scenario}.{_ext}", dpi=150)

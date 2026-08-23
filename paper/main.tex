@@ -22,6 +22,8 @@
 \newcommand{\qD}{q_{\mathrm{D}}}
 \newcommand{\dR}{\Delta R}
 \newcommand{\pT}{p_{\mathrm{T}}}
+% unnumbered bold family heading on its own line
+\newcommand{\obshead}[1]{\par\medskip\noindent{\bfseries #1}\par\nobreak\smallskip}
 
 \title{Displacement-aware jet substructure\\
 for anomaly detection at the lifetime frontier}
@@ -156,8 +158,7 @@ transverse-momentum fraction $z_i = p_{\mathrm{T},i} / \pT^{\mathrm{jet}}$, angl
 $\theta_i = \dR(i, \mathrm{jet\ axis})/R$, transverse impact parameter
 $d_{0,i}$, and per-track resolution $\sigma_i$.
 
-\subsection{Displacement weight}
-\label{sec:weight}
+\obshead{Displacement weight}
 
 Each track carries a displacement weight based on its impact-parameter
 \emph{significance},
@@ -181,8 +182,7 @@ distribution, ROC, and anomaly-detection input basis is shown for both
 members, so the lifetime information contributed by the weighting is
 read off directly. Table~\ref{tab:observables} summarizes the family.
 
-\subsection{Angularities}
-\label{sec:tier1}
+\obshead{Angularities}
 
 The nominal track angularities~\cite{Larkoski:2014pca} and their
 displacement-weighted generalization are
@@ -210,8 +210,7 @@ favors the corner $\lambda^0_0(w) = \sum_i w_i$, the
 \emph{displacement-weighted track multiplicity}, which we promote to a
 flagship observable.
 
-\subsection{Energy--energy correlators}
-\label{sec:tier2}
+\obshead{Energy--energy correlators}
 
 The nominal two-point energy correlation
 function~\cite{Larkoski:2013eya} and its displaced counterpart are
@@ -264,8 +263,7 @@ angular and vertex \emph{structure}: a dark shower distributes
 displacement over many vertices across the jet, while a $B$-decay
 chain concentrates it in one.
 
-\subsection{Lifetime moments}
-\label{sec:tier3}
+\obshead{Lifetime moments}
 
 The lifetime moments have no nontrivial nominal partner --- the
 $\dnought$-independent limit of the family is
@@ -282,8 +280,7 @@ independently of its scale. These support a ``measure, don't just
 tag'' program: given a tagged emerging-jet sample, the moments estimate
 $\ctau(\pid)$ itself. \todo{develop the $\ctau$-measurement section}
 
-\subsection{Signed variants}
-\label{sec:signed}
+\obshead{Signed variants}
 
 Throughout, we also consider signed-$\dnought$ variants in which
 $|d_{0,i}|$ in Eq.~(\ref{eq:weight}) carries the lifetime sign of the
@@ -294,8 +291,7 @@ resolution and calibrates the $w_i \simeq \ln 2$ prompt pedestal in
 situ. \stub{Signed-variant distributions and in-situ calibration
 closure test.}
 
-\subsection{Prong-structure observables and search-style baselines}
-\label{sec:standard}
+\obshead{Prong-structure observables and search-style baselines}
 
 Two further sets complete the basis. First, the nominal
 prong-structure observables, for which we do not construct weighted
