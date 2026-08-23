@@ -53,7 +53,7 @@ def main() -> None:
     w_light = pt_weights(ref_pt, labels["pt"][light])
     w_b = pt_weights(ref_pt, labels["pt"][bjet])
 
-    def plot_panel(ax, var, annotate=False, label_fs=None):
+    def plot_panel(ax, var, annotate=False, label_fs=None, legend=None):
         allv = np.concatenate([jets[var][light], jets[var][bjet]]
                               + [jets[var][m] for m in sig_masks.values()])
         hi_q = 0.98 if var in ("dd2", "d2") else 0.999
@@ -84,10 +84,13 @@ def main() -> None:
             ax.set_xlabel(LABELS.get(var, var), fontsize=label_fs)
             ax.set_ylabel("density", fontsize=label_fs - 2)
             ax.tick_params(labelsize=label_fs - 4)
-        if annotate:
+        if legend is None:
+            legend = annotate
+        if legend:
             ax.legend(fontsize=12 if label_fs is None else max(12, label_fs - 4),
                       loc="upper right")
-            ax.set_ylim(top=ax.get_ylim()[1] * 3e4)
+            ax.set_ylim(top=ax.get_ylim()[1] * (3e4 if annotate else 3e2))
+        if annotate:
             ax.text(0.04, 0.97,
                     f"Pythia {PYTHIA_VERSION}, $\\sqrt{{s}}=13.6$ TeV\n"
                     "$Z'(1.5\\,\\mathrm{TeV})\\to q_D\\bar{q}_D$\n"
@@ -116,6 +119,17 @@ def main() -> None:
                         dpi=150)
         plt.close(fig)
     print("wrote 24 appendix_input_* panels")
+
+    # panels for the paired body figure: legend only, no generator annotation
+    for var in ("girth", "ang_11", "eec_b1", "deec_min"):
+        fig, ax = plt.subplots(figsize=(7, 6))
+        plot_panel(ax, var, annotate=False, legend=True)
+        fig.tight_layout()
+        for _ext in ("png", "pdf"):
+            fig.savefig(Path(args.out) / f"paired_panel_{var}_{args.scenario}.{_ext}",
+                        dpi=150)
+        plt.close(fig)
+    print("wrote 4 paired_panel_* panels")
 
     # paper Figure 1: nominal (left) vs displacement-weighted (right) pairs
     fig, axes = plt.subplots(2, 2, figsize=(13, 10.5))
