@@ -295,12 +295,15 @@ Secs.~\ref{sec:anomaly}--\ref{sec:supervised}: $\{\mathrm{dEEC}(\min),\;
 
 \begin{figure}[tb]
   \centering
-  \includegraphics[width=0.49\textwidth]{kb_scan_QCD_b_ctau3_truth.pdf}
-  \includegraphics[width=0.49\textwidth]{kb_scan_QCD_b_ctau30_truth.pdf}
-  \caption{$b$-jet rejection at 50\% signal efficiency for the
-  displacement-weighted angularities $\lambda^\kappa_\beta(w)$ over the
-  $(\kappa,\beta)$ grid, at $\ctau = 3$~mm (left) and 30~mm (right).
-  ``$>$'' marks sample-statistics lower bounds.}
+  \begin{subfigure}{0.49\textwidth}
+    \includegraphics[width=\textwidth]{kb_scan_QCD_b_ctau3_truth.pdf}
+    \caption{}
+  \end{subfigure}
+  \begin{subfigure}{0.49\textwidth}
+    \includegraphics[width=\textwidth]{kb_scan_QCD_b_ctau30_truth.pdf}
+    \caption{}
+  \end{subfigure}
+  \caption{$b$-jet rejection at 50\% signal efficiency for the displacement-weighted angularities $\lambda^\kappa_\beta(w)$ over the $(\kappa,\beta)$ grid, at $\ctau = 3$~mm (a) and 30~mm (b). ``$>$'' marks sample-statistics lower bounds.}
   \label{fig:kbscan}
 \end{figure}
 
@@ -461,15 +464,24 @@ of Eq.~(\ref{eq:weight}).
 
 \begin{figure}[tb]
   \centering
-  \includegraphics[width=0.95\textwidth]{paired_dists_truth.pdf}
-  \caption{Nominal observables (left column) and their
-  displacement-weighted counterparts (right column), truth-level
-  tracking. Filled gray: QCD light jets. Hatched orange: QCD $b$ jets
-  (both $\pT$-reweighted to the signal spectrum). Lines: signal at
-  $\ctau = 1$, 10, and 100~mm.
-  Top: girth $\lambda^1_1$ vs displaced girth $\lambda^1_1(w)$.
-  Bottom: $\mathrm{ECF}_2(\beta{=}1)$ vs
-  $\mathrm{dEEC}(\beta{=}1, \min)$.}
+  \begin{subfigure}{0.49\textwidth}
+    \includegraphics[width=\textwidth]{appendix_input_girth_truth.pdf}
+    \caption{}
+  \end{subfigure}
+  \begin{subfigure}{0.49\textwidth}
+    \includegraphics[width=\textwidth]{appendix_input_ang_11_truth.pdf}
+    \caption{}
+  \end{subfigure}
+  \\
+  \begin{subfigure}{0.49\textwidth}
+    \includegraphics[width=\textwidth]{appendix_input_eec_b1_truth.pdf}
+    \caption{}
+  \end{subfigure}
+  \begin{subfigure}{0.49\textwidth}
+    \includegraphics[width=\textwidth]{appendix_input_deec_min_truth.pdf}
+    \caption{}
+  \end{subfigure}
+  \caption{Nominal observables (left column) and their displacement-weighted counterparts (right column). Filled gray: QCD light jets. Hatched orange: QCD $b$ jets (both $\pT$-reweighted to the signal spectrum). Lines: signal at $\ctau = 1$, 10, and 100~mm. Top: girth $\lambda^1_1$ (a) vs displaced girth $\lambda^1_1(w)$ (b). Bottom: $\mathrm{ECF}_2(\beta{=}1)$ (c) vs $\mathrm{dEEC}(\beta{=}1, \min)$ (d).}
   \label{fig:dists}
 \end{figure}
 
@@ -492,18 +504,115 @@ fans out with $\ctau$.
 
 \begin{figure}[p]
   \centering
-  \includegraphics[width=\textwidth]{appendix_inputs_S_truth.pdf}
-  \caption{The 12 nominal input features (basis $S$). Filled gray: QCD
-  light. Hatched orange: QCD $b$ (both $\pT$-reweighted to the signal
-  spectrum). Lines: signal at $\ctau = 1$, 10, 100~mm.}
+  \begin{subfigure}{0.32\textwidth}
+    \includegraphics[width=\textwidth]{appendix_input_girth_truth.pdf}
+    \caption{}
+  \end{subfigure}
+  \begin{subfigure}{0.32\textwidth}
+    \includegraphics[width=\textwidth]{appendix_input_mass_ang_truth.pdf}
+    \caption{}
+  \end{subfigure}
+  \begin{subfigure}{0.32\textwidth}
+    \includegraphics[width=\textwidth]{appendix_input_eec_b1_truth.pdf}
+    \caption{}
+  \end{subfigure}
+  \\
+  \begin{subfigure}{0.32\textwidth}
+    \includegraphics[width=\textwidth]{appendix_input_ecf3_truth.pdf}
+    \caption{}
+  \end{subfigure}
+  \begin{subfigure}{0.32\textwidth}
+    \includegraphics[width=\textwidth]{appendix_input_c2_truth.pdf}
+    \caption{}
+  \end{subfigure}
+  \begin{subfigure}{0.32\textwidth}
+    \includegraphics[width=\textwidth]{appendix_input_d2_truth.pdf}
+    \caption{}
+  \end{subfigure}
+  \\
+  \begin{subfigure}{0.32\textwidth}
+    \includegraphics[width=\textwidth]{appendix_input_tau1_truth.pdf}
+    \caption{}
+  \end{subfigure}
+  \begin{subfigure}{0.32\textwidth}
+    \includegraphics[width=\textwidth]{appendix_input_tau21_truth.pdf}
+    \caption{}
+  \end{subfigure}
+  \begin{subfigure}{0.32\textwidth}
+    \includegraphics[width=\textwidth]{appendix_input_tau32_truth.pdf}
+    \caption{}
+  \end{subfigure}
+  \\
+  \begin{subfigure}{0.32\textwidth}
+    \includegraphics[width=\textwidth]{appendix_input_ptd_truth.pdf}
+    \caption{}
+  \end{subfigure}
+  \begin{subfigure}{0.32\textwidth}
+    \includegraphics[width=\textwidth]{appendix_input_ntrk_truth.pdf}
+    \caption{}
+  \end{subfigure}
+  \begin{subfigure}{0.32\textwidth}
+    \includegraphics[width=\textwidth]{appendix_input_jetmass_truth.pdf}
+    \caption{}
+  \end{subfigure}
+  \caption{The 12 nominal input features (basis $S$). Filled gray: QCD light. Hatched orange: QCD $b$ (both $\pT$-reweighted to the signal spectrum). Lines: signal at $\ctau = 1$, 10, 100~mm.}
   \label{fig:appS}
 \end{figure}
 
 \begin{figure}[p]
   \centering
-  \includegraphics[width=\textwidth]{appendix_inputs_D_truth.pdf}
-  \caption{The 12 displacement-weighted input features (basis $D$).
-  Conventions as in Fig.~\ref{fig:appS}.}
+  \begin{subfigure}{0.32\textwidth}
+    \includegraphics[width=\textwidth]{appendix_input_ang_00_truth.pdf}
+    \caption{}
+  \end{subfigure}
+  \begin{subfigure}{0.32\textwidth}
+    \includegraphics[width=\textwidth]{appendix_input_ang_10_truth.pdf}
+    \caption{}
+  \end{subfigure}
+  \begin{subfigure}{0.32\textwidth}
+    \includegraphics[width=\textwidth]{appendix_input_ang_11_truth.pdf}
+    \caption{}
+  \end{subfigure}
+  \\
+  \begin{subfigure}{0.32\textwidth}
+    \includegraphics[width=\textwidth]{appendix_input_deec_b1_truth.pdf}
+    \caption{}
+  \end{subfigure}
+  \begin{subfigure}{0.32\textwidth}
+    \includegraphics[width=\textwidth]{appendix_input_deec_min_truth.pdf}
+    \caption{}
+  \end{subfigure}
+  \begin{subfigure}{0.32\textwidth}
+    \includegraphics[width=\textwidth]{appendix_input_decf3_truth.pdf}
+    \caption{}
+  \end{subfigure}
+  \\
+  \begin{subfigure}{0.32\textwidth}
+    \includegraphics[width=\textwidth]{appendix_input_dc2_truth.pdf}
+    \caption{}
+  \end{subfigure}
+  \begin{subfigure}{0.32\textwidth}
+    \includegraphics[width=\textwidth]{appendix_input_dd2_truth.pdf}
+    \caption{}
+  \end{subfigure}
+  \begin{subfigure}{0.32\textwidth}
+    \includegraphics[width=\textwidth]{appendix_input_L1_truth.pdf}
+    \caption{}
+  \end{subfigure}
+  \\
+  \begin{subfigure}{0.32\textwidth}
+    \includegraphics[width=\textwidth]{appendix_input_Lratio_truth.pdf}
+    \caption{}
+  \end{subfigure}
+  \begin{subfigure}{0.32\textwidth}
+    \includegraphics[width=\textwidth]{appendix_input_ip2d_truth.pdf}
+    \caption{}
+  \end{subfigure}
+  \begin{subfigure}{0.32\textwidth}
+    \includegraphics[width=\textwidth]{appendix_input_promptfrac_truth.pdf}
+    \caption{}
+  \end{subfigure}
+  \caption{The 12 displacement-weighted input features (basis $D$). Conventions as in Fig.~\ref{fig:appS}.}
   \label{fig:appD}
 \end{figure}
 
@@ -539,10 +648,15 @@ dominating the Pearson estimator rather than genuine independence.)
 
 \begin{figure}[tb]
   \centering
-  \includegraphics[width=0.98\textwidth]{correlations_D_truth.pdf}
-  \caption{Pearson correlations of the 12 displacement-weighted input
-  features for inclusive QCD (left) and signal at $\ctau = 10$~mm
-  (right).}
+  \begin{subfigure}{0.49\textwidth}
+    \includegraphics[width=\textwidth]{correlations_QCD_truth.pdf}
+    \caption{}
+  \end{subfigure}
+  \begin{subfigure}{0.49\textwidth}
+    \includegraphics[width=\textwidth]{correlations_sig10_truth.pdf}
+    \caption{}
+  \end{subfigure}
+  \caption{Pearson correlations of the 12 displacement-weighted input features for inclusive QCD (a) and signal at $\ctau = 10$~mm (b).}
   \label{fig:corr}
 \end{figure}
 
@@ -589,13 +703,15 @@ flavor. Three qualitative results emerge:
 
 \begin{figure}[tb]
   \centering
-  \includegraphics[width=0.49\textwidth]{rejection_paper_QCD_b_truth.pdf}
-  \includegraphics[width=0.49\textwidth]{rejection_paper_QCD_light_truth.pdf}
-  \caption{Background rejection at 50\% signal efficiency versus
-  $\ctau(\pid)$ for $b$ jets (left) and light jets (right), for the
-  benchmark displacement-weighted observables (colored) and two nominal
-  references (gray dotted). Open triangles mark statistics lower
-  bounds.}
+  \begin{subfigure}{0.49\textwidth}
+    \includegraphics[width=\textwidth]{rejection_paper_QCD_b_truth.pdf}
+    \caption{}
+  \end{subfigure}
+  \begin{subfigure}{0.49\textwidth}
+    \includegraphics[width=\textwidth]{rejection_paper_QCD_light_truth.pdf}
+    \caption{}
+  \end{subfigure}
+  \caption{Background rejection at 50\% signal efficiency versus $\ctau(\pid)$ for $b$ jets (a) and light jets (b), for the benchmark displacement-weighted observables (colored) and two nominal references (gray dotted). Open triangles mark statistics lower bounds.}
   \label{fig:rejection}
 \end{figure}
 
@@ -729,45 +845,52 @@ Three further observations:
 
 \begin{figure}[tb]
   \centering
-  \includegraphics[width=0.9\textwidth]{vae_scores_truth.pdf}
-  \caption{Anomaly-score distributions (per-jet loss): AE (top) and
-  VAE (bottom) for the nominal basis $S$ (left) and the augmented basis
-  $S{+}D$ (right). Filled gray: inclusive QCD test sample. Hatched
-  orange: $b$-enriched sample. Lines: signal at $\ctau = 1$, 10, and
-  100~mm.}
+  \begin{subfigure}{0.49\textwidth}
+    \includegraphics[width=\textwidth]{vae_scores_AE_S_truth.pdf}
+    \caption{}
+  \end{subfigure}
+  \begin{subfigure}{0.49\textwidth}
+    \includegraphics[width=\textwidth]{vae_scores_AE_SpD_truth.pdf}
+    \caption{}
+  \end{subfigure}
+  \\
+  \begin{subfigure}{0.49\textwidth}
+    \includegraphics[width=\textwidth]{vae_scores_VAE_S_truth.pdf}
+    \caption{}
+  \end{subfigure}
+  \begin{subfigure}{0.49\textwidth}
+    \includegraphics[width=\textwidth]{vae_scores_VAE_SpD_truth.pdf}
+    \caption{}
+  \end{subfigure}
+  \caption{Anomaly-score distributions (per-jet loss): AE (top row) and VAE (bottom row) for the nominal basis $S$ (left column) and the augmented basis $S{+}D$ (right column). Filled gray: inclusive QCD test sample. Hatched orange: $b$-enriched sample. Lines: signal at $\ctau = 1$, 10, and 100~mm.}
   \label{fig:vaescore}
 \end{figure}
 
 \begin{figure}[tb]
   \centering
-  \includegraphics[width=0.95\textwidth]{vae_efficiency_truth.pdf}
-  \caption{Signal efficiency of the (V)AE anomaly score at a fixed QCD
-  anomaly rate of $10^{-2}$ (left) and $10^{-3}$ (right), versus
-  $\ctau(\pid)$. Gray dashed: basis $S$. Red solid: basis $S{+}D$.
-  Black: the supervised XGBoost classifier of
-  Sec.~\ref{sec:supervised} on the same $S{+}D$ basis at the same
-  working points. Identical (V)AE architecture and training
-  throughout.}
+  \begin{subfigure}{0.49\textwidth}
+    \includegraphics[width=\textwidth]{vae_efficiency_fpr1em2_truth.pdf}
+    \caption{}
+  \end{subfigure}
+  \begin{subfigure}{0.49\textwidth}
+    \includegraphics[width=\textwidth]{vae_efficiency_fpr1em3_truth.pdf}
+    \caption{}
+  \end{subfigure}
+  \caption{Signal efficiency of the (V)AE anomaly score at a fixed QCD anomaly rate of $10^{-2}$ (a) and $10^{-3}$ (b), versus $\ctau(\pid)$. Gray dashed: basis $S$. Red solid: basis $S{+}D$. Black: the supervised classifier of Sec.~\ref{sec:supervised} on the same $S{+}D$ basis at the same working points.}
   \label{fig:vae}
 \end{figure}
 
 \begin{figure}[tb]
   \centering
   \begin{subfigure}{0.49\textwidth}
-    \includegraphics[width=\textwidth]{vae_recon_example_ang_00_truth.pdf}
+    \includegraphics[width=\textwidth]{vae_recon_panel_ang_00_truth.pdf}
     \caption{}
   \end{subfigure}
   \begin{subfigure}{0.49\textwidth}
-    \includegraphics[width=\textwidth]{vae_recon_example_deec_min_truth.pdf}
+    \includegraphics[width=\textwidth]{vae_recon_panel_promptfrac_truth.pdf}
     \caption{}
   \end{subfigure}
-  \caption{Input and reconstructed distributions of the VAE trained on
-  QCD only (basis $S{+}D$) for two example displaced observables,
-  (a) $\Sigma_i w_i$ and (b) $\mathrm{dEEC}(\min)$, for the QCD test
-  sample and signal at $\ctau = 10$~mm. QCD is reconstructed
-  faithfully, while signal reconstructions are pulled onto the QCD
-  manifold, producing the large anomaly score. The complete feature set
-  is shown in Appendix~\ref{app:recon}.}
+  \caption{Input and reconstructed distributions of the VAE trained on QCD only (basis $S{+}D$) for two example displaced observables, (a) $\Sigma_i w_i$ and (b) the prompt $\pT$ fraction, for the QCD test sample and signal at $\ctau = 10$~mm. QCD is reconstructed faithfully, while signal reconstructions are pulled onto the QCD manifold, producing the large anomaly score. The complete feature set is shown in Appendix~\ref{app:recon}.}
   \label{fig:vaerecon}
 \end{figure}
 
@@ -790,50 +913,52 @@ Three further observations:
 % anomaly contrast. For displacement-aware anomaly detection the
 % heavy-tailed features should enter the autoencoder untransformed.
 %
-% \subsection{Comparison with fully supervised classifiers}
-% \label{sec:supervised}
-%
-% To quantify how much of the family's combined discrimination a single
-% interpretable observable retains, we compare against fully supervised
-% classifiers trained on the same features and jet splits. The ceiling
-% is an XGBoost classifier on the complete 24-feature $S{+}D$ basis,
-% trained separately per $\ctau$ point: signal versus inclusive QCD
-% using the training subsets of Sec.~\ref{sec:addata} ($73\,354$ QCD
-% and $5\,476$ signal jets), up to 400 trees with the library defaults
-% (maximum depth 6, learning rate 0.3), class-weighted by the training
-% imbalance (\texttt{scale\_pos\_weight} $\simeq 13$), with early
-% stopping after 20 rounds without validation-logloss improvement.
-% Scores are class probabilities, and working points use the same
-% definitions as elsewhere (50\% signal efficiency for rejections, or
-% fixed QCD anomaly rates in Sec.~\ref{sec:adresults}). An identically
-% configured classifier restricted to the 12-feature nominal basis $S$,
-% and the two strongest single observables ($\mathrm{dEEC}(\min)$ and
-% $\Sigma_i w_i$), are evaluated on the same test jets.
-%
-% Figure~\ref{fig:gap} shows the outcome. The single observables capture
-% $40$--$100\%$ of the ceiling's log-rejection across the lifetime grid:
-% the weighted multiplicity leads against $b$ jets at every lifetime and
-% itself saturates the test-sample ceiling for $\ctau \geq 30$~mm, while
-% the dEEC leads against light jets at the shortest lifetimes. The
-% nominal-basis classifier is the supervised counterpart of the
-% anomaly-detection blind spot: supervised training does extract a
-% lifetime-\emph{independent} $\sim 40\times$ $b$-jet rejection from
-% shape information alone, but the curve never rises with $\ctau$.
-% Displacement is where all the lifetime discrimination lives, and two
-% interpretable observables transmit most of it.
-% \todo{seed ensembles for error bands. production statistics}
-%
-% \begin{figure}[tb]
-%   \centering
-%   \includegraphics[width=0.95\textwidth]{interpretability_gap_truth.pdf}
-%   \caption{Left: $b$-jet rejection at 50\% signal efficiency versus
-%   $\ctau(\pid)$ for the supervised XGBoost ceiling on the full $S{+}D$
-%   basis, the classifier restricted to the nominal basis $S$, and the
-%   two strongest single observables. Plateaus reflect the test-sample
-%   statistics. Right: fraction of the ceiling's log-rejection captured
-%   by each proxy.}
-%   \label{fig:gap}
-% \end{figure}
+\subsection{Comparison with fully supervised classifiers}
+\label{sec:supervised}
+
+To quantify how much of the family's combined discrimination a single
+interpretable observable retains, we compare against fully supervised
+classifiers trained on the same features and jet splits. The ceiling
+is an XGBoost classifier on the complete 24-feature $S{+}D$ basis,
+trained separately per $\ctau$ point: signal versus inclusive QCD
+using the training subsets of Sec.~\ref{sec:addata} ($73\,354$ QCD
+and $5\,476$ signal jets), up to 400 trees with the library defaults
+(maximum depth 6, learning rate 0.3), class-weighted by the training
+imbalance (\texttt{scale\_pos\_weight} $\simeq 13$), with early
+stopping after 20 rounds without validation-logloss improvement.
+Scores are class probabilities, and working points use the same
+definitions as elsewhere (50\% signal efficiency for rejections, or
+fixed QCD anomaly rates in Sec.~\ref{sec:adresults}). An identically
+configured classifier restricted to the 12-feature nominal basis $S$,
+and the two strongest single observables ($\mathrm{dEEC}(\min)$ and
+$\Sigma_i w_i$), are evaluated on the same test jets.
+
+Figure~\ref{fig:gap} shows the outcome. The single observables capture
+$40$--$100\%$ of the ceiling's log-rejection across the lifetime grid:
+the weighted multiplicity leads against $b$ jets at every lifetime and
+itself saturates the test-sample ceiling for $\ctau \geq 30$~mm, while
+the dEEC leads against light jets at the shortest lifetimes. The
+nominal-basis classifier is the supervised counterpart of the
+anomaly-detection blind spot: supervised training does extract a
+lifetime-\emph{independent} $\sim 40\times$ $b$-jet rejection from
+shape information alone, but the curve never rises with $\ctau$.
+Displacement is where all the lifetime discrimination lives, and two
+interpretable observables transmit most of it.
+\todo{seed ensembles for error bands. production statistics}
+
+\begin{figure}[tb]
+  \centering
+  \begin{subfigure}{0.49\textwidth}
+    \includegraphics[width=\textwidth]{gap_rejection_truth.pdf}
+    \caption{}
+  \end{subfigure}
+  \begin{subfigure}{0.49\textwidth}
+    \includegraphics[width=\textwidth]{gap_fraction_truth.pdf}
+    \caption{}
+  \end{subfigure}
+  \caption{(a) $b$-jet rejection at 50\% signal efficiency versus $\ctau(\pid)$ for the supervised XGBoost ceiling on the full $S{+}D$ basis, the classifier restricted to the nominal basis $S$, and the two strongest single observables. Plateaus reflect the test-sample statistics. (b) Fraction of the ceiling's log-rejection captured by each proxy.}
+  \label{fig:gap}
+\end{figure}
 
 \stub{Per-flavor efficiency curves. Latent-space diagnostics.
 Cross-check with reco-level set-based architectures (deep-set / DETR).}
@@ -1012,11 +1137,15 @@ whose denominators grow with every accepted soft track.
 
 \begin{figure}[tb]
   \centering
-  \includegraphics[width=0.95\textwidth]{pileup_paper_truth.pdf}
-  \caption{$b$-jet rejection versus $\ctau(\pid)$ for the weighted
-  multiplicity (left) and the dEEC (right), with ($\mu = 60$, red) and
-  without ($\mu = 0$, black) minimum-bias pileup overlay. Open
-  triangles are sample-statistics lower bounds.}
+  \begin{subfigure}{0.49\textwidth}
+    \includegraphics[width=\textwidth]{pileup_mu_ang_00_truth.pdf}
+    \caption{}
+  \end{subfigure}
+  \begin{subfigure}{0.49\textwidth}
+    \includegraphics[width=\textwidth]{pileup_mu_deec_min_truth.pdf}
+    \caption{}
+  \end{subfigure}
+  \caption{$b$-jet rejection versus $\ctau(\pid)$ for the weighted multiplicity (a) and the dEEC (b), with ($\mu = 60$, red) and without ($\mu = 0$, black) minimum-bias pileup overlay. Open triangles are sample-statistics lower bounds.}
   \label{fig:pileup}
 \end{figure}
 
@@ -1031,19 +1160,115 @@ manifold.
 
 \begin{figure}[p]
   \centering
-  \includegraphics[width=\textwidth]{vae_recon_VAE_SpD_truth_nominal.pdf}
-  \caption{VAE (basis $S{+}D$) input and reconstructed distributions of
-  the 12 nominal features, for the QCD test sample (solid) and signal
-  at $\ctau = 10$~mm (dashed).}
+  \begin{subfigure}{0.32\textwidth}
+    \includegraphics[width=\textwidth]{vae_recon_panel_girth_truth.pdf}
+    \caption{}
+  \end{subfigure}
+  \begin{subfigure}{0.32\textwidth}
+    \includegraphics[width=\textwidth]{vae_recon_panel_mass_ang_truth.pdf}
+    \caption{}
+  \end{subfigure}
+  \begin{subfigure}{0.32\textwidth}
+    \includegraphics[width=\textwidth]{vae_recon_panel_eec_b1_truth.pdf}
+    \caption{}
+  \end{subfigure}
+  \\
+  \begin{subfigure}{0.32\textwidth}
+    \includegraphics[width=\textwidth]{vae_recon_panel_ecf3_truth.pdf}
+    \caption{}
+  \end{subfigure}
+  \begin{subfigure}{0.32\textwidth}
+    \includegraphics[width=\textwidth]{vae_recon_panel_c2_truth.pdf}
+    \caption{}
+  \end{subfigure}
+  \begin{subfigure}{0.32\textwidth}
+    \includegraphics[width=\textwidth]{vae_recon_panel_d2_truth.pdf}
+    \caption{}
+  \end{subfigure}
+  \\
+  \begin{subfigure}{0.32\textwidth}
+    \includegraphics[width=\textwidth]{vae_recon_panel_tau1_truth.pdf}
+    \caption{}
+  \end{subfigure}
+  \begin{subfigure}{0.32\textwidth}
+    \includegraphics[width=\textwidth]{vae_recon_panel_tau21_truth.pdf}
+    \caption{}
+  \end{subfigure}
+  \begin{subfigure}{0.32\textwidth}
+    \includegraphics[width=\textwidth]{vae_recon_panel_tau32_truth.pdf}
+    \caption{}
+  \end{subfigure}
+  \\
+  \begin{subfigure}{0.32\textwidth}
+    \includegraphics[width=\textwidth]{vae_recon_panel_ptd_truth.pdf}
+    \caption{}
+  \end{subfigure}
+  \begin{subfigure}{0.32\textwidth}
+    \includegraphics[width=\textwidth]{vae_recon_panel_ntrk_truth.pdf}
+    \caption{}
+  \end{subfigure}
+  \begin{subfigure}{0.32\textwidth}
+    \includegraphics[width=\textwidth]{vae_recon_panel_jetmass_truth.pdf}
+    \caption{}
+  \end{subfigure}
+  \caption{VAE (basis $S{+}D$) input and reconstructed distributions of the 12 nominal features, for the QCD test sample and signal at $\ctau = 10$~mm.}
   \label{fig:appreconS}
 \end{figure}
 
 \begin{figure}[p]
   \centering
-  \includegraphics[width=\textwidth]{vae_recon_VAE_SpD_truth_displaced.pdf}
-  \caption{VAE (basis $S{+}D$) input and reconstructed distributions of
-  the 12 displaced features, for the QCD test sample (solid) and signal
-  at $\ctau = 10$~mm (dashed).}
+  \begin{subfigure}{0.32\textwidth}
+    \includegraphics[width=\textwidth]{vae_recon_panel_ang_00_truth.pdf}
+    \caption{}
+  \end{subfigure}
+  \begin{subfigure}{0.32\textwidth}
+    \includegraphics[width=\textwidth]{vae_recon_panel_ang_10_truth.pdf}
+    \caption{}
+  \end{subfigure}
+  \begin{subfigure}{0.32\textwidth}
+    \includegraphics[width=\textwidth]{vae_recon_panel_ang_11_truth.pdf}
+    \caption{}
+  \end{subfigure}
+  \\
+  \begin{subfigure}{0.32\textwidth}
+    \includegraphics[width=\textwidth]{vae_recon_panel_deec_b1_truth.pdf}
+    \caption{}
+  \end{subfigure}
+  \begin{subfigure}{0.32\textwidth}
+    \includegraphics[width=\textwidth]{vae_recon_panel_deec_min_truth.pdf}
+    \caption{}
+  \end{subfigure}
+  \begin{subfigure}{0.32\textwidth}
+    \includegraphics[width=\textwidth]{vae_recon_panel_decf3_truth.pdf}
+    \caption{}
+  \end{subfigure}
+  \\
+  \begin{subfigure}{0.32\textwidth}
+    \includegraphics[width=\textwidth]{vae_recon_panel_dc2_truth.pdf}
+    \caption{}
+  \end{subfigure}
+  \begin{subfigure}{0.32\textwidth}
+    \includegraphics[width=\textwidth]{vae_recon_panel_dd2_truth.pdf}
+    \caption{}
+  \end{subfigure}
+  \begin{subfigure}{0.32\textwidth}
+    \includegraphics[width=\textwidth]{vae_recon_panel_L1_truth.pdf}
+    \caption{}
+  \end{subfigure}
+  \\
+  \begin{subfigure}{0.32\textwidth}
+    \includegraphics[width=\textwidth]{vae_recon_panel_Lratio_truth.pdf}
+    \caption{}
+  \end{subfigure}
+  \begin{subfigure}{0.32\textwidth}
+    \includegraphics[width=\textwidth]{vae_recon_panel_ip2d_truth.pdf}
+    \caption{}
+  \end{subfigure}
+  \begin{subfigure}{0.32\textwidth}
+    \includegraphics[width=\textwidth]{vae_recon_panel_promptfrac_truth.pdf}
+    \caption{}
+  \end{subfigure}
+  \caption{VAE (basis $S{+}D$) input and reconstructed distributions of the 12 displaced features. Conventions as in Fig.~\ref{fig:appreconS}.}
   \label{fig:appreconD}
 \end{figure}
 

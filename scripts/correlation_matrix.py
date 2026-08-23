@@ -54,17 +54,20 @@ def main() -> None:
         jets = f["jets"][:]
         labels = f["labels"][:]
 
-    fig, axes = plt.subplots(1, 2, figsize=(20, 9.5))
-    corr_panel(axes[0], jets, labels["sample"] == 0, "inclusive QCD")
-    im = corr_panel(
-        axes[1], jets,
-        (labels["sample"] == 2) & (labels["ctau"] == args.ctau),
-        f"signal $c\\tau = {args.ctau:g}$ mm")
-    fig.colorbar(im, ax=axes, label="Pearson correlation", fraction=0.025, pad=0.02)
-    out = Path(args.out) / f"correlations_D_{args.scenario}.png"
-    for _ext in ("png", "pdf"):
-        fig.savefig(str(out).replace(".png", "." + _ext), dpi=150, bbox_inches="tight")
-    print(f"wrote {out}")
+    for tag, mask, title in (
+        ("QCD", labels["sample"] == 0, "inclusive QCD"),
+        ("sig10", (labels["sample"] == 2) & (labels["ctau"] == args.ctau),
+         f"signal $c\\tau = {args.ctau:g}$ mm"),
+    ):
+        fig, ax = plt.subplots(figsize=(11, 9.5))
+        im = corr_panel(ax, jets, mask, title)
+        fig.colorbar(im, ax=ax, label="Pearson correlation", fraction=0.046, pad=0.03)
+        out = Path(args.out) / f"correlations_{tag}_{args.scenario}.png"
+        for _ext in ("png", "pdf"):
+            fig.savefig(str(out).replace(".png", "." + _ext), dpi=150,
+                        bbox_inches="tight")
+        plt.close(fig)
+        print(f"wrote {out}")
 
 
 if __name__ == "__main__":

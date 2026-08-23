@@ -66,7 +66,7 @@ def main() -> None:
     w_light = pt_weights(ref_pt, labels["pt"][light])
     w_b = pt_weights(ref_pt, labels["pt"][bjet])
 
-    def plot_panel(ax, var, annotate=False, label_fs=15):
+    def plot_panel(ax, var, annotate=False, label_fs=None):
         allv = np.concatenate([jets[var][light], jets[var][bjet]]
                               + [jets[var][m] for m in sig_masks.values()])
         hi_q = 0.98 if var in ("dd2", "d2") else 0.999
@@ -90,17 +90,23 @@ def main() -> None:
                     density=True, histtype="step", lw=1.8, color=col,
                     label=f"signal $c\\tau$={c:g} mm")
         ax.set_yscale("log")
-        ax.set_xlabel(LABELS.get(var, var), fontsize=label_fs)
-        ax.set_ylabel("density", fontsize=label_fs - 2)
-        ax.tick_params(labelsize=label_fs - 4)
+        if label_fs is None:
+            ax.set_xlabel(LABELS.get(var, var))
+            ax.set_ylabel("density")
+        else:
+            ax.set_xlabel(LABELS.get(var, var), fontsize=label_fs)
+            ax.set_ylabel("density", fontsize=label_fs - 2)
+            ax.tick_params(labelsize=label_fs - 4)
         if annotate:
-            ax.legend(fontsize=max(12, label_fs - 4), loc="upper right")
+            ax.legend(fontsize=12 if label_fs is None else max(12, label_fs - 4),
+                      loc="upper right")
             ax.set_ylim(top=ax.get_ylim()[1] * 3e4)
             ax.text(0.04, 0.97,
                     f"Pythia {PYTHIA_VERSION}, $\\sqrt{{s}}=13.6$ TeV\n"
                     "$Z'(1.5\\,\\mathrm{TeV})\\to q_D\\bar{q}_D$\n"
                     "anti-$k_t$ $R=1.0$",
-                    transform=ax.transAxes, va="top", fontsize=label_fs - 5)
+                    transform=ax.transAxes, va="top",
+                    fontsize=13 if label_fs is None else label_fs - 5)
 
     for tag, basis in (("S", BASIS_S), ("D", BASIS_D)):
         fig, axes = plt.subplots(4, 3, figsize=(17, 19))
@@ -112,6 +118,17 @@ def main() -> None:
             fig.savefig(str(out).replace(".png", "." + _ext), dpi=140)
         plt.close(fig)
         print(f"wrote {out}")
+
+    # standalone per-feature panels for subfigure layouts
+    for var in BASIS_S + BASIS_D:
+        fig, ax = plt.subplots(figsize=(7, 6))
+        plot_panel(ax, var, annotate=True)
+        fig.tight_layout()
+        for _ext in ("png", "pdf"):
+            fig.savefig(Path(args.out) / f"appendix_input_{var}_{args.scenario}.{_ext}",
+                        dpi=150)
+        plt.close(fig)
+    print("wrote 24 appendix_input_* panels")
 
     # paper Figure 1: nominal (left) vs displacement-weighted (right) pairs
     fig, axes = plt.subplots(2, 2, figsize=(13, 10.5))

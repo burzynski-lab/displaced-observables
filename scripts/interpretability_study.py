@@ -114,33 +114,43 @@ def main() -> None:
 
     styles = {"BDT, S+D": ("k", "-", "o"), "BDT, S": ("tab:gray", ":", "v"),
               "dEEC(min)": ("tab:orange", "--", "D"), "$\\Sigma_i w_i$": ("tab:blue", "--", "s")}
-    fig, axes = plt.subplots(1, 2, figsize=(14, 6))
     bname = "QCD b"
+    # rejection panel
+    fig, ax = plt.subplots(figsize=(7, 6))
     for m in methods:
         y = [results[(m, c, bname)] for c in ctaus]
         col, ls, mk = styles[m]
-        axes[0].plot(ctaus, y, color=col, ls=ls, marker=mk, ms=5, label=m)
-    axes[0].set_yscale("log")
-    axes[0].set_ylabel(f"{bname} rejection @ $\\epsilon_s$=50%")
+        ax.plot(ctaus, y, color=col, ls=ls, marker=mk, ms=5, label=m)
+    ax.set_yscale("log")
+    ax.set_ylabel(f"{bname} rejection @ $\\epsilon_s$=50%")
+    ax.set_xscale("symlog", linthresh=1)
+    ax.set_xlabel("$c\\tau(\\pi_d)$ [mm]")
+    ax.set_ylim(top=ax.get_ylim()[1] * 3e3)
+    ax.legend(fontsize=13, loc="lower right")
+    decorate(ax, extra="supervised per $c\\tau$")
+    fig.tight_layout()
+    for _ext in ("png", "pdf"):
+        fig.savefig(out_dir / f"gap_rejection_{args.scenario}.{_ext}", dpi=150)
+    plt.close(fig)
+    # fraction panel
+    fig, ax = plt.subplots(figsize=(7, 6))
     for m in methods[1:]:
         frac = [np.log(max(results[(m, c, bname)], 1.001))
                 / np.log(max(results[("BDT, S+D", c, bname)], 1.002))
                 for c in ctaus]
         col, ls, mk = styles[m]
-        axes[1].plot(ctaus, frac, color=col, ls=ls, marker=mk, ms=5, label=m)
-    axes[1].axhline(1.0, color="k", lw=0.8)
-    axes[1].set_ylabel("fraction of ceiling log-rejection")
-    axes[1].set_ylim(0, 1.3)
-    for k, ax in enumerate(axes):
-        ax.set_xscale("symlog", linthresh=1)
-        ax.set_xlabel("$c\\tau(\\pi_d)$ [mm]")
-        ax.legend(fontsize=13, loc="lower right" if k == 0 else "upper right")
-    decorate(axes[0], extra="supervised per $c\\tau$")
+        ax.plot(ctaus, frac, color=col, ls=ls, marker=mk, ms=5, label=m)
+    ax.axhline(1.0, color="k", lw=0.8)
+    ax.set_ylabel("fraction of ceiling log-rejection")
+    ax.set_ylim(0, 1.3)
+    ax.set_xscale("symlog", linthresh=1)
+    ax.set_xlabel("$c\\tau(\\pi_d)$ [mm]")
+    ax.legend(fontsize=13, loc="upper right")
     fig.tight_layout()
     for _ext in ("png", "pdf"):
-        fig.savefig(out_dir / f"interpretability_gap_{args.scenario}.{_ext}", dpi=150)
+        fig.savefig(out_dir / f"gap_fraction_{args.scenario}.{_ext}", dpi=150)
     plt.close(fig)
-    print(f"wrote {out_dir}/interpretability_gap_{args.scenario}.png")
+    print(f"wrote {out_dir}/gap_rejection and gap_fraction")
 
 
 if __name__ == "__main__":

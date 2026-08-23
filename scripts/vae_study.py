@@ -192,34 +192,38 @@ def plot_reconstruction(series, basis, kind, basis_name, out_dir, scenario):
             fig.savefig(out_dir / f"vae_recon_{tag}{suffix}.{_ext}", dpi=140)
         plt.close(fig)
 
-    # standalone example panels for the paper body (VAE, S+D)
+    # standalone per-feature panels (VAE, S+D) for subfigure layouts
     if kind == "VAE" and basis_name == "S+D":
-        for var in ("ang_00", "deec_min"):
+        for var in basis:
             k = basis.index(var)
             fig, ax = plt.subplots(figsize=(7, 6))
             allv = np.concatenate([s[1][:, k] for s in series])
-            lo, hi = np.quantile(allv, [0.001, 0.999])
+            hi_q = 0.98 if var in ("dd2", "d2") else 0.999
+            lo, hi = np.quantile(allv, [0.001, hi_q])
             if hi <= lo:
                 hi = lo + 1
+            scale = 10.0 ** np.floor(np.log10(max(abs(hi), 1))) if abs(hi) > 1e4 else 1.0
+            lo, hi = lo / scale, hi / scale
             bins = np.linspace(lo, hi, 50)
             for label, arr, color, ls, filled in series:
                 if filled:
-                    ax.hist(np.clip(arr[:, k], lo, hi), bins=bins,
+                    ax.hist(np.clip(arr[:, k] / scale, lo, hi), bins=bins,
                             histtype="stepfilled", alpha=0.45, color=color,
                             label=label, density=True)
                 else:
-                    ax.hist(np.clip(arr[:, k], lo, hi), bins=bins,
+                    ax.hist(np.clip(arr[:, k] / scale, lo, hi), bins=bins,
                             histtype="step", lw=1.5, label=label, color=color,
                             ls=ls, density=True)
             ax.set_yscale("log")
             ax.set_ylim(top=ax.get_ylim()[1] * 3e4)
-            ax.set_xlabel(var)
+            ax.set_xlabel(var if scale == 1.0
+                          else f"{var}  [$\\times 10^{{{int(np.log10(scale))}}}$]")
             ax.set_ylabel("density")
             ax.legend(fontsize=13, loc="upper right")
             decorate(ax)
             fig.tight_layout()
             for _ext in ("png", "pdf"):
-                fig.savefig(out_dir / f"vae_recon_example_{var}_{scenario}.{_ext}",
+                fig.savefig(out_dir / f"vae_recon_panel_{var}_{scenario}.{_ext}",
                             dpi=150)
             plt.close(fig)
 
@@ -377,11 +381,13 @@ def main() -> None:
         plot_reconstruction(rd["series"], rd["basis"], kind, basis_name,
                             out_dir, args.scenario)
 
-    # money plot: signal efficiency at fixed QCD anomaly rate vs ctau
-    fig, axes = plt.subplots(1, 2, figsize=(14, 6))
+    # money plot: signal efficiency at fixed QCD anomaly rate vs ctau,
+    # one standalone figure per working point (subfigure layout in the paper)
     colors = {"S": "tab:gray", "S+D": "tab:red"}
     markers = {"AE": "o", "VAE": "s"}
-    for ax, fpr in zip(axes, FPRS):
+    fpr_tags = {1e-2: "fpr1em2", 1e-3: "fpr1em3"}
+    for fpr in FPRS:
+        fig, ax = plt.subplots(figsize=(7, 6))
         for kind in ("AE", "VAE"):
             for basis_name in BASES:
                 y = [max(results[(kind, basis_name, c, fpr)], 1.2e-4) for c in ctaus]
@@ -400,18 +406,18 @@ def main() -> None:
         ax.set_ylim(1e-4, 3e2)
         ax.legend(fontsize=13, loc="upper right")
         decorate(ax, extra="QCD-only training")
-    fig.tight_layout()
-    for _ext in ("png", "pdf"):
-        fig.savefig(out_dir / f"vae_efficiency_{args.scenario}.{_ext}", dpi=150)
-    plt.close(fig)
+        fig.tight_layout()
+        for _ext in ("png", "pdf"):
+            fig.savefig(out_dir / f"vae_efficiency_{fpr_tags[fpr]}_{args.scenario}.{_ext}",
+                        dpi=150)
+        plt.close(fig)
 
-    # anomaly-score distributions: 4 panels (model x basis), shaded
-    # backgrounds, three signal lifetimes, log-log axes
-    fig, axes = plt.subplots(2, 2, figsize=(14, 11))
+    # anomaly-score distributions: one standalone figure per (model, basis)
     sig_colors = {1.0: "#d62728", 10.0: "#9467bd", 100.0: "#2ca02c"}
-    for r, kind in enumerate(("AE", "VAE")):
-        for c, basis_name in enumerate(BASES):
-            ax = axes[r][c]
+    for kind in ("AE", "VAE"):
+        for basis_name in BASES:
+            btag = basis_name.replace("+", "p")
+            ax_fig, ax = plt.subplots(figsize=(7, 6))
             d = score_store[(kind, basis_name)]
             allv = np.concatenate([d["qcd"], d["bb"]] + list(d["sig"].values()))
             lo = max(np.quantile(allv, 0.001), 1e-4)
@@ -433,13 +439,13 @@ def main() -> None:
             ax.set_ylim(top=ax.get_ylim()[1] * 3e4)
             ax.set_xlabel(f"anomaly score  [{kind}, basis {basis_name}]")
             ax.set_ylabel("density")
-            ax.tick_params(labelsize=12)
             ax.legend(fontsize=13, loc="upper right")
             decorate(ax)
-    fig.tight_layout()
-    for _ext in ("png", "pdf"):
-        fig.savefig(out_dir / f"vae_scores_{args.scenario}.{_ext}", dpi=150)
-    plt.close(fig)
+            ax_fig.tight_layout()
+            for _ext in ("png", "pdf"):
+                ax_fig.savefig(out_dir / f"vae_scores_{kind}_{btag}_{args.scenario}.{_ext}",
+                               dpi=150)
+            plt.close(ax_fig)
 
     print(f"\nplots written to {out_dir}/")
     print("\nsignal efficiency @ QCD anomaly rate:")
