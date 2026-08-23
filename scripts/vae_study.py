@@ -31,7 +31,7 @@ import yaml
 
 import sys
 sys.path.insert(0, str(Path(__file__).parent))
-from make_plots import decorate  # noqa: E402
+from make_plots import LABELS, decorate  # noqa: E402
 
 plt.style.use(hep.style.ATLAS)
 
@@ -174,7 +174,8 @@ def plot_reconstruction(series, basis, kind, basis_name, out_dir, scenario):
                             ls=ls, density=True)
             ax.set_yscale("log")
             ax.set_ylim(top=ax.get_ylim()[1] * 3e4)
-            xlab = var if scale == 1.0 else f"{var}  [$\\times 10^{{{int(np.log10(scale))}}}$]"
+            name = LABELS.get(var, var)
+            xlab = name if scale == 1.0 else f"{name}  [$\\times 10^{{{int(np.log10(scale))}}}$]"
             ax.set_xlabel(xlab, fontsize=16)
             from make_plots import PYTHIA_VERSION
             ax.text(0.04, 0.97,
@@ -216,8 +217,9 @@ def plot_reconstruction(series, basis, kind, basis_name, out_dir, scenario):
                             ls=ls, density=True)
             ax.set_yscale("log")
             ax.set_ylim(top=ax.get_ylim()[1] * 3e4)
-            ax.set_xlabel(var if scale == 1.0
-                          else f"{var}  [$\\times 10^{{{int(np.log10(scale))}}}$]")
+            name = LABELS.get(var, var)
+            ax.set_xlabel(name if scale == 1.0
+                          else f"{name}  [$\\times 10^{{{int(np.log10(scale))}}}$]")
             ax.set_ylabel("density")
             ax.legend(fontsize=13, loc="upper right")
             decorate(ax)

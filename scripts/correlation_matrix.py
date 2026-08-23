@@ -20,7 +20,7 @@ import numpy as np
 import sys
 sys.path.insert(0, str(Path(__file__).parent))
 from vae_study import BASIS_D  # noqa: E402
-from appendix_inputs import LABELS  # noqa: E402
+from make_plots import LABELS  # noqa: E402
 
 plt.style.use(hep.style.ATLAS)
 

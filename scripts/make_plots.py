@@ -71,13 +71,29 @@ OBSERVABLES = {
 EFFS = (0.5, 0.9)
 
 
+# display names shared by every figure (keys are the feature-table columns)
+LABELS = {
+    "girth": "girth $\\lambda^1_1$", "mass_ang": "mass ang. $\\lambda^1_2$",
+    "eec_b1": "ECF$_2(\\beta{=}1)$", "ecf3": "ECF$_3(\\beta{=}1)$",
+    "c2": "$C_2$", "d2": "$D_2$", "tau1": "$\\tau_1$",
+    "tau21": "$\\tau_{21}$", "tau32": "$\\tau_{32}$", "ptd": "$p_T^D$",
+    "ntrk": "$n_{trk}$", "jetmass": "jet mass [GeV]",
+    "ang_00": "$\\Sigma_i w_i$", "ang_10": "$\\lambda^1_0(w)$",
+    "ang_11": "$\\lambda^1_1(w)$", "deec_b1": "dEEC(prod)",
+    "deec_min": "dEEC(min)", "decf3": "dECF$_3$(prod)",
+    "dc2": "$C_2(w)$", "dd2": "$D_2(w)$", "L1": "$L_1$ [mm]",
+    "Lratio": "$L_2 L_0/L_1^2$", "ip2d": "$\\langle|d_0|/\\sigma\\rangle$",
+    "promptfrac": "prompt $p_T$ fraction",
+}
+
+
 def decorate(ax, extra: str | None = None):
     """ATLAS-style plot annotation (no experiment label): generator,
     CoM energy, and the BSM process."""
     lines = [
         f"Pythia {PYTHIA_VERSION}, $\\sqrt{{s}} = 13.6$ TeV",
         "$Z'(1.5\\,\\mathrm{TeV}) \\to q_{\\mathrm{D}}\\bar{q}_{\\mathrm{D}}$",
-        "anti-$k_t$ $R=1.0$, $500 < p_T^{jet} < 1000$ GeV",
+        "anti-$k_t$ $R=1.0$",
     ]
     if extra:
         lines.append(extra)

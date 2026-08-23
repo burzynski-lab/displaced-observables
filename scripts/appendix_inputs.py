@@ -23,25 +23,12 @@ import numpy as np
 
 import sys
 sys.path.insert(0, str(Path(__file__).parent))
-from make_plots import PYTHIA_VERSION  # noqa: E402
+from make_plots import LABELS, PYTHIA_VERSION  # noqa: E402
 from vae_study import BASIS_S, BASIS_D  # noqa: E402
 from displaced_observables.analysis import pt_weights  # noqa: E402
 
 plt.style.use(hep.style.ATLAS)
 
-LABELS = {
-    "girth": "girth $\\lambda^1_1$", "mass_ang": "mass ang. $\\lambda^1_2$",
-    "eec_b1": "ECF$_2(\\beta{=}1)$", "ecf3": "ECF$_3(\\beta{=}1)$",
-    "c2": "$C_2$", "d2": "$D_2$", "tau1": "$\\tau_1$",
-    "tau21": "$\\tau_{21}$", "tau32": "$\\tau_{32}$", "ptd": "$p_T^D$",
-    "ntrk": "$n_{trk}$", "jetmass": "jet mass [GeV]",
-    "ang_00": "$\\Sigma_i w_i$", "ang_10": "$\\lambda^1_0(w)$",
-    "ang_11": "$\\lambda^1_1(w)$", "deec_b1": "dEEC(prod)",
-    "deec_min": "dEEC(min)", "decf3": "dECF$_3$(prod)",
-    "dc2": "$C_2(w)$", "dd2": "$D_2(w)$", "L1": "$L_1$ [mm]",
-    "Lratio": "$L_2 L_0/L_1^2$", "ip2d": "$\\langle|d_0|/\\sigma\\rangle$",
-    "promptfrac": "prompt $p_T$ fraction",
-}
 CTAUS = (1.0, 10.0, 100.0)
 SIG_COLORS = ("#d62728", "#9467bd", "#2ca02c")
 
