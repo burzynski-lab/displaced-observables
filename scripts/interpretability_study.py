@@ -119,7 +119,7 @@ def main() -> None:
     for m in methods:
         y = [results[(m, c, bname)] for c in ctaus]
         col, ls, mk = styles[m]
-        axes[0].plot(ctaus, y, color=col, ls=ls, marker=mk, ms=4, label=m)
+        axes[0].plot(ctaus, y, color=col, ls=ls, marker=mk, ms=5, label=m)
     axes[0].set_yscale("log")
     axes[0].set_ylabel(f"{bname} rejection @ $\\epsilon_s$=50%")
     for m in methods[1:]:
@@ -127,14 +127,14 @@ def main() -> None:
                 / np.log(max(results[("BDT, S+D", c, bname)], 1.002))
                 for c in ctaus]
         col, ls, mk = styles[m]
-        axes[1].plot(ctaus, frac, color=col, ls=ls, marker=mk, ms=4, label=m)
+        axes[1].plot(ctaus, frac, color=col, ls=ls, marker=mk, ms=5, label=m)
     axes[1].axhline(1.0, color="k", lw=0.8)
     axes[1].set_ylabel("fraction of ceiling log-rejection")
     axes[1].set_ylim(0, 1.3)
     for ax in axes:
         ax.set_xscale("symlog", linthresh=1)
         ax.set_xlabel("$c\\tau(\\pi_d)$ [mm]")
-        ax.legend(fontsize=8, loc="upper right")
+        ax.legend(fontsize=13, loc="upper right")
     decorate(axes[0], extra="supervised per $c\\tau$")
     fig.tight_layout()
     for _ext in ("png", "pdf"):

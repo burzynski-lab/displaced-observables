@@ -94,7 +94,7 @@ def main() -> None:
         ax.set_ylabel("density", fontsize=label_fs - 2)
         ax.tick_params(labelsize=label_fs - 4)
         if annotate:
-            ax.legend(fontsize=label_fs - 5, loc="upper right")
+            ax.legend(fontsize=max(12, label_fs - 4), loc="upper right")
             ax.set_ylim(top=ax.get_ylim()[1] * 3e4)
             ax.text(0.04, 0.97,
                     f"Pythia {PYTHIA_VERSION}, $\\sqrt{{s}}=13.6$ TeV\n"

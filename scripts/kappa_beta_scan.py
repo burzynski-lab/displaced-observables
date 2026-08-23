@@ -71,15 +71,16 @@ def main() -> None:
                 for ib in range(len(BETAS)):
                     txt = f"{'>' if sat_mask[ik, ib] else ''}{grid[ik, ib]:.0f}"
                     ax.text(ib, ik, txt, ha="center", va="center",
-                            color="white", fontsize=11)
+                            color="white", fontsize=13)
             ax.set_xticks(range(len(BETAS)), [f"{b:g}" for b in BETAS])
+            ax.tick_params(labelsize=13)
             ax.set_yticks(range(len(KAPPAS)), [f"{k:g}" for k in KAPPAS])
             ax.set_xlabel("$\\beta$ (angular exponent)")
             ax.set_ylabel("$\\kappa$ ($p_T$ exponent)")
             ax.set_title(
                 f"$\\lambda^\\kappa_\\beta(w)$: {bname} rejection @ "
                 f"$\\epsilon_s$={args.eff:.0%}, $c\\tau$={ctau:g} mm",
-                fontsize=13)
+                fontsize=15)
             fig.colorbar(im, ax=ax, label="$\\log_{10}$ rejection")
             fig.text(0.13, 0.005,
                      f"Pythia {PYTHIA_VERSION}, $\\sqrt{{s}}=13.6$ TeV, "

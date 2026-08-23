@@ -511,9 +511,9 @@ Every feature is z-score normalized, $\hat x = (x - \mu)/\sigma$, with
 $\mu$ and $\sigma$ computed \emph{on the inclusive QCD sample only}.
 Signal jets are normalized with the same constants, so displaced jets
 appear many standard deviations from zero in the displaced features.
-No other preprocessing is applied, and in particular no compression of
-heavy-tailed features, for the reason quantified in
-Sec.~\ref{sec:tails}.
+No other preprocessing is applied. In particular the heavy-tailed
+features enter the autoencoder untransformed, since compressing their
+tails was found to reduce the anomaly contrast.
 
 Figure~\ref{fig:corr} shows the Pearson correlations of the displaced
 features for QCD and signal. Three aspects are relevant for the
@@ -771,69 +771,69 @@ Three further observations:
   \label{fig:vaerecon}
 \end{figure}
 
-\subsection{Input preprocessing and the heavy-tail effect}
-\label{sec:tails}
-
-One design choice deserves an explicit warning, because the natural
-instinct backfires. Several displaced observables are heavy-tailed
-($L_1$, $\langle|\dnought|/\sigma\rangle$ span decades), and standard
-autoencoder practice recommends compressing such features (e.g.\
-$x \to \ln(1+x)$) before z-score normalization so the MSE objective is
-not dominated by tail events. We tested exactly this and find it
-\emph{degrades} the anomaly detection substantially, reducing the VAE
-efficiency at the $1\%$ working point by factors of $1.5$--$3$ across
-the short-lifetime half of the grid. The mechanism is that the tails
-are the signal: an untransformed displaced feature sitting many
-standard deviations from the QCD mean produces an enormous
-reconstruction error, and compressing the tails improves
-background-model fidelity at the direct expense of exactly that
-anomaly contrast. For displacement-aware anomaly detection the
-heavy-tailed features should enter the autoencoder untransformed.
-
-\subsection{Comparison with fully supervised classifiers}
-\label{sec:supervised}
-
-To quantify how much of the family's combined discrimination a single
-interpretable observable retains, we compare against fully supervised
-classifiers trained on the same features and jet splits. The ceiling
-is an XGBoost classifier on the complete 24-feature $S{+}D$ basis,
-trained separately per $\ctau$ point: signal versus inclusive QCD
-using the training subsets of Sec.~\ref{sec:addata} ($73\,354$ QCD
-and $5\,476$ signal jets), up to 400 trees with the library defaults
-(maximum depth 6, learning rate 0.3), class-weighted by the training
-imbalance (\texttt{scale\_pos\_weight} $\simeq 13$), with early
-stopping after 20 rounds without validation-logloss improvement.
-Scores are class probabilities, and working points use the same
-definitions as elsewhere (50\% signal efficiency for rejections, or
-fixed QCD anomaly rates in Sec.~\ref{sec:adresults}). An identically
-configured classifier restricted to the 12-feature nominal basis $S$,
-and the two strongest single observables ($\mathrm{dEEC}(\min)$ and
-$\Sigma_i w_i$), are evaluated on the same test jets.
-
-Figure~\ref{fig:gap} shows the outcome. The single observables capture
-$40$--$100\%$ of the ceiling's log-rejection across the lifetime grid:
-the weighted multiplicity leads against $b$ jets at every lifetime and
-itself saturates the test-sample ceiling for $\ctau \geq 30$~mm, while
-the dEEC leads against light jets at the shortest lifetimes. The
-nominal-basis classifier is the supervised counterpart of the
-anomaly-detection blind spot: supervised training does extract a
-lifetime-\emph{independent} $\sim 40\times$ $b$-jet rejection from
-shape information alone, but the curve never rises with $\ctau$.
-Displacement is where all the lifetime discrimination lives, and two
-interpretable observables transmit most of it.
-\todo{seed ensembles for error bands. production statistics}
-
-\begin{figure}[tb]
-  \centering
-  \includegraphics[width=0.95\textwidth]{interpretability_gap_truth.pdf}
-  \caption{Left: $b$-jet rejection at 50\% signal efficiency versus
-  $\ctau(\pid)$ for the supervised XGBoost ceiling on the full $S{+}D$
-  basis, the classifier restricted to the nominal basis $S$, and the
-  two strongest single observables. Plateaus reflect the test-sample
-  statistics. Right: fraction of the ceiling's log-rejection captured
-  by each proxy.}
-  \label{fig:gap}
-\end{figure}
+% \subsection{Input preprocessing and the heavy-tail effect}
+% \label{sec:tails}
+%
+% One design choice deserves an explicit warning, because the natural
+% instinct backfires. Several displaced observables are heavy-tailed
+% ($L_1$, $\langle|\dnought|/\sigma\rangle$ span decades), and standard
+% autoencoder practice recommends compressing such features (e.g.\
+% $x \to \ln(1+x)$) before z-score normalization so the MSE objective is
+% not dominated by tail events. We tested exactly this and find it
+% \emph{degrades} the anomaly detection substantially, reducing the VAE
+% efficiency at the $1\%$ working point by factors of $1.5$--$3$ across
+% the short-lifetime half of the grid. The mechanism is that the tails
+% are the signal: an untransformed displaced feature sitting many
+% standard deviations from the QCD mean produces an enormous
+% reconstruction error, and compressing the tails improves
+% background-model fidelity at the direct expense of exactly that
+% anomaly contrast. For displacement-aware anomaly detection the
+% heavy-tailed features should enter the autoencoder untransformed.
+%
+% \subsection{Comparison with fully supervised classifiers}
+% \label{sec:supervised}
+%
+% To quantify how much of the family's combined discrimination a single
+% interpretable observable retains, we compare against fully supervised
+% classifiers trained on the same features and jet splits. The ceiling
+% is an XGBoost classifier on the complete 24-feature $S{+}D$ basis,
+% trained separately per $\ctau$ point: signal versus inclusive QCD
+% using the training subsets of Sec.~\ref{sec:addata} ($73\,354$ QCD
+% and $5\,476$ signal jets), up to 400 trees with the library defaults
+% (maximum depth 6, learning rate 0.3), class-weighted by the training
+% imbalance (\texttt{scale\_pos\_weight} $\simeq 13$), with early
+% stopping after 20 rounds without validation-logloss improvement.
+% Scores are class probabilities, and working points use the same
+% definitions as elsewhere (50\% signal efficiency for rejections, or
+% fixed QCD anomaly rates in Sec.~\ref{sec:adresults}). An identically
+% configured classifier restricted to the 12-feature nominal basis $S$,
+% and the two strongest single observables ($\mathrm{dEEC}(\min)$ and
+% $\Sigma_i w_i$), are evaluated on the same test jets.
+%
+% Figure~\ref{fig:gap} shows the outcome. The single observables capture
+% $40$--$100\%$ of the ceiling's log-rejection across the lifetime grid:
+% the weighted multiplicity leads against $b$ jets at every lifetime and
+% itself saturates the test-sample ceiling for $\ctau \geq 30$~mm, while
+% the dEEC leads against light jets at the shortest lifetimes. The
+% nominal-basis classifier is the supervised counterpart of the
+% anomaly-detection blind spot: supervised training does extract a
+% lifetime-\emph{independent} $\sim 40\times$ $b$-jet rejection from
+% shape information alone, but the curve never rises with $\ctau$.
+% Displacement is where all the lifetime discrimination lives, and two
+% interpretable observables transmit most of it.
+% \todo{seed ensembles for error bands. production statistics}
+%
+% \begin{figure}[tb]
+%   \centering
+%   \includegraphics[width=0.95\textwidth]{interpretability_gap_truth.pdf}
+%   \caption{Left: $b$-jet rejection at 50\% signal efficiency versus
+%   $\ctau(\pid)$ for the supervised XGBoost ceiling on the full $S{+}D$
+%   basis, the classifier restricted to the nominal basis $S$, and the
+%   two strongest single observables. Plateaus reflect the test-sample
+%   statistics. Right: fraction of the ceiling's log-rejection captured
+%   by each proxy.}
+%   \label{fig:gap}
+% \end{figure}
 
 \stub{Per-flavor efficiency curves. Latent-space diagnostics.
 Cross-check with reco-level set-based architectures (deep-set / DETR).}
@@ -873,9 +873,8 @@ raises the signal efficiency at a fixed $1\%$ QCD anomaly rate from
 the background-consistent level to $44\%$ at $\ctau = 1$~mm and above
 $88\%$ for $\ctau \geq 10$~mm, realizing about half to all of the
 fully supervised ceiling depending on lifetime. The QCD background
-model is essentially unchanged by the augmentation, the heavy-flavor
-anomaly rate grows only mildly, and the heavy-tailed observables are
-most effective when supplied to the network untransformed.
+model is essentially unchanged by the augmentation and the heavy-flavor
+anomaly rate grows only mildly.
 
 These results carry a simple practical message for the growing program
 of substructure-based anomaly detection at the LHC. The

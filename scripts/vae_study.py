@@ -184,7 +184,7 @@ def plot_reconstruction(series, basis, kind, basis_name, out_dir, scenario):
                     transform=ax.transAxes, va="top", fontsize=10)
             ax.set_ylabel("density", fontsize=12)
             ax.tick_params(labelsize=10)
-            ax.legend(fontsize=9, loc="upper right")
+            ax.legend(fontsize=11, loc="upper right")
         for ax in axes.ravel()[len(vars_blk):]:
             ax.set_visible(False)
         fig.tight_layout()
@@ -216,7 +216,7 @@ def plot_reconstruction(series, basis, kind, basis_name, out_dir, scenario):
             ax.set_ylim(top=ax.get_ylim()[1] * 3e4)
             ax.set_xlabel(var, fontsize=17)
             ax.set_ylabel("density", fontsize=15)
-            ax.legend(fontsize=12, loc="upper right")
+            ax.legend(fontsize=13, loc="upper right")
             ax.text(0.04, 0.97,
                     f"Pythia {PYTHIA_VERSION}, $\\sqrt{{s}}=13.6$ TeV\n"
                     "$Z'(1.5\\,\\mathrm{TeV})\\to q_D\\bar{q}_D$\n"
@@ -439,14 +439,14 @@ def main() -> None:
             ax.set_xlabel(f"anomaly score  [{kind}, basis {basis_name}]",
                           fontsize=16)
             ax.set_ylabel("density", fontsize=14)
-            ax.tick_params(labelsize=11)
-            ax.legend(fontsize=11, loc="upper right")
+            ax.tick_params(labelsize=12)
+            ax.legend(fontsize=13, loc="upper right")
             from make_plots import PYTHIA_VERSION
             ax.text(0.04, 0.97,
                     f"Pythia {PYTHIA_VERSION}, $\\sqrt{{s}}=13.6$ TeV\n"
                     "$Z'(1.5\\,\\mathrm{TeV})\\to q_D\\bar{q}_D$\n"
                     "anti-$k_t$ $R=1.0$",
-                    transform=ax.transAxes, va="top", fontsize=11)
+                    transform=ax.transAxes, va="top", fontsize=13)
     fig.tight_layout()
     for _ext in ("png", "pdf"):
         fig.savefig(out_dir / f"vae_scores_{args.scenario}.{_ext}", dpi=150)

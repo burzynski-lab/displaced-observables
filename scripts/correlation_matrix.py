@@ -33,12 +33,12 @@ def corr_panel(ax, jets, mask, title):
     for i in range(n):
         for j in range(n):
             ax.text(j, i, f"{C[i, j]:.2f}", ha="center", va="center",
-                    fontsize=7.5,
+                    fontsize=9,
                     color="white" if abs(C[i, j]) > 0.6 else "black")
     ticks = [LABELS.get(v, v) for v in BASIS_D]
-    ax.set_xticks(range(n), ticks, rotation=60, ha="right", fontsize=10)
-    ax.set_yticks(range(n), ticks, fontsize=10)
-    ax.set_title(title, fontsize=14)
+    ax.set_xticks(range(n), ticks, rotation=60, ha="right", fontsize=12)
+    ax.set_yticks(range(n), ticks, fontsize=12)
+    ax.set_title(title, fontsize=16)
     return im
 
 
