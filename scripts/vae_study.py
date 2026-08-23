@@ -194,7 +194,6 @@ def plot_reconstruction(series, basis, kind, basis_name, out_dir, scenario):
 
     # standalone example panels for the paper body (VAE, S+D)
     if kind == "VAE" and basis_name == "S+D":
-        from make_plots import PYTHIA_VERSION
         for var in ("ang_00", "deec_min"):
             k = basis.index(var)
             fig, ax = plt.subplots(figsize=(7, 6))
@@ -217,11 +216,7 @@ def plot_reconstruction(series, basis, kind, basis_name, out_dir, scenario):
             ax.set_xlabel(var)
             ax.set_ylabel("density")
             ax.legend(fontsize=13, loc="upper right")
-            ax.text(0.04, 0.97,
-                    f"Pythia {PYTHIA_VERSION}, $\\sqrt{{s}}=13.6$ TeV\n"
-                    "$Z'(1.5\\,\\mathrm{TeV})\\to q_D\\bar{q}_D$\n"
-                    "anti-$k_t$ $R=1.0$",
-                    transform=ax.transAxes, va="top", fontsize=12)
+            decorate(ax)
             fig.tight_layout()
             for _ext in ("png", "pdf"):
                 fig.savefig(out_dir / f"vae_recon_example_{var}_{scenario}.{_ext}",
@@ -440,12 +435,7 @@ def main() -> None:
             ax.set_ylabel("density")
             ax.tick_params(labelsize=12)
             ax.legend(fontsize=13, loc="upper right")
-            from make_plots import PYTHIA_VERSION
-            ax.text(0.04, 0.97,
-                    f"Pythia {PYTHIA_VERSION}, $\\sqrt{{s}}=13.6$ TeV\n"
-                    "$Z'(1.5\\,\\mathrm{TeV})\\to q_D\\bar{q}_D$\n"
-                    "anti-$k_t$ $R=1.0$",
-                    transform=ax.transAxes, va="top", fontsize=13)
+            decorate(ax)
     fig.tight_layout()
     for _ext in ("png", "pdf"):
         fig.savefig(out_dir / f"vae_scores_{args.scenario}.{_ext}", dpi=150)
