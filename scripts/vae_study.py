@@ -197,7 +197,7 @@ def plot_reconstruction(series, basis, kind, basis_name, out_dir, scenario):
         from make_plots import PYTHIA_VERSION
         for var in ("ang_00", "deec_min"):
             k = basis.index(var)
-            fig, ax = plt.subplots(figsize=(8, 6))
+            fig, ax = plt.subplots(figsize=(7, 6))
             allv = np.concatenate([s[1][:, k] for s in series])
             lo, hi = np.quantile(allv, [0.001, 0.999])
             if hi <= lo:
@@ -214,8 +214,8 @@ def plot_reconstruction(series, basis, kind, basis_name, out_dir, scenario):
                             ls=ls, density=True)
             ax.set_yscale("log")
             ax.set_ylim(top=ax.get_ylim()[1] * 3e4)
-            ax.set_xlabel(var, fontsize=17)
-            ax.set_ylabel("density", fontsize=15)
+            ax.set_xlabel(var)
+            ax.set_ylabel("density")
             ax.legend(fontsize=13, loc="upper right")
             ax.text(0.04, 0.97,
                     f"Pythia {PYTHIA_VERSION}, $\\sqrt{{s}}=13.6$ TeV\n"
@@ -436,9 +436,8 @@ def main() -> None:
             ax.set_xscale("log")
             ax.set_yscale("log")
             ax.set_ylim(top=ax.get_ylim()[1] * 3e4)
-            ax.set_xlabel(f"anomaly score  [{kind}, basis {basis_name}]",
-                          fontsize=16)
-            ax.set_ylabel("density", fontsize=14)
+            ax.set_xlabel(f"anomaly score  [{kind}, basis {basis_name}]")
+            ax.set_ylabel("density")
             ax.tick_params(labelsize=12)
             ax.legend(fontsize=13, loc="upper right")
             from make_plots import PYTHIA_VERSION
