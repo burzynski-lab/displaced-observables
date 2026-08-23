@@ -192,9 +192,15 @@ def plot_reconstruction(model, x_te, basis, norm, kind, basis_name,
                             histtype="step", lw=1.5, label=label, color=color,
                             ls=ls, density=True)
             ax.set_yscale("log")
-            ax.set_ylim(top=ax.get_ylim()[1] * 3e3)
+            ax.set_ylim(top=ax.get_ylim()[1] * 3e4)
             xlab = var if scale == 1.0 else f"{var}  [$\\times 10^{{{int(np.log10(scale))}}}$]"
             ax.set_xlabel(xlab, fontsize=16)
+            from make_plots import PYTHIA_VERSION
+            ax.text(0.04, 0.97,
+                    f"Pythia {PYTHIA_VERSION}, $\\sqrt{{s}}=13.6$ TeV\n"
+                    "$Z'(1.5\\,\\mathrm{TeV})\\to q_D\\bar{q}_D$\n"
+                    "anti-$k_t$ $R=1.0$, tracking: " + scenario,
+                    transform=ax.transAxes, va="top", fontsize=10)
             ax.set_ylabel("density", fontsize=12)
             ax.tick_params(labelsize=10)
             ax.legend(fontsize=9, loc="upper right")
@@ -347,9 +353,9 @@ def main() -> None:
         ax.set_yscale("log")
         ax.set_xlabel("$c\\tau(\\pi_d)$ [mm]")
         ax.set_ylabel(f"signal efficiency @ QCD anomaly rate {fpr:g}")
-        ax.set_ylim(1e-4, 30)
-        ax.legend(fontsize=14, loc="upper left")
-    decorate(axes[0], extra=f"tracking: {args.scenario}, QCD-only training")
+        ax.set_ylim(1e-4, 3e2)
+        ax.legend(fontsize=13, loc="center right")
+        decorate(ax, extra=f"tracking: {args.scenario}, QCD-only training")
     fig.tight_layout()
     for _ext in ("png", "pdf"):
         fig.savefig(out_dir / f"vae_efficiency_{args.scenario}.{_ext}", dpi=150)
