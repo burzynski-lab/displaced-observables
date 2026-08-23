@@ -65,7 +65,7 @@ architectures.}
 \label{sec:intro}
 
 Confining dark sectors coupled to the Standard Model through a heavy
-mediator generically produce collider signatures in which a parton-level
+mediator~\cite{Strassler:2006im} generically produce collider signatures in which a parton-level
 dark quark showers and hadronizes into a multiplicity of dark hadrons,
 a fraction of which decay back to SM particles with macroscopic proper
 lifetimes~\cite{Schwaller:2015gea,Albouy:2022cin}. The resulting
@@ -77,7 +77,9 @@ Existing search strategies occupy two extremes. Cut-based analyses use
 simple per-jet counting variables, such as the prompt-track energy
 fraction or the median unsigned impact parameter, which are robust
 and interpretable but discard the rich correlation structure of the
-displaced final state~\cite{Schwaller:2015gea,ATLAS:EJ,CMS:EJ}.
+displaced final state~\cite{Schwaller:2015gea,ATLAS:EJ,ATLAS:EJRun2,CMS:EJ}.
+Related dark-shower signatures in which part of the shower remains
+invisible give rise to semi-visible jets~\cite{Cohen:2015toa}.
 Machine-learned constituent-level taggers, at the other extreme,
 approach the information-theoretic ceiling but resist physical
 interpretation, complicate calibration, and obscure which features of
@@ -222,6 +224,7 @@ genuinely displaced pileup component from strange-hadron decays.
 \label{sec:observables}
 
 Jets are clustered with the anti-$k_t$ algorithm~\cite{Cacciari:2008gp}
+as implemented in \textsc{FastJet}~\cite{Cacciari:2011ma}
 with $R = 1.0$ from all visible final-state particles. Observables are
 computed from the jet's charged constituents (``tracks'') $i$ with
 transverse-momentum fraction $z_i = p_{\mathrm{T},i} / \pT^{\mathrm{jet}}$, angle
@@ -254,7 +257,8 @@ read off directly. Table~\ref{tab:observables} summarizes the family.
 
 \obshead{Angularities}
 
-The nominal track angularities~\cite{Larkoski:2014pca} and their
+The nominal track angularities~\cite{Larkoski:2014pca}, part of the
+standard jet substructure toolkit~\cite{Larkoski:2017jix}, and their
 displacement-weighted generalization are
 \begin{equation}
   \lambda^\kappa_\beta \;=\; \sum_{i \in \mathrm{jet}}
@@ -331,7 +335,7 @@ more robust against single-track resolution tails. The differential
 profile $\langle w_i w_j \rangle (\dR_{ij})$, shown in
 Fig.~\ref{fig:wij}, exhibits the vertex pair correlation directly and
 connects to the energy-correlator-on-tracks literature
-\cite{Chang:2013rca,Lee:2023npz}.
+\cite{Chang:2013rca,Jaarsma:2023ell}.
 
 The construction extends to higher point count. Writing
 $\mathrm{dECF}_1 = \sum_i z_i w_i$ and
@@ -767,8 +771,8 @@ $24$):
   $\log\sigma^2 \in \mathbb{R}^{8}$ (latent dimension 8).
   \item \textbf{Decoder}: $8 \to 32 \to 64 \to d$, ReLU between hidden
   layers, linear output. About $7\times 10^3$ parameters in total.
-  \item \textbf{VAE}: the latent code is sampled via the
-  reparameterization trick during training, $z = \mu + \epsilon \odot
+  \item \textbf{VAE}~\cite{Kingma:2013hel}: the latent code is sampled
+  via the reparameterization trick during training, $z = \mu + \epsilon \odot
   \sigma$ with $\epsilon \sim \mathcal{N}(0, I)$, and set to
   $z = \mu$ at evaluation. The per-jet loss is the ELBO with
   feature-averaged reconstruction error,
@@ -784,7 +788,7 @@ $24$):
   latent ($z = \mu$ throughout) and the MSE term of
   Eq.~(\ref{eq:elbo}) alone.
 \end{itemize}
-Training uses Adam with learning rate $10^{-3}$ and batch size 256 on
+Training uses Adam~\cite{Kingma:2014vow} with learning rate $10^{-3}$ and batch size 256 on
 the QCD training subset, for at most 200 epochs with early stopping
 (patience 15) on the validation loss, and the best-validation weights are
 retained. With fixed seeds the four trainings converge at 19 (VAE,
@@ -919,7 +923,8 @@ Three further observations:
 To quantify how much of the family's combined discrimination a single
 interpretable observable retains, we compare against fully supervised
 classifiers trained on the same features and jet splits. The ceiling
-is an XGBoost classifier on the complete 24-feature $S{+}D$ basis,
+is an XGBoost~\cite{Chen:2016btl} classifier on the complete
+24-feature $S{+}D$ basis,
 trained separately per $\ctau$ point: signal versus inclusive QCD
 using the training subsets of Sec.~\ref{sec:addata} ($73\,354$ QCD
 and $5\,476$ signal jets), up to 400 trees with the library defaults
@@ -1021,6 +1026,17 @@ default.
 
 \begin{thebibliography}{99}
 
+\bibitem{Strassler:2006im}
+M.~J.~Strassler and K.~M.~Zurek,
+\emph{Echoes of a hidden valley at hadron colliders},
+Phys.\ Lett.\ B \textbf{651} (2007) 374, [\texttt{hep-ph/0604261}].
+
+\bibitem{Cohen:2015toa}
+T.~Cohen, M.~Lisanti and H.~K.~Lou,
+\emph{Semivisible Jets: Dark Matter Undercover at the LHC},
+Phys.\ Rev.\ Lett.\ \textbf{115} (2015) 171804,
+[\texttt{arXiv:1503.00009}].
+
 \bibitem{Schwaller:2015gea}
 P.~Schwaller, D.~Stolarski and A.~Weiler,
 \emph{Emerging Jets},
@@ -1034,8 +1050,16 @@ Eur.\ Phys.\ J.\ C \textbf{82} (2022) 1132, [\texttt{arXiv:2203.09503}].
 
 \bibitem{ATLAS:EJ}
 ATLAS Collaboration,
-\emph{Search for emerging jets},
-\todo{cite the ATLAS emerging-jets search}.
+\emph{Search for emerging jets in $pp$ collisions at $\sqrt{s} = 13.6$~TeV
+with the ATLAS experiment},
+Rept.\ Prog.\ Phys.\ \textbf{88} (2025) 097801,
+[\texttt{arXiv:2505.02429}].
+
+\bibitem{ATLAS:EJRun2}
+ATLAS Collaboration,
+\emph{Search for emerging jets in $pp$ collisions at $\sqrt{s} = 13$~TeV
+with the ATLAS experiment},
+[\texttt{arXiv:2510.12347}].
 
 \bibitem{CMS:EJ}
 CMS Collaboration,
@@ -1078,13 +1102,22 @@ Y.~Li, I.~Moult, S.~S.~van Velzen, W.~J.~Waalewijn and H.~X.~Zhu,
 Phys.\ Rev.\ Lett.\ \textbf{128} (2022) 182001,
 [\texttt{arXiv:2108.01674}].
 
-\bibitem{Lee:2023npz}
-\todo{energy correlators on tracks reference (Moult et al.)}
+\bibitem{Jaarsma:2023ell}
+M.~Jaarsma, Y.~Li, I.~Moult, W.~Waalewijn and H.~X.~Zhu,
+\emph{Energy correlators on tracks: resummation and non-perturbative
+effects},
+JHEP \textbf{12} (2023) 087, [\texttt{arXiv:2307.15739}].
 
 \bibitem{Cacciari:2008gp}
 M.~Cacciari, G.~P.~Salam and G.~Soyez,
 \emph{The anti-$k_t$ jet clustering algorithm},
 JHEP \textbf{04} (2008) 063, [\texttt{arXiv:0802.1189}].
+
+\bibitem{Larkoski:2017jix}
+A.~J.~Larkoski, I.~Moult and B.~Nachman,
+\emph{Jet Substructure at the Large Hadron Collider: A Review of Recent
+Advances in Theory and Machine Learning},
+Phys.\ Rept.\ \textbf{841} (2020) 1, [\texttt{arXiv:1709.04464}].
 
 \bibitem{Larkoski:2014pca}
 A.~J.~Larkoski, J.~Thaler and W.~J.~Waalewijn,
@@ -1100,6 +1133,27 @@ JHEP \textbf{06} (2013) 108, [\texttt{arXiv:1305.0007}].
 J.~Thaler and K.~Van Tilburg,
 \emph{Identifying Boosted Objects with N-subjettiness},
 JHEP \textbf{03} (2011) 015, [\texttt{arXiv:1011.2268}].
+
+\bibitem{Cacciari:2011ma}
+M.~Cacciari, G.~P.~Salam and G.~Soyez,
+\emph{FastJet User Manual},
+Eur.\ Phys.\ J.\ C \textbf{72} (2012) 1896, [\texttt{arXiv:1111.6097}].
+
+\bibitem{Kingma:2013hel}
+D.~P.~Kingma and M.~Welling,
+\emph{Auto-Encoding Variational Bayes},
+[\texttt{arXiv:1312.6114}].
+
+\bibitem{Kingma:2014vow}
+D.~P.~Kingma and J.~Ba,
+\emph{Adam: A Method for Stochastic Optimization},
+[\texttt{arXiv:1412.6980}].
+
+\bibitem{Chen:2016btl}
+T.~Chen and C.~Guestrin,
+\emph{XGBoost: A Scalable Tree Boosting System},
+in \emph{Proc.\ 22nd ACM SIGKDD} (2016) 785,
+[\texttt{arXiv:1603.02754}].
 
 \bibitem{Bierlich:2022pfr}
 C.~Bierlich et al.,
