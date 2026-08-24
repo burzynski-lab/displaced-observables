@@ -438,13 +438,16 @@ axes,
   \tau_N = \frac{\sum_i z_i \, \min_a (\dR_{ia})^\beta}
                 {\sum_i z_i \, R^\beta},
 \end{equation}
-its ratios $\tau_{21}$, $\tau_{32}$, and the jet mass. The
-displacement-weighted counterpart requires more than an insertion of
-$w_i$ into the sum, because $\tau_N$ is already a ratio and a weight
-appearing in both numerator and denominator would cancel the
-displacement scale entirely. The physical content of $N$-subjettiness
-lies instead in its \emph{axes}, which are ordinarily determined by the
-energy flow. We therefore define
+its ratios $\tau_{21}$, $\tau_{32}$, and the jet mass. Constructing
+the displacement-weighted counterpart requires some care. Inserting
+$w_i$ into both sums of $\tau_N$ is well defined and does not cancel,
+since the numerator weights the angular spread while the denominator
+weights a constant, but it only changes which tracks dominate an
+average taken about axes that are still fixed by the energy flow. We
+find that this variant performs no better than its nominal partner,
+with light-jet rejections of $2.1$ in both cases. The discriminating
+content of $N$-subjettiness lies in the \emph{axes}. We therefore
+define
 \begin{equation}
   \tau_N(w) = \frac{\sum_i w_i z_i \, \min_a (\dR_{ia})^\beta}
                     {\sum_i w_i z_i \, R^\beta},
@@ -453,7 +456,8 @@ energy flow. We therefore define
   \label{eq:tauw}
 \end{equation}
 so that the axes follow the displaced substructure rather than the
-energy flow. Where $\tau_N$ counts energy prongs, $\tau_N(w)$ counts
+energy flow. With this single change the light-jet rejection of
+$\tau_{32}(w)$ rises to $\sim 40$. Where $\tau_N$ counts energy prongs, $\tau_N(w)$ counts
 \emph{displaced} prongs, a more direct probe of the number of decay
 vertices in the jet: a $b$ jet contains a single displaced decay chain,
 whereas a dark shower distributes several vertices across the jet. The
