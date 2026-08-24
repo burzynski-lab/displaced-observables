@@ -1,4 +1,4 @@
-"""Displacement-weighted jet substructure observables (PHYSICS.md tiers 1-3)
+"""Displacement-weighted jet substructure observables (see paper/main.tex)
 plus standard baselines. All functions are pure, awkward-vectorized maps
 from a per-jet track table (output of ``tracking.apply_tracking``) to one
 number per jet.

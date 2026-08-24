@@ -1,6 +1,6 @@
 # Implementation Plan
 
-Companion to [PHYSICS.md](PHYSICS.md). Maps the physics milestones onto concrete
+Companion to [CLAUDE.md](CLAUDE.md). Maps the physics milestones onto concrete
 software, in dependency order. Laptop-first (Apple Silicon); everything is
 driven by pixi so the same lockfile replays on OSCER (linux-64 is a solved
 platform in `pixi.toml`).
@@ -24,8 +24,8 @@ Deliberate choice: the **baseline pipeline never leaves Python** —
 Pythia8 python bindings → awkward arrays → parquet. MadGraph and Delphes are
 installed and wired in, but the s-channel Z′ signal and QCD dijets come from
 standalone Pythia (no matrix-element accuracy needed for a shape study), and
-the tracking response is our own parametrized layer (PHYSICS.md §Detector
-parametrization) rather than Delphes, so every smearing knob is a function
+the tracking response is our own parametrized layer (see CLAUDE.md)
+rather than Delphes, so every smearing knob is a function
 argument, not a TCL card. Delphes stays available as a closure test.
 
 ## 1. Sample production (`src/displaced_observables/generate.py`)

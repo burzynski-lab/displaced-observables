@@ -5,8 +5,10 @@ Displacement-weighted jet substructure observables for dark-shower
 correlators, and lifetime moments, characterized as a function of dark-pion
 lifetime against light-QCD and heavy-flavor backgrounds.
 
-- **[PHYSICS.md](PHYSICS.md)** — the physics plan: observable definitions,
-  benchmark choices, money plots, milestones.
+- **[paper/main.tex](paper/main.tex)** — the paper: observable definitions,
+  benchmark choices, and results.
+- **[CLAUDE.md](CLAUDE.md)** — working notes: environment, pipeline, cache
+  discipline, current results, conventions.
 - **[PLAN.md](PLAN.md)** — the implementation plan: how the milestones map
   onto the code in this repository.
 

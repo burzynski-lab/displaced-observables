@@ -1,8 +1,8 @@
 # CLAUDE.md — project handoff
 
 Working notes for continuing this project in a fresh session. Read this
-first, then [PHYSICS.md](PHYSICS.md) (physics plan) and
-[PLAN.md](PLAN.md) (implementation plan).
+first, then [PLAN.md](PLAN.md) (implementation plan) and the paper
+itself, which carries the full observable definitions.
 
 ## What this project is
 
@@ -303,6 +303,30 @@ cross-check.
 - Jet radius is analysis-side only. The R = 0.4 -> 1.0 switch needed no
   regeneration, just defaults in `jets.py`/`pileup.py`/`observables.py`
   (`JET_R`) plus the wij profile range and unit tests.
+
+## Scope, venue, and project intent
+
+**Scope discipline** (author's rule): one mediator, one shower
+benchmark, the six-lifetime grid plus the prompt limit, smearing
+systematics only. Follow-ups (other portals, SUEP regime, trigger-level
+version) get an outlook paragraph, not sections.
+
+**Venue**: present at ML4Jets, submit to SciPost Physics or PRD, arXiv
+hep-ph cross-listed cs.LG since the ML comparison is prominent. Target
+length ~15 pages. Public code release planned under the
+`burzynski-lab` GitHub organization (this repo's remote).
+
+**Team**: JB plus one student (this is designed as a good first project,
+generator-level start with incremental difficulty), optionally a Dark
+Showers Task Force theorist for the IRC-safety framing, which is the
+open item at paper line ~127. Track observables are IRC-unsafe and are
+framed via track functions with calculability deferred.
+
+**Milestones**: literature check, sample production, observable
+implementation, truth-level distributions and ROCs, tracking
+parametrization, AE/VAE anomaly-detection study, supervised-BDT
+ceiling, paper draft, and public release. All are complete in draft
+form except the final production statistics and the public release.
 
 ## Immediate next steps
 
