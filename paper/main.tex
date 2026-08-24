@@ -52,9 +52,8 @@ below the percent level to $34\%$ at $c\tau = 1$~mm and above $83\%$
 for $c\tau \geq 10$~mm, leaving the QCD background model unaffected,
 and realizes about half to all of the fully supervised ceiling defined
 by a boosted-decision-tree classifier on the complete observable
-basis. The observables are robust against impact-parameter resolution
-and pileup, and are inexpensive to add to existing anomaly-detection
-architectures.}
+basis. The observables are robust against impact-parameter resolution and
+are inexpensive to add to existing anomaly-detection architectures.}
 
 \begin{document}
 \maketitle
@@ -241,20 +240,21 @@ reduce the rejection factors we quote. Quantifying this requires a
 hit-level simulation of the track reconstruction, which is beyond the
 scope of this study.
 
-Pileup is modeled by overlaying Poisson($\mu$) minimum-bias events
-(\textsc{Pythia} \texttt{SoftQCD:\allowbreak inelastic}) per jet before the tracking
-transform, with each overlaid vertex displaced longitudinally by the
-beam-spot spread ($\sigma_z = 45$~mm). Results are presented for
-$\mu = 60$, representative of LHC Run~3 conditions, and compared to
-the $\mu = 0$ baseline. At $\mu = 60$ the overlaid component amounts
-to $11\%$ of the selected signal-jet tracks after the selection
-below. Overlaid tracks receive the
-identical smearing, efficiency, and selection as hard-scatter tracks.
-A track is kept if it is
-primary-vertex associated ($|z_0 \sin\theta| < 1.5$~mm) or is a
-displaced candidate ($|\dnought|/\sigma > 3$). Prompt pileup from other
-vertices fails both conditions. The surviving contamination is the
-genuinely displaced pileup component from strange-hadron decays.
+A track is kept if it is primary-vertex associated
+($|z_0 \sin\theta| < 1.5$~mm) or is a displaced candidate
+($|\dnought|/\sigma > 3$), so that hard-scatter tracks are retained
+whether they are prompt or displaced.
+
+% pileup overlay methodology (study commented out)
+% Pileup is modeled by overlaying Poisson($\mu$) minimum-bias events
+% (\textsc{Pythia} \texttt{SoftQCD:\allowbreak inelastic}) per jet before the tracking
+% transform, with each overlaid vertex displaced longitudinally by the
+% beam-spot spread ($\sigma_z = 45$~mm), at $\mu = 60$ compared to a
+% $\mu = 0$ baseline. Overlaid tracks receive the identical smearing,
+% efficiency, and selection as hard-scatter tracks. Prompt pileup from
+% other vertices fails both selection conditions, leaving the genuinely
+% displaced pileup component from strange-hadron decays.
+
 
 % =====================================================================
 \section{Observable definitions}
@@ -1290,36 +1290,36 @@ JHEP \textbf{04} (2011) 091, [\texttt{arXiv:1102.3795}].
 \clearpage
 \appendix
 
-% =====================================================================
-\section{Pileup robustness}
-\label{app:robustness}
-
-Figure~\ref{fig:pileup} shows the benchmark observables with and
-without minimum-bias pileup overlay at $\mu = 60$, using the
-methodology of Sec.~\ref{sec:tracking}. The rejection curves are
-nearly unchanged across the lifetime grid. The mechanism is twofold.
-The $z_0$ association removes the prompt pileup bulk, and the
-significance weighting caps what leaks through at the resolution
-pedestal $w \simeq \ln 2$. The surviving displaced pileup component
-from strange-hadron decays is angularly uncorrelated and too rare to
-populate displaced pairs, so the pairwise correlators are essentially
-unaffected. Displacement-weighted substructure is therefore
-pileup-robust by construction, in contrast to track-counting variables
-whose denominators grow with every accepted soft track.
-
-\begin{figure}[tb]
-  \centering
-  \begin{subfigure}{0.49\textwidth}
-    \includegraphics[width=\textwidth]{pileup_mu_ang_00_truth.pdf}
-    \caption{}
-  \end{subfigure}
-  \begin{subfigure}{0.49\textwidth}
-    \includegraphics[width=\textwidth]{pileup_mu_deec_min_truth.pdf}
-    \caption{}
-  \end{subfigure}
-  \caption{$b$-jet rejection versus $\ctau(\pid)$ for the weighted multiplicity (a) and the dEEC (b), with ($\mu = 60$, red) and without ($\mu = 0$, black) minimum-bias pileup overlay. Open triangles are sample-statistics lower bounds.}
-  \label{fig:pileup}
-\end{figure}
+% % =====================================================================
+% \section{Pileup robustness}
+% \label{app:robustness}
+%
+% Figure~\ref{fig:pileup} shows the benchmark observables with and
+% without minimum-bias pileup overlay at $\mu = 60$, using the
+% methodology of Sec.~\ref{sec:tracking}. The rejection curves are
+% nearly unchanged across the lifetime grid. The mechanism is twofold.
+% The $z_0$ association removes the prompt pileup bulk, and the
+% significance weighting caps what leaks through at the resolution
+% pedestal $w \simeq \ln 2$. The surviving displaced pileup component
+% from strange-hadron decays is angularly uncorrelated and too rare to
+% populate displaced pairs, so the pairwise correlators are essentially
+% unaffected. Displacement-weighted substructure is therefore
+% pileup-robust by construction, in contrast to track-counting variables
+% whose denominators grow with every accepted soft track.
+%
+% \begin{figure}[tb]
+%   \centering
+%   \begin{subfigure}{0.49\textwidth}
+%     \includegraphics[width=\textwidth]{pileup_mu_ang_00_truth.pdf}
+%     \caption{}
+%   \end{subfigure}
+%   \begin{subfigure}{0.49\textwidth}
+%     \includegraphics[width=\textwidth]{pileup_mu_deec_min_truth.pdf}
+%     \caption{}
+%   \end{subfigure}
+%   \caption{$b$-jet rejection versus $\ctau(\pid)$ for the weighted multiplicity (a) and the dEEC (b), with ($\mu = 60$, red) and without ($\mu = 0$, black) minimum-bias pileup overlay. Open triangles are sample-statistics lower bounds.}
+%   \label{fig:pileup}
+% \end{figure}
 
 \section{Autoencoder reconstruction distributions}
 \label{app:recon}
@@ -1466,8 +1466,7 @@ below. The dark-pion lifetime (\texttt{4900111:tau0}, in mm) and the
 random seed are set per grid point at run time. The background samples
 use the same beam settings with \texttt{HardQCD:all} (inclusive
 dijets) or \texttt{HardQCD:hardbbbar} ($b$-enriched) and
-\texttt{PhaseSpace:pTHatMin = 450}, and the pileup library uses
-\texttt{SoftQCD:\allowbreak inelastic}.
+\texttt{PhaseSpace:pTHatMin = 450}.
 
 {\small
 \begin{verbatim}
