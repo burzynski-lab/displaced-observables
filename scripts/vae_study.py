@@ -38,7 +38,8 @@ plt.style.use(hep.style.ATLAS)
 BASIS_S = ["girth", "mass_ang", "eec_b1", "ecf3", "c2", "d2",
            "tau1", "tau21", "tau32", "ptd", "ntrk", "jetmass"]
 BASIS_D = ["ang_00", "ang_10", "ang_11", "deec_b1", "deec_min",
-           "decf3", "dc2", "dd2", "L1", "Lratio", "ip2d", "promptfrac"]
+           "decf3", "dc2", "dd2", "L1", "Lratio", "ip2d", "promptfrac",
+           "tau1_disp", "tau21_disp", "tau32_disp"]
 BASES = {"S": BASIS_S, "S+D": BASIS_S + BASIS_D}
 
 HIDDEN = [64, 32]

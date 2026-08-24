@@ -54,6 +54,9 @@ OBSERVABLES = {
     "Lratio": ("$L_2 L_0 / L_1^2$", lambda j: obs.lifetime_ratio(j), "disp"),
     "ip2d": ("$\\langle |d_0|/\\sigma \\rangle$", lambda j: obs.mean_ip2d_significance(j), "disp"),
     "promptfrac": ("prompt $p_T$ fraction", lambda j: obs.prompt_pt_fraction(j), "disp"),
+    "tau1_disp": ("$\\tau_1(w)$", lambda j: obs.nsubjettiness_disp(j, 1), "disp"),
+    "tau21_disp": ("$\\tau_{21}(w)$", lambda j: obs.tau_ratio_disp(j, 2, 1), "disp"),
+    "tau32_disp": ("$\\tau_{32}(w)$", lambda j: obs.tau_ratio_disp(j, 3, 2), "disp"),
     "girth": ("girth  $\\lambda^{1}_{1}$", lambda j: obs.angularity_std(j, 1, 1), "std"),
     "mass_ang": ("mass ang.  $\\lambda^{1}_{2}$", lambda j: obs.angularity_std(j, 1, 2), "std"),
     "eec_b1": ("EEC($\\beta$=1)", lambda j: obs.eec(j, 1.0), "std"),
@@ -84,6 +87,8 @@ LABELS = {
     "dc2": "$C_2(w)$", "dd2": "$D_2(w)$", "L1": "$L_1$ [mm]",
     "Lratio": "$L_2 L_0/L_1^2$", "ip2d": "$\\langle|d_0|/\\sigma\\rangle$",
     "promptfrac": "prompt $p_T$ fraction",
+    "tau1_disp": "$\\tau_1(w)$", "tau21_disp": "$\\tau_{21}(w)$",
+    "tau32_disp": "$\\tau_{32}(w)$",
 }
 
 

@@ -46,7 +46,7 @@ observables precisely in the short-lifetime regime where dark pions
 must be distinguished from $B$ hadrons. Augmenting the input basis of
 an otherwise unchanged variational autoencoder with these observables
 raises the signal efficiency at a fixed $1\%$ QCD anomaly rate from
-below the percent level to $44\%$ at $c\tau = 1$~mm and above $88\%$
+below the percent level to $34\%$ at $c\tau = 1$~mm and above $83\%$
 for $c\tau \geq 10$~mm, leaving the QCD background model unaffected,
 and realizes about half to all of the fully supervised ceiling defined
 by a boosted-decision-tree classifier on the complete observable
@@ -412,15 +412,33 @@ $\ctau(\pid)$ itself. \todo{develop the $\ctau$-measurement section}
 
 \obshead{Prong-structure observables and search-style baselines}
 
-Two further sets complete the basis. First, the nominal
-prong-structure observables, for which we do not construct weighted
-counterparts here: $N$-subjettiness~\cite{Thaler:2010tr} with
-exclusive-$k_t$ axes,
+Two further sets complete the basis. First, the prong-structure
+observables: $N$-subjettiness~\cite{Thaler:2010tr} with exclusive-$k_t$
+axes,
 \begin{equation}
   \tau_N = \frac{\sum_i z_i \, \min_a (\dR_{ia})^\beta}
                 {\sum_i z_i \, R^\beta},
 \end{equation}
-its ratios $\tau_{21}$, $\tau_{32}$, and the jet mass. Second, the
+its ratios $\tau_{21}$, $\tau_{32}$, and the jet mass. The
+displacement-weighted counterpart requires more than an insertion of
+$w_i$ into the sum, because $\tau_N$ is already a ratio and a weight
+appearing in both numerator and denominator would cancel the
+displacement scale entirely. The physical content of $N$-subjettiness
+lies instead in its \emph{axes}, which are ordinarily determined by the
+energy flow. We therefore define
+\begin{equation}
+  \tau_N(w) = \frac{\sum_i w_i z_i \, \min_a (\dR_{ia})^\beta}
+                    {\sum_i w_i z_i \, R^\beta},
+  \qquad
+  \text{axes from exclusive-$k_t$ on } \{w_i\, p_{\mathrm{T},i}\},
+  \label{eq:tauw}
+\end{equation}
+so that the axes follow the displaced substructure rather than the
+energy flow. Where $\tau_N$ counts energy prongs, $\tau_N(w)$ counts
+\emph{displaced} prongs, a more direct probe of the number of decay
+vertices in the jet: a $b$ jet contains a single displaced decay chain,
+whereas a dark shower distributes several vertices across the jet. The
+ratios $\tau_{21}(w)$ and $\tau_{32}(w)$ follow as usual. Second, the
 search-style single-track baselines against which any new displaced
 observable must be compared: the mean impact-parameter significance
 $\langle |\dnought|/\sigma \rangle$ and the prompt $\pT$ fraction
@@ -456,7 +474,7 @@ Refs.~\cite{Schwaller:2015gea,CMS:EJ}.
       & $\mathrm{dECF}_3$, $C_2(w)$, $D_2(w)$ \\
     prong structure
       & $\tau_1$, $\tau_{21}$, $\tau_{32}$, jet mass
-      & none \\
+      & $\tau_1(w)$, $\tau_{21}(w)$, $\tau_{32}(w)$ \\
     lifetime moments
       & $L_0 = \sum_i z_i$ (trivial)
       & $L_n = \sum_i z_i |d_{0,i}|^n$, $L_2 L_0/L_1^2$ \\
@@ -519,7 +537,7 @@ of Eq.~(\ref{eq:weight}).
 \end{figure}
 
 Figures~\ref{fig:appS} and~\ref{fig:appD} show the distributions of
-all 24 observables for both backgrounds and for signal at three
+all 27 observables for both backgrounds and for signal at three
 representative lifetimes. The nominal set is nearly
 lifetime-independent panel by panel, while every displaced observable
 fans out with $\ctau$.
@@ -634,7 +652,20 @@ fans out with $\ctau$.
     \includegraphics[width=\textwidth]{appendix_input_promptfrac_truth.pdf}
     \caption{}
   \end{subfigure}
-  \caption{The 12 displacement-weighted input features (basis $D$). Conventions as in Fig.~\ref{fig:appS}.}
+  \\
+  \begin{subfigure}{0.32\textwidth}
+    \includegraphics[width=\textwidth]{appendix_input_tau1_disp_truth.pdf}
+    \caption{}
+  \end{subfigure}
+  \begin{subfigure}{0.32\textwidth}
+    \includegraphics[width=\textwidth]{appendix_input_tau21_disp_truth.pdf}
+    \caption{}
+  \end{subfigure}
+  \begin{subfigure}{0.32\textwidth}
+    \includegraphics[width=\textwidth]{appendix_input_tau32_disp_truth.pdf}
+    \caption{}
+  \end{subfigure}
+  \caption{The 15 displacement-weighted input features (basis $D$). Conventions as in Fig.~\ref{fig:appS}.}
   \label{fig:appD}
 \end{figure}
 
@@ -678,7 +709,7 @@ dominating the Pearson estimator rather than genuine independence.)
     \includegraphics[width=\textwidth]{correlations_sig10_truth.pdf}
     \caption{}
   \end{subfigure}
-  \caption{Pearson correlations of the 12 displacement-weighted input features for inclusive QCD (a) and signal at $\ctau = 10$~mm (b).}
+  \caption{Pearson correlations of the 15 displacement-weighted input features for inclusive QCD (a) and signal at $\ctau = 10$~mm (b).}
   \label{fig:corr}
 \end{figure}
 
@@ -703,7 +734,14 @@ flavor. Three qualitative results emerge:
   for $1 \le \ctau \le 300$~mm), as expected for a variable sensitive
   to the vertex structure of the displacement rather than its amount.
   This provides a uniform working point across the entire lifetime
-  grid.
+  grid. The displaced prong observables of Eq.~(\ref{eq:tauw}) behave
+  the same way and illustrate the value of the axis reweighting:
+  $\tau_{32}(w)$ rejects light jets by a factor of $\sim 40$, an order
+  of magnitude above its nominal partner $\tau_{32}$ at $\sim 3$, while
+  remaining flat in $\ctau$ from 1 to 300~mm. Their contribution is
+  complementary rather than additive: including them in the supervised
+  basis improves the $b$-jet rejection at $\ctau = 1$~mm, the hardest
+  point of the grid, from $1.8\times 10^4$ to $2.7\times 10^4$.
   \item \textbf{Standard substructure carries no lifetime information.}
   All lifetime-blind observables sit at rejections of $2$--$5$,
   independent of $\ctau$, confirming that the discrimination above is
@@ -767,11 +805,13 @@ Two per-jet input vectors are compared. Basis $S$ (12 features) is the
 nominal column of Table~\ref{tab:observables}: girth, mass angularity,
 $\mathrm{ECF}_2$, $\mathrm{ECF}_3$, $C_2$, $D_2$, $\tau_1$,
 $\tau_{21}$, $\tau_{32}$, $\pT^D$, $n_{\mathrm{trk}}$, and jet mass.
-Basis $S{+}D$ (24 features) appends the displacement-weighted column:
+Basis $S{+}D$ (27 features) appends the displacement-weighted column:
 $\Sigma_i w_i$, $\lambda^1_0(w)$, $\lambda^1_1(w)$,
 $\mathrm{dEEC}(\mathrm{prod})$, $\mathrm{dEEC}(\min)$,
 $\mathrm{dECF}_3$, $C_2(w)$, $D_2(w)$, $L_1$, $L_2L_0/L_1^2$,
-$\langle|\dnought|/\sigma\rangle$, and the prompt-$\pT$ fraction.
+$\langle|\dnought|/\sigma\rangle$, the prompt-$\pT$ fraction, and the
+displaced prong observables $\tau_1(w)$, $\tau_{21}(w)$, and
+$\tau_{32}(w)$.
 
 The distributions of every input feature, and the correlations of the
 displaced features, are shown in Figs.~\ref{fig:appS}, \ref{fig:appD},
@@ -824,14 +864,14 @@ per $\ctau$ point.
 
 Figure~\ref{fig:vaescore} shows the score distributions. In basis $S$
 the signal is indistinguishable from QCD at every lifetime. The
-efficiency at the $1\%$ working point is $0.2$--$0.5\%$,
+efficiency at the $1\%$ working point is $0.3$--$0.8\%$,
 consistent with the background rate, and zero to sample precision at
 $10^{-3}$.
 In basis $S{+}D$, with architecture, training, and working points
 unchanged, the signal population migrates orders of magnitude into the
 loss tail, and the efficiency at the $1\%$ working point becomes
-$44\%$ at $\ctau = 1$~mm, $69\%$ at 3~mm, $88\%$ at 10~mm, and
-$\geq 97\%$ for $\ctau \geq 30$~mm (VAE, Fig.~\ref{fig:vae}).
+$34\%$ at $\ctau = 1$~mm, $59\%$ at 3~mm, $83\%$ at 10~mm, and
+$\geq 96\%$ for $\ctau \geq 30$~mm (VAE, Fig.~\ref{fig:vae}).
 
 Figure~\ref{fig:vaerecon} shows \emph{why} through the per-feature
 reconstructions: trained only on QCD, the decoder reconstructs the
@@ -844,11 +884,11 @@ Three further observations:
 \begin{enumerate}
   \item \textbf{The background model is stable under augmentation.}
   The $b$-jet anomaly rate at the $1\%$ inclusive working point rises
-  only from $\sim 0.5\%$ (basis $S$) to $\sim 1.8\%$ (basis $S{+}D$).
+  only from $\sim 0.4\%$ (basis $S$) to $\sim 2\%$ (basis $S{+}D$).
   This is the anticipated mild heavy-flavor tail, usable as an in-situ
   validation region.
   \item \textbf{The variational architecture outperforms the
-  deterministic AE at short lifetime} ($44\%$ versus $15\%$ at 1~mm at
+  deterministic AE at short lifetime} ($34\%$ versus $24\%$ at 1~mm at
   the $1\%$ working point): the KL term regularizes the background
   model against the broad displaced features that otherwise dominate
   the plain MSE objective.
@@ -858,8 +898,8 @@ Three further observations:
   trained per $\ctau$ point on the same $S{+}D$ basis and evaluated at
   the identical fixed-anomaly-rate working points, so the gap to the
   red curve isolates supervision alone. The unsupervised VAE realizes
-  $45\%$ of the supervised efficiency at $\ctau = 1$~mm, $70\%$ at
-  3~mm, $89\%$ at 10~mm, and $\geq 98\%$ for $\ctau \geq 30$~mm: at
+  $34\%$ of the supervised efficiency at $\ctau = 1$~mm, $60\%$ at
+  3~mm, $84\%$ at 10~mm, and $\geq 96\%$ for $\ctau \geq 30$~mm: at
   long lifetime the signal sits so deep in the tails of the learned
   QCD density that supervision buys nothing, while near the $B$-hadron
   lifetime a targeted search retains a genuine advantage.
@@ -942,7 +982,7 @@ To quantify how much of the family's combined discrimination a single
 interpretable observable retains, we compare against fully supervised
 classifiers trained on the same features and jet splits. The ceiling
 is an XGBoost~\cite{Chen:2016btl} classifier on the complete
-24-feature $S{+}D$ basis,
+27-feature $S{+}D$ basis,
 trained separately per $\ctau$ point: signal versus inclusive QCD
 using the training subsets of Sec.~\ref{sec:addata} ($73\,354$ QCD
 and $5\,476$ signal jets), up to 400 trees with the library defaults
@@ -1015,11 +1055,11 @@ is displacement is invisible to anomaly-detection architectures built
 on calorimeter- or momentum-based substructure alone, and no increase
 in model capacity can recover information that is absent from the
 inputs. Augmenting the input vector of an otherwise unchanged
-variational autoencoder with twelve displacement-weighted observables
+variational autoencoder with fifteen displacement-weighted observables
 raises the signal efficiency at a fixed $1\%$ QCD anomaly rate from
-the background-consistent level to $44\%$ at $\ctau = 1$~mm and above
-$88\%$ for $\ctau \geq 10$~mm, realizing about half to all of the
-fully supervised ceiling depending on lifetime. The QCD background
+the background-consistent level to $34\%$ at $\ctau = 1$~mm and above
+$83\%$ for $\ctau \geq 10$~mm, realizing a third to all of the fully
+supervised ceiling depending on lifetime. The QCD background
 model is essentially unchanged by the augmentation and the heavy-flavor
 anomaly rate grows only mildly.
 
@@ -1034,7 +1074,7 @@ searches~\cite{ATLAS:LLPID,CMS:LLPjets}.
 These results carry a simple practical message for the growing program
 of substructure-based anomaly detection at the LHC. The
 displacement-aware observables proposed here are inexpensive in every
-relevant sense. They are twelve numbers per jet, computed from track
+relevant sense. They are fifteen numbers per jet, computed from track
 collections that already exist in standard event reconstruction, they
 require no new detector information, no architectural changes, and no
 retuning of the background model, and they add negligible
@@ -1280,7 +1320,7 @@ whose denominators grow with every accepted soft track.
 \label{app:recon}
 
 Figures~\ref{fig:appreconS} and~\ref{fig:appreconD} show the input
-and reconstructed distributions of all 24 features for the VAE of
+and reconstructed distributions of all 27 features for the VAE of
 Sec.~\ref{sec:adtrain}. QCD is reconstructed faithfully in every
 feature, while signal reconstructions are pulled onto the learned QCD
 manifold.
@@ -1395,7 +1435,20 @@ manifold.
     \includegraphics[width=\textwidth]{vae_recon_panel_promptfrac_truth.pdf}
     \caption{}
   \end{subfigure}
-  \caption{VAE (basis $S{+}D$) input and reconstructed distributions of the 12 displaced features. Conventions as in Fig.~\ref{fig:appreconS}.}
+  \\
+  \begin{subfigure}{0.32\textwidth}
+    \includegraphics[width=\textwidth]{vae_recon_panel_tau1_disp_truth.pdf}
+    \caption{}
+  \end{subfigure}
+  \begin{subfigure}{0.32\textwidth}
+    \includegraphics[width=\textwidth]{vae_recon_panel_tau21_disp_truth.pdf}
+    \caption{}
+  \end{subfigure}
+  \begin{subfigure}{0.32\textwidth}
+    \includegraphics[width=\textwidth]{vae_recon_panel_tau32_disp_truth.pdf}
+    \caption{}
+  \end{subfigure}
+  \caption{VAE (basis $S{+}D$) input and reconstructed distributions of the 15 displaced features. Conventions as in Fig.~\ref{fig:appreconS}.}
   \label{fig:appreconD}
 \end{figure}
 

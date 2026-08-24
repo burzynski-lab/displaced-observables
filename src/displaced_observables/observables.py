@@ -218,6 +218,60 @@ def nsubjettiness(jets, n: int, beta: float = 1.0) -> ak.Array:
     return ak.Array(out)
 
 
+def nsubjettiness_disp(jets, n: int, beta: float = 1.0) -> ak.Array:
+    """Displacement-aware N-subjettiness: exclusive-kT axes are found on the
+    w-weighted track collection (pT_i -> w_i pT_i), so the axes follow the
+    displaced substructure rather than the energy flow, and the sum is
+    w-weighted as well:
+
+        tau_N(disp) = sum_i w_i z_i min_a(dR_ia)^beta
+                      / (sum_i w_i z_i R^beta),   axes from {w_i pT_i}.
+
+    This counts *displaced prongs*: a b jet has a single displaced decay
+    chain, while a dark shower has several vertices spread across the jet.
+    Unlike a naive w-insertion into both numerator and denominator of the
+    standard tau_N, the axis reweighting makes this more than a rescaled
+    copy of its nominal partner."""
+    import fastjet
+
+    trk = jets.trk
+    w = weight(trk)
+    # a track needs a nonzero weight to define a displaced axis
+    has_w = w > 0
+    sub, wsub = trk[has_w], w[has_w]
+    ok = ak.to_numpy(ak.num(sub.pt, axis=1) >= n)
+    sub, wsub = sub[ok], wsub[ok]
+
+    p4 = ak.zip(
+        {"pt": sub.pt * wsub, "eta": sub.eta, "phi": sub.phi,
+         "M": ak.zeros_like(sub.pt)},
+        with_name="Momentum4D",
+    )
+    jetdef = fastjet.JetDefinition(fastjet.kt_algorithm, 1.0)
+    axes = fastjet.ClusterSequence(p4, jetdef).exclusive_jets(n_jets=n)
+
+    pairs = ak.cartesian({"t": sub, "a": axes}, axis=1, nested=True)
+    dphi = np.mod(pairs.t.phi - pairs.a.phi + np.pi, 2 * np.pi) - np.pi
+    dr = np.sqrt((pairs.t.eta - pairs.a.eta) ** 2 + dphi**2)
+    min_dr = ak.min(dr, axis=-1)
+    wz = wsub * sub.z
+    norm = ak.sum(wz, axis=1) * JET_R**beta
+    tau_sub = ak.where(norm > 0,
+                       ak.sum(wz * min_dr**beta, axis=1) / ak.where(norm > 0, norm, 1),
+                       0.0)
+
+    out = np.zeros(len(jets))
+    out[ok] = ak.to_numpy(tau_sub)
+    return ak.Array(out)
+
+
+def tau_ratio_disp(jets, n: int, m: int, beta: float = 1.0) -> ak.Array:
+    """tau_n(disp) / tau_m(disp); 0 where the denominator vanishes."""
+    tn = nsubjettiness_disp(jets, n, beta)
+    tm = nsubjettiness_disp(jets, m, beta)
+    return ak.where(tm > 0, tn / ak.where(tm > 0, tm, 1), 0.0)
+
+
 def tau_ratio(jets, n: int, m: int, beta: float = 1.0) -> ak.Array:
     """tau_n / tau_m (e.g. tau21 = tau_ratio(jets, 2, 1)); 0 where tau_m = 0."""
     tn, tm = nsubjettiness(jets, n, beta), nsubjettiness(jets, m, beta)

@@ -45,6 +45,9 @@ BASIS_D = {
     "Lratio": obs.lifetime_ratio,
     "ip2d": obs.mean_ip2d_significance,
     "promptfrac": obs.prompt_pt_fraction,
+    "tau1_disp": lambda j: obs.nsubjettiness_disp(j, 1),
+    "tau21_disp": lambda j: obs.tau_ratio_disp(j, 2, 1),
+    "tau32_disp": lambda j: obs.tau_ratio_disp(j, 3, 2),
 }
 
 

@@ -143,6 +143,27 @@ def test_nsubjettiness_limits():
     assert obs.nsubjettiness(j1, 3)[0] == 0.0  # fewer tracks than axes
 
 
+def test_displaced_nsubjettiness():
+    # two displaced tracks at eta = +/-0.15 and one prompt track between
+    # them: the displaced axes must follow the displaced pair, so tau2 = 0
+    # while the nominal tau2 (energy axes, three tracks) is nonzero.
+    disp = dict(z=0.3, d0=1.0, sigma_d0=0.01)
+    jets = make_jet([
+        {**disp, "eta": 0.15, "phi": 0.0},
+        {**disp, "eta": -0.15, "phi": 0.0},
+        dict(z=0.4, d0=0.0, sigma_d0=0.01, eta=0.0, phi=0.0),
+    ])
+    assert obs.nsubjettiness_disp(jets, 2)[0] < 1e-12   # 2 displaced prongs
+    assert obs.nsubjettiness(jets, 2)[0] > 1e-6         # 3 energy prongs
+    # tau1(disp): single axis at the displaced midpoint, tracks at dR = 0.15
+    assert np.isclose(obs.nsubjettiness_disp(jets, 1)[0], 0.15 / obs.JET_R)
+    # ratio is well defined and vanishes for a clean two-prong displaced jet
+    assert obs.tau_ratio_disp(jets, 2, 1)[0] < 1e-10
+    # a jet with no displaced tracks yields zero
+    prompt = make_jet([dict(d0=0.0), dict(d0=0.0), dict(d0=0.0)])
+    assert obs.nsubjettiness_disp(prompt, 1)[0] == 0.0
+
+
 def test_apply_tracking_preserves_jet_depth():
     # regression: zip depth must not broadcast jet fields into track lists,
     # or flavor masks filter tracks instead of jets
