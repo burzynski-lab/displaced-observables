@@ -6,8 +6,8 @@
 Per ctau point, the ceiling is a fully supervised XGBoost BDT on the
 complete S+D observable basis (signal vs inclusive QCD). It is compared,
 on identical jet splits, against a BDT on the nominal basis S and the best
-single observables (dEEC-min, displaced multiplicity). Reports background
-rejection at 50% signal efficiency per flavor and the fraction of the
+single observables (dECF2-min, displaced multiplicity). Reports background
+rejection at 70% signal efficiency per flavor and the fraction of the
 ceiling's log-rejection each proxy captures.
 """
 
@@ -26,13 +26,24 @@ sys.path.insert(0, str(Path(__file__).parent))
 from make_plots import decorate  # noqa: E402
 from vae_study import BASIS_S, BASIS_D  # noqa: E402
 
+from displaced_observables.analysis import rejection
+
 plt.style.use(hep.style.ATLAS)
 
 
-def rejection_at_eff(s_sig, s_bkg, eff=0.5):
-    cut = np.quantile(s_sig, 1 - eff)
-    fpr = np.mean(s_bkg > cut)
-    return 1.0 / fpr if fpr > 0 else float(len(s_bkg))
+# Working point shared with make_plots, so the supervised ceiling is quoted
+# against the same definition as the single-observable rejections.
+EFF = 0.7
+
+
+def rejection_at_eff(s_sig, s_bkg, eff=EFF):
+    """(value, saturated) from the shared implementation.
+
+    The private version this replaces returned len(s_bkg) whenever nothing
+    survived the cut, with no flag, so a fully saturated BDT was reported as
+    a measured rejection equal to the test-sample size.
+    """
+    return rejection(s_sig, s_bkg, eff=eff)
 
 
 def main() -> None:
@@ -71,8 +82,8 @@ def main() -> None:
 
     from xgboost import XGBClassifier
 
-    methods = ["BDT, S+D", "BDT, S", "dEEC(min)", "$\\Sigma_i w_i$"]
-    singles = {"dEEC(min)": "deec_min", "$\\Sigma_i w_i$": "ang_00"}
+    methods = ["BDT, S+D", "BDT, S", "dECF$_2$(min)", "$\\Sigma_i w_i$"]
+    singles = {"dECF$_2$(min)": "deec_min", "$\\Sigma_i w_i$": "ang_00"}
 
     def compute():
         results = {}
@@ -90,9 +101,15 @@ def main() -> None:
                 X_val = np.concatenate([feat_matrix(q_va, basis), feat_matrix(s_va, basis)])
                 y_val = np.concatenate([np.zeros(len(q_va)), np.ones(len(s_va))])
                 bdt.fit(X, y, eval_set=[(X_val, y_val)], verbose=False)
-                sc_sig = bdt.predict_proba(feat_matrix(s_te, basis))[:, 1]
+                # Raw margin, not predict_proba: the probability is float32,
+                # so every jet with log-odds above 16.6 collapses to exactly
+                # 1.0f. That manufactures ties at the cut, and a background
+                # jet tied with the cut is dropped by the strict inequality,
+                # inflating the rejection. The margin is monotonic in p, so
+                # the working point is unchanged.
+                sc_sig = bdt.predict(feat_matrix(s_te, basis), output_margin=True)
                 for bname, bidx in bkg_cats.items():
-                    sc_bkg = bdt.predict_proba(feat_matrix(bidx, basis))[:, 1]
+                    sc_bkg = bdt.predict(feat_matrix(bidx, basis), output_margin=True)
                     results[(mname, ctau, bname)] = rejection_at_eff(sc_sig, sc_bkg)
 
             for mname, col in singles.items():
@@ -101,7 +118,10 @@ def main() -> None:
                     results[(mname, ctau, bname)] = rejection_at_eff(v_sig, jets[col][bidx])
 
             row = " ".join(
-                f"{m}: L={results[(m, ctau, 'QCD light')]:.0f} b={results[(m, ctau, 'QCD b')]:.0f}"
+                f"{m}: L={results[(m, ctau, 'QCD light')][1] and '>' or ''}"
+                f"{results[(m, ctau, 'QCD light')][0]:.0f} "
+                f"b={results[(m, ctau, 'QCD b')][1] and '>' or ''}"
+                f"{results[(m, ctau, 'QCD b')][0]:.0f}"
                 for m in methods)
             print(f"ctau={ctau:6g} mm | {row}")
 
@@ -113,20 +133,27 @@ def main() -> None:
         compute, args.recompute)
 
     styles = {"BDT, S+D": ("k", "-", "o"), "BDT, S": ("tab:gray", ":", "v"),
-              "dEEC(min)": ("tab:orange", "--", "D"), "$\\Sigma_i w_i$": ("tab:blue", "--", "s")}
+              "dECF$_2$(min)": ("tab:orange", "--", "D"), "$\\Sigma_i w_i$": ("tab:blue", "--", "s")}
     bname = "QCD b"
     # rejection panel
     fig, ax = plt.subplots(figsize=(7, 6))
     for m in methods:
-        y = [results[(m, c, bname)] for c in ctaus]
+        y = [results[(m, c, bname)][0] for c in ctaus]
+        sat = [results[(m, c, bname)][1] for c in ctaus]
         col, ls, mk = styles[m]
         ax.plot(ctaus, y, color=col, ls=ls, marker=mk, ms=5, label=m)
+        xs = [c for c, si in zip(ctaus, sat) if si]
+        ys = [v for v, si in zip(y, sat) if si]
+        if xs:
+            ax.plot(xs, ys, ls="none", marker="^", ms=9,
+                    markerfacecolor="none", color=col)
     ax.set_yscale("log")
-    ax.set_ylabel(f"{bname} rejection @ $\\epsilon_s$=50%")
+    ax.set_ylabel(f"{bname} rejection @ "
+                  f"$\\epsilon_s$={EFF * 100:.0f}%")
     ax.set_xscale("symlog", linthresh=1)
     ax.set_xlabel("$c\\tau(\\pi_d)$ [mm]")
     ax.set_ylim(top=ax.get_ylim()[1] * 3e3)
-    ax.legend(fontsize=13, loc="lower right")
+    ax.legend(fontsize=13, loc="upper right")
     decorate(ax, extra="supervised per $c\\tau$")
     fig.tight_layout()
     for _ext in ("png", "pdf"):
@@ -135,8 +162,8 @@ def main() -> None:
     # fraction panel
     fig, ax = plt.subplots(figsize=(7, 6))
     for m in methods[1:]:
-        frac = [np.log(max(results[(m, c, bname)], 1.001))
-                / np.log(max(results[("BDT, S+D", c, bname)], 1.002))
+        frac = [np.log(max(results[(m, c, bname)][0], 1.001))
+                / np.log(max(results[("BDT, S+D", c, bname)][0], 1.002))
                 for c in ctaus]
         col, ls, mk = styles[m]
         ax.plot(ctaus, frac, color=col, ls=ls, marker=mk, ms=5, label=m)

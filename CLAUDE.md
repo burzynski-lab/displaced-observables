@@ -49,19 +49,47 @@ replays on the cluster.
 
 ## Data
 
-`data/` is gitignored, currently ~3.7 GB, and does **not** transfer with
-the repo. On a new machine it must be regenerated (see below).
+`data/` is gitignored, does **not** transfer with the repo, and on the
+cluster is a symlink to `/scratch/jburzyns/displaced-observables/data`.
+On a new machine it must be regenerated (see below).
+
+Production sample, generated on OSCER 2026-08-24, 32 GB, verified complete
+(270/270 files, every file a full 10k events):
 
 | sample | files | events | notes |
 |---|---|---|---|
-| signal | `signal_ctau{0,1,3,10,30,100,300}mm_seed1.parquet` | 10k each | Z'(1.5 TeV) -> qD qDbar, Hidden Valley |
-| inclusive QCD | `qcd_seed1..11.parquet` | ~112k | `HardQCD:all`, pTHatMin 450 |
-| b-enriched QCD | `qcdbb_seed1..10.parquet` | ~100k | `HardQCD:hardbbbar` |
-| minimum bias | `minbias_seed1.parquet` | 20k | `SoftQCD:inelastic`, pileup overlay only |
+| signal | `signal_ctau{0,1,3,10,30,100,300}mm_seed{1..10}.parquet` | 100k per ctau | Z'(1.5 TeV) -> qD qDbar, Hidden Valley |
+| inclusive QCD | `qcd_seed{1..100}.parquet` | 1M | `HardQCD:all`, pTHatMin 450 |
+| b-enriched QCD | `qcdbb_seed{1..100}.parquet` | 1M | `HardQCD:hardbbbar` |
+| minimum bias | not generated | | only feeds the pileup study, which is commented out of the paper |
 
-Yields after selection: 122,258 inclusive-QCD jets (75,679 light /
-8,878 c / 37,701 b), 108,453 b-enriched b jets, 9,126 signal jets per
-lifetime point.
+Measured yields after selection (truth scenario, 2026-08-24 production),
+to 3 significant figures:
+
+| sample | jets | light | c | b |
+|---|---|---|---|---|
+| inclusive QCD | 1.20e6 | 9.68e5 | 1.57e5 | 7.26e4 |
+| b-enriched | 1.09e6 | 8.21e3 | 1.69e3 | 1.08e6 |
+| signal, per ctau | 9.13e4 | | | |
+
+As used in the analysis: `QCD light` 9.68e5, `QCD c` 1.57e5, `QCD b`
+1.15e6 (pooling inclusive b with b-enriched b). Signal totals 6.39e5
+over the seven lifetime points, and the feature file holds 2.92e6 jets.
+Exact counts, if needed: 1,198,022 / 968,322 / 157,140 / 72,560;
+1,086,051 / 8,213 / 1,686 / 1,076,152; 91,316 per ctau; 1,148,712
+pooled b; 2,923,285 total.
+
+**Flavour-composition discrepancy, unresolved.** The inclusive-QCD split
+above is 80.8% light / 13.1% c / 6.1% b, whereas the yields previously
+recorded here were 61.9% / 7.3% / 30.8%. The new fractions are reproduced
+file by file and are the more physical ones (a ~31% b fraction in
+`HardQCD:all` at pTHatMin 450 is not credible). The refactor is *not* the
+cause: `scripts/validate_sharding.py` shows the pre-refactor and current
+code agree exactly on the same files. The old sample no longer exists on
+this machine, so the discrepancy could not be chased down. Rejections are
+per-flavour efficiencies and so are composition-independent, and they do
+reproduce the old values, but anything quoting background *composition*
+should be re-derived rather than taken from the old record.
 
 Generation (~20-25 evt/s per process on one core):
 
@@ -79,19 +107,43 @@ before writing, so a single 100k job is RAM-hungry; the analysis globs
 
 ### Running generation on SLURM
 
-Generation is embarrassingly parallel over (sample, ctau, seed). One
-array task per file, e.g.
+Generation is embarrassingly parallel over (sample, ctau, seed), one
+array task per 10k-event file. The full workflow lives in `slurm/` and is
+documented in **[slurm/README.md](slurm/README.md)**. Short version, on
+OSCER:
 
 ```bash
-#!/bin/bash
-#SBATCH --array=1-20 --cpus-per-task=1 --mem=8G --time=02:00:00
-cd $SLURM_SUBMIT_DIR
-pixi run generate --sample qcd --nevents 10000 --seed $SLURM_ARRAY_TASK_ID
+pixi install                 # ~2 min from the committed lockfile
+./slurm/manifest.sh          # build the job lists
+./slurm/submit.sh            # 270 array tasks
+./slurm/status.sh            # progress, disk usage, failures
 ```
 
-Notes: use distinct seeds per task (the seed is passed to Pythia as
-`Random:seed`), 8 GB/task is comfortable for 10k events, and pixi needs
-a writable `PIXI_CACHE_DIR`/`HOME` on the compute nodes.
+Production scale is 100k events per ctau point (7 x 10 seeds), 1M
+inclusive QCD and 1M b-enriched QCD (100 seeds each): 270 tasks, 2.7M
+events, ~33 GB.
+
+To fill gaps after a partial run, `./slurm/manifest.sh --todo` rewrites
+the manifests with only the jobs whose parquet is missing, then submit
+again. It is idempotent, so repeat until `status.sh` is clean.
+
+Cluster specifics that cost time to rediscover:
+
+- The partition is `sooner_test` with an **underscore**. `sooner-test`
+  does not exist and `sbatch` rejects it.
+- Account `general`, QOS `normal`, capped at **1500 submitted jobs**.
+- `DefMemPerCPU` is 1024 MB, so `--mem` must always be set explicitly.
+  Tasks request 12 GB because `generate()` accumulates all events in
+  memory before writing, which is also why files stay at 10k events.
+- `data/` is a **symlink** to `/scratch/jburzyns/displaced-observables/data`.
+  Bulk samples belong on scratch (111 TB free) but every script still
+  just refers to `data/`.
+- pixi needs a writable `PIXI_CACHE_DIR`/`HOME` on the compute nodes; the
+  sbatch points it at scratch. The `.pixi/envs` tree is read off NFS, so
+  no per-job install is needed.
+- The seed is passed to Pythia as `Random:seed`. Seeds are deliberately
+  **reused across the ctau grid** so the hard process is common to all
+  lifetime points, which is what makes the ctau comparison controlled.
 
 ## Pipeline
 
@@ -155,7 +207,7 @@ on one feature file.)
 | `appendix_inputs.py` | ml | per-feature input panels (paper Figs 3-4) |
 | `correlation_matrix.py` | ml | D-basis Pearson correlations |
 | `vae_study.py` | ml | AE/VAE training, anomaly scores, efficiency curves, reconstruction panels |
-| `interpretability_study.py` | ml | supervised XGBoost ceiling vs single observables |
+| `interpretability_study.py` | ml | supervised XGBoost ceiling vs single observables. **No longer feeds the paper**: the ceiling figure was dropped because the S+D classifier separates completely and the rejection is unquantifiable. The BDT curve in the money plot comes from `vae_study.py` (`BDT-sup`), not from here. Kept as a cross-check. |
 | `kappa_beta_scan.py` | default | (kappa,beta) angularity scan heatmaps |
 | `pileup_study.py` | default | minimum-bias overlay study (commented out of the paper) |
 | `scenario_comparison.py` | default | tracking-scenario comparison (dropped from the paper) |
@@ -192,45 +244,81 @@ Non-obvious definitions:
   reweighting is the whole point (counts displaced prongs, not energy
   prongs).
 
-## Key results (current, R = 1.0, 10^5-jet backgrounds)
+## Key results (current, R = 1.0, 2.7M-event production)
 
-Background rejection at 50% signal efficiency, pT-reweighted, vs
+**Working point is 70% signal efficiency, not 50%.** At 50% the
+production sample still leaves six entries (QCD light and b) as
+sample-statistics lower bounds. At 70% every rejection the paper
+reports is a measurement, so no published number depends on the
+saturation guard. `EFFS = (0.5, 0.7, 0.9)` and `PAPER_EFF = 0.7` in
+`make_plots.py`; the 50% and 90% tables are still written to
+`plots/rejection_truth.log` for comparison.
+
+Background rejection at **70%** signal efficiency, pT-reweighted, vs
 light / c / b:
 
-| observable | ctau=1 mm | 3 mm | 10 mm | 30 mm |
-|---|---|---|---|---|
-| Sum_i w_i | 199 / 72 / 54 | 1635 / 564 / 385 | 23018 / 15514 / 4462 | >53423 / >9038 / 32104 |
-| dEEC(min) | 619 / 106 / 42 | 1330 / 265 / 82 | 3439 / 689 / 170 | 4389 / 1309 / 298 |
-| dECF3 | 244 / 43 / 34 | 788 / 116 / 84 | 2498 / 433 / 234 | 10236 / 1577 / 580 |
-| nominal substructure | 2-5, flat in ctau | | | |
+| observable | ctau=1 mm | 3 mm | 10 mm | 30 mm | 100 mm |
+|---|---|---|---|---|---|
+| Sum_i w_i | 55 / 23 / 16 | 306 / 106 / 77 | 2373 / 753 / 535 | 20838 / 4851 / 4604 | 110919 / >88431 / 26779 |
+| dECF2(min) | 251 / 47 / 23 | 528 / 100 / 42 | 1040 / 197 / 77 | 1753 / 319 / 125 | 2633 / 529 / 181 |
+| dECF3 | 100 / 22 / 17 | 254 / 50 / 36 | 686 / 123 / 83 | 1563 / 291 / 176 | 3686 / 598 / 348 |
+| promptfrac | 378 / - / 5 | 2050 / - / 23 | 11271 / - / 144 | 30769 / - / 344 | 39739 / - / 470 |
+| nominal substructure | 1.6-2.3, flat in ctau | | | | |
+
+Ordering notes worth keeping straight:
+- `Sum_i w_i` is strongest against b only for ctau >= 3 mm. At 1 mm
+  `dECF2(min)` overtakes it (23 vs 16). At 50% the ordering was the
+  other way round, so this is a working-point effect.
+- `promptfrac` beats every correlator against **light** jets below
+  ctau = 100 mm, and did so at 50% too. It peaks at 1 for light jets by
+  construction, so treat its light-jet rejection as partly artifactual.
+  The paper currently claims dECF2 leads against light jets, which is
+  true only among the correlator observables.
+- The only `QCD c` entries still saturating at 70% are `ip2d` at
+  300 mm and `Sum_i w_i` at 100 mm. The paper does not report c.
 
 Anomaly detection, signal efficiency at fixed 1% QCD anomaly rate
-(ctau = 0, 1, 3, 10, 30, 100, 300 mm):
+(ctau = 0, 1, 3, 10, 30, 100, 300 mm), 2026-08-24 production:
 
 ```
-AE   S      0.005 0.005 0.005 0.005 0.005 0.005 0.008
-AE   S+D    0.096 0.241 0.485 0.745 0.893 0.959 0.980
-VAE  S      0.003 0.003 0.003 0.003 0.003 0.004 0.008
-VAE  S+D    0.072 0.335 0.592 0.831 0.955 0.988 0.990
-BDT  S+D    0.694 0.988 0.991 0.991 0.992 0.992 0.991   (supervised ceiling)
+AE   S      0.006 0.006 0.006 0.006 0.006 0.007 0.009
+AE   S+D    0.090 0.213 0.426 0.710 0.898 0.976 0.987
+VAE  S      0.005 0.005 0.005 0.005 0.005 0.005 0.010
+VAE  S+D    0.073 0.366 0.618 0.855 0.964 0.988 0.990
+BDT  S+D    0.744 0.988 0.990 0.990 0.991 0.991 0.992   (supervised)
+VAE/BDT      0.10  0.37  0.62  0.86  0.97  1.00  1.00
 ```
 
-b-jet anomaly rate at the 1% working point: 0.44% (S) -> 1.95% (S+D).
+b-jet anomaly rate at the 1% working point: VAE 0.49% (S) -> 1.81%
+(S+D); AE 0.81% -> 2.52%.
+
+Training converged well inside the 200-epoch budget (AE 152 and 119
+epochs, VAE 26 and 29), so the hyperparameters transferred to 10x data
+without retuning. Device was CPU: see slurm/README.md for the GPU path.
 
 Other established facts:
 - The (kappa,beta) scan favors the origin: Sum_i w_i is the best
   angularity; energy weighting *dilutes* the lifetime information.
 - Normalized ratios (dc2, dd2, tau*_disp) are flat in ctau: they probe
-  displacement *structure*, not amount. tau32_disp gives ~40x light-jet
-  rejection vs ~3x for nominal tau32.
-- Adding tau*_disp to the supervised basis improved b-rejection at
-  ctau = 1 mm from 1.8e4 to 2.7e4 (controlled A/B, same features).
+  displacement *structure*, not amount. tau32_disp gives ~22x light-jet
+  rejection vs ~1.6x for nominal tau32 (at the 70% WP).
+- Adding tau*_disp to the supervised basis improves b-rejection at
+  ctau = 1 mm from 4.9e3 to 6.5e3 at the 70% WP (controlled A/B, same
+  seed and split, `scripts/tauw_ab.py`). The old 1.8e4 -> 2.7e4 figure
+  was the 50% WP on the pre-production sample.
 - The heavy-tail log1p transform **degrades** anomaly contrast (the
   tails are the signal). Kept as an opt-in `--log1p` export flag, off by
   default; results preserved in `plots/vae_study_log1p.log`.
 
 ## Paper conventions
 
+- **Notation: ECF everywhere, never EEC.** The two-point correlator is
+  `ECF_2` and its weighted partner `dECF_2`, so each nominal/weighted
+  pair shares a name. `EEC` appears nowhere in the paper, the plot
+  labels, or the docstrings. Internal identifiers are unchanged and
+  still read `eec`/`deec` (`eec_b1`, `deec_b1`, `deec_min`), because
+  renaming them would invalidate `features_truth.h5`, the norm YAML and
+  every cache. Only display strings were changed.
 - **Style rules the author enforces**: no semicolons, no em-dashes
   anywhere in the text. JHEP register, no informal terms.
 - Observable families use `\obshead{...}` (unnumbered bold heading), not
