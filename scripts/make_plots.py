@@ -196,7 +196,7 @@ def main() -> None:
         prof = np.divide(num, den, out=np.zeros_like(num), where=den > 0)
         ax.stairs(prof, dr_bins, ls=style, label=name)
     ax.set_xlabel("$\\Delta R_{ij}$")
-    ax.set_ylabel("$\\langle w_i w_j \\rangle$ (z-weighted)")
+    ax.set_ylabel("$\\langle w_i w_j \\rangle$  (mean over track pairs, $z_i z_j$ weighted)", fontsize=15)
     ax.set_ylim(top=ax.get_ylim()[1] * 1.45)
     ax.legend(fontsize=13, loc="upper right")
     decorate(ax)
