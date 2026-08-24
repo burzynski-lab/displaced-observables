@@ -217,12 +217,29 @@ parameter $z_0$, computed at the transverse point of closest approach,
 is smeared analogously with
 $\sigma(z_0) = 20~\mu\mathrm{m} \oplus 100~\mu\mathrm{m}\,\mathrm{GeV}/\pT$.
 Reconstruction-efficiency effects, in particular the loss of efficiency
-with increasing production radius and the role of dedicated
-large-radius tracking, depend strongly on detector and reconstruction
+with increasing production radius and the role of the dedicated
+large-radius tracking passes used to recover displaced
+tracks~\cite{ATLAS:LRT}, depend strongly on detector and reconstruction
 details. A careful treatment of these efficiency considerations is
 left to future work, and the results presented here include the
 resolution smearing and the track selection below but assume fully
 efficient tracking within the $|\dnought| < 300$~mm acceptance.
+
+A second simplification deserves emphasis, because it acts in the
+direction of degrading the results reported here. The parametrization
+contains no fake tracks, that is, reconstructed tracks not
+corresponding to a single charged particle. Fake rates are small for
+standard tracking, but they grow substantially once the pointing
+requirements are loosened to reconstruct large impact-parameter
+tracks~\cite{ATLAS:LRT}. Fakes populate the large-$|\dnought|$ region
+by construction and are produced in proportion to the local hit
+density, so they are expected to contribute more displaced-looking
+tracks to dense QCD jets than to signal jets. Their effect is
+therefore to move background jets toward the signal region in every
+observable defined here, and a realistic fake-track treatment would
+reduce the rejection factors we quote. Quantifying this requires a
+hit-level simulation of the track reconstruction, which is beyond the
+scope of this study.
 
 Pileup is modeled by overlaying Poisson($\mu$) minimum-bias events
 (\textsc{Pythia} \texttt{SoftQCD:\allowbreak inelastic}) per jet before the tracking
@@ -1184,6 +1201,13 @@ CMS Collaboration,
 substructure in proton-proton collisions at $\sqrt{s} = 13$~TeV},
 Rept.\ Prog.\ Phys.\ \textbf{88} (2025) 067802,
 [\texttt{arXiv:2412.03747}].
+
+\bibitem{ATLAS:LRT}
+ATLAS Collaboration,
+\emph{Performance of the reconstruction of large impact parameter tracks
+in the inner detector of ATLAS},
+Eur.\ Phys.\ J.\ C \textbf{83} (2023) 1081,
+[\texttt{arXiv:2304.12867}].
 
 \bibitem{Chang:2013rca}
 H.-M.~Chang, M.~Procura, J.~Thaler and W.~J.~Waalewijn,
