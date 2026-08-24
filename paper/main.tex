@@ -5,6 +5,8 @@
 \usepackage{amssymb}
 \usepackage{xcolor}
 \usepackage{subcaption}
+\captionsetup[subfigure]{skip=1pt}
+\setlength{\emergencystretch}{1em}
 
 \graphicspath{{../plots/}}
 
@@ -20,8 +22,8 @@
 % unnumbered bold family heading on its own line
 \newcommand{\obshead}[1]{\par\medskip\noindent{\bfseries #1}\par\nobreak\smallskip}
 
-\title{Displacement-aware jet substructure\\
-for anomaly detection at the lifetime frontier}
+\title{Displacement-aware jet substructure for\\
+anomaly detection at the lifetime frontier}
 \author{Jackson Burzynski}
 \emailAdd{jackson.carl.burzynski@cern.ch}
 
@@ -223,7 +225,7 @@ resolution smearing and the track selection below but assume fully
 efficient tracking within the $|\dnought| < 300$~mm acceptance.
 
 Pileup is modeled by overlaying Poisson($\mu$) minimum-bias events
-(\textsc{Pythia} \texttt{SoftQCD:inelastic}) per jet before the tracking
+(\textsc{Pythia} \texttt{SoftQCD:\allowbreak inelastic}) per jet before the tracking
 transform, with each overlaid vertex displaced longitudinally by the
 beam-spot spread ($\sigma_z = 45$~mm). Results are presented for
 $\mu = 60$, representative of LHC Run~3 conditions, and compared to
@@ -456,7 +458,8 @@ Refs.~\cite{Schwaller:2015gea,CMS:EJ}.
   anomaly-detection input basis $S$, and adding the ``weighted'' column
   gives $S{+}D$ (Sec.~\ref{sec:anomaly}).}
   \label{tab:observables}
-  \begin{tabular}{lll}
+  \small
+  \begin{tabular}{@{}l p{0.33\textwidth} p{0.40\textwidth}@{}}
     \hline
     family & nominal & displacement-weighted \\
     \hline
@@ -522,54 +525,54 @@ fans out with $\ctau$.
 
 \begin{figure}[p]
   \centering
-  \begin{subfigure}{0.32\textwidth}
+  \begin{subfigure}{0.30\textwidth}
     \includegraphics[width=\textwidth]{appendix_input_girth_truth.pdf}
     \caption{}
   \end{subfigure}
-  \begin{subfigure}{0.32\textwidth}
+  \begin{subfigure}{0.30\textwidth}
     \includegraphics[width=\textwidth]{appendix_input_mass_ang_truth.pdf}
     \caption{}
   \end{subfigure}
-  \begin{subfigure}{0.32\textwidth}
+  \begin{subfigure}{0.30\textwidth}
     \includegraphics[width=\textwidth]{appendix_input_eec_b1_truth.pdf}
     \caption{}
   \end{subfigure}
   \\
-  \begin{subfigure}{0.32\textwidth}
+  \begin{subfigure}{0.30\textwidth}
     \includegraphics[width=\textwidth]{appendix_input_ecf3_truth.pdf}
     \caption{}
   \end{subfigure}
-  \begin{subfigure}{0.32\textwidth}
+  \begin{subfigure}{0.30\textwidth}
     \includegraphics[width=\textwidth]{appendix_input_c2_truth.pdf}
     \caption{}
   \end{subfigure}
-  \begin{subfigure}{0.32\textwidth}
+  \begin{subfigure}{0.30\textwidth}
     \includegraphics[width=\textwidth]{appendix_input_d2_truth.pdf}
     \caption{}
   \end{subfigure}
   \\
-  \begin{subfigure}{0.32\textwidth}
+  \begin{subfigure}{0.30\textwidth}
     \includegraphics[width=\textwidth]{appendix_input_tau1_truth.pdf}
     \caption{}
   \end{subfigure}
-  \begin{subfigure}{0.32\textwidth}
+  \begin{subfigure}{0.30\textwidth}
     \includegraphics[width=\textwidth]{appendix_input_tau21_truth.pdf}
     \caption{}
   \end{subfigure}
-  \begin{subfigure}{0.32\textwidth}
+  \begin{subfigure}{0.30\textwidth}
     \includegraphics[width=\textwidth]{appendix_input_tau32_truth.pdf}
     \caption{}
   \end{subfigure}
   \\
-  \begin{subfigure}{0.32\textwidth}
+  \begin{subfigure}{0.30\textwidth}
     \includegraphics[width=\textwidth]{appendix_input_ptd_truth.pdf}
     \caption{}
   \end{subfigure}
-  \begin{subfigure}{0.32\textwidth}
+  \begin{subfigure}{0.30\textwidth}
     \includegraphics[width=\textwidth]{appendix_input_ntrk_truth.pdf}
     \caption{}
   \end{subfigure}
-  \begin{subfigure}{0.32\textwidth}
+  \begin{subfigure}{0.30\textwidth}
     \includegraphics[width=\textwidth]{appendix_input_jetmass_truth.pdf}
     \caption{}
   \end{subfigure}
@@ -579,67 +582,67 @@ fans out with $\ctau$.
 
 \begin{figure}[p]
   \centering
-  \begin{subfigure}{0.32\textwidth}
+  \begin{subfigure}{0.28\textwidth}
     \includegraphics[width=\textwidth]{appendix_input_ang_00_truth.pdf}
     \caption{}
   \end{subfigure}
-  \begin{subfigure}{0.32\textwidth}
+  \begin{subfigure}{0.28\textwidth}
     \includegraphics[width=\textwidth]{appendix_input_ang_10_truth.pdf}
     \caption{}
   \end{subfigure}
-  \begin{subfigure}{0.32\textwidth}
+  \begin{subfigure}{0.28\textwidth}
     \includegraphics[width=\textwidth]{appendix_input_ang_11_truth.pdf}
     \caption{}
   \end{subfigure}
   \\
-  \begin{subfigure}{0.32\textwidth}
+  \begin{subfigure}{0.28\textwidth}
     \includegraphics[width=\textwidth]{appendix_input_deec_b1_truth.pdf}
     \caption{}
   \end{subfigure}
-  \begin{subfigure}{0.32\textwidth}
+  \begin{subfigure}{0.28\textwidth}
     \includegraphics[width=\textwidth]{appendix_input_deec_min_truth.pdf}
     \caption{}
   \end{subfigure}
-  \begin{subfigure}{0.32\textwidth}
+  \begin{subfigure}{0.28\textwidth}
     \includegraphics[width=\textwidth]{appendix_input_decf3_truth.pdf}
     \caption{}
   \end{subfigure}
   \\
-  \begin{subfigure}{0.32\textwidth}
+  \begin{subfigure}{0.28\textwidth}
     \includegraphics[width=\textwidth]{appendix_input_dc2_truth.pdf}
     \caption{}
   \end{subfigure}
-  \begin{subfigure}{0.32\textwidth}
+  \begin{subfigure}{0.28\textwidth}
     \includegraphics[width=\textwidth]{appendix_input_dd2_truth.pdf}
     \caption{}
   \end{subfigure}
-  \begin{subfigure}{0.32\textwidth}
+  \begin{subfigure}{0.28\textwidth}
     \includegraphics[width=\textwidth]{appendix_input_L1_truth.pdf}
     \caption{}
   \end{subfigure}
   \\
-  \begin{subfigure}{0.32\textwidth}
+  \begin{subfigure}{0.28\textwidth}
     \includegraphics[width=\textwidth]{appendix_input_Lratio_truth.pdf}
     \caption{}
   \end{subfigure}
-  \begin{subfigure}{0.32\textwidth}
+  \begin{subfigure}{0.28\textwidth}
     \includegraphics[width=\textwidth]{appendix_input_ip2d_truth.pdf}
     \caption{}
   \end{subfigure}
-  \begin{subfigure}{0.32\textwidth}
+  \begin{subfigure}{0.28\textwidth}
     \includegraphics[width=\textwidth]{appendix_input_promptfrac_truth.pdf}
     \caption{}
   \end{subfigure}
   \\
-  \begin{subfigure}{0.32\textwidth}
+  \begin{subfigure}{0.28\textwidth}
     \includegraphics[width=\textwidth]{appendix_input_tau1_disp_truth.pdf}
     \caption{}
   \end{subfigure}
-  \begin{subfigure}{0.32\textwidth}
+  \begin{subfigure}{0.28\textwidth}
     \includegraphics[width=\textwidth]{appendix_input_tau21_disp_truth.pdf}
     \caption{}
   \end{subfigure}
-  \begin{subfigure}{0.32\textwidth}
+  \begin{subfigure}{0.28\textwidth}
     \includegraphics[width=\textwidth]{appendix_input_tau32_disp_truth.pdf}
     \caption{}
   \end{subfigure}
@@ -1305,54 +1308,54 @@ manifold.
 
 \begin{figure}[p]
   \centering
-  \begin{subfigure}{0.32\textwidth}
+  \begin{subfigure}{0.30\textwidth}
     \includegraphics[width=\textwidth]{vae_recon_panel_girth_truth.pdf}
     \caption{}
   \end{subfigure}
-  \begin{subfigure}{0.32\textwidth}
+  \begin{subfigure}{0.30\textwidth}
     \includegraphics[width=\textwidth]{vae_recon_panel_mass_ang_truth.pdf}
     \caption{}
   \end{subfigure}
-  \begin{subfigure}{0.32\textwidth}
+  \begin{subfigure}{0.30\textwidth}
     \includegraphics[width=\textwidth]{vae_recon_panel_eec_b1_truth.pdf}
     \caption{}
   \end{subfigure}
   \\
-  \begin{subfigure}{0.32\textwidth}
+  \begin{subfigure}{0.30\textwidth}
     \includegraphics[width=\textwidth]{vae_recon_panel_ecf3_truth.pdf}
     \caption{}
   \end{subfigure}
-  \begin{subfigure}{0.32\textwidth}
+  \begin{subfigure}{0.30\textwidth}
     \includegraphics[width=\textwidth]{vae_recon_panel_c2_truth.pdf}
     \caption{}
   \end{subfigure}
-  \begin{subfigure}{0.32\textwidth}
+  \begin{subfigure}{0.30\textwidth}
     \includegraphics[width=\textwidth]{vae_recon_panel_d2_truth.pdf}
     \caption{}
   \end{subfigure}
   \\
-  \begin{subfigure}{0.32\textwidth}
+  \begin{subfigure}{0.30\textwidth}
     \includegraphics[width=\textwidth]{vae_recon_panel_tau1_truth.pdf}
     \caption{}
   \end{subfigure}
-  \begin{subfigure}{0.32\textwidth}
+  \begin{subfigure}{0.30\textwidth}
     \includegraphics[width=\textwidth]{vae_recon_panel_tau21_truth.pdf}
     \caption{}
   \end{subfigure}
-  \begin{subfigure}{0.32\textwidth}
+  \begin{subfigure}{0.30\textwidth}
     \includegraphics[width=\textwidth]{vae_recon_panel_tau32_truth.pdf}
     \caption{}
   \end{subfigure}
   \\
-  \begin{subfigure}{0.32\textwidth}
+  \begin{subfigure}{0.30\textwidth}
     \includegraphics[width=\textwidth]{vae_recon_panel_ptd_truth.pdf}
     \caption{}
   \end{subfigure}
-  \begin{subfigure}{0.32\textwidth}
+  \begin{subfigure}{0.30\textwidth}
     \includegraphics[width=\textwidth]{vae_recon_panel_ntrk_truth.pdf}
     \caption{}
   \end{subfigure}
-  \begin{subfigure}{0.32\textwidth}
+  \begin{subfigure}{0.30\textwidth}
     \includegraphics[width=\textwidth]{vae_recon_panel_jetmass_truth.pdf}
     \caption{}
   \end{subfigure}
@@ -1362,67 +1365,67 @@ manifold.
 
 \begin{figure}[p]
   \centering
-  \begin{subfigure}{0.32\textwidth}
+  \begin{subfigure}{0.28\textwidth}
     \includegraphics[width=\textwidth]{vae_recon_panel_ang_00_truth.pdf}
     \caption{}
   \end{subfigure}
-  \begin{subfigure}{0.32\textwidth}
+  \begin{subfigure}{0.28\textwidth}
     \includegraphics[width=\textwidth]{vae_recon_panel_ang_10_truth.pdf}
     \caption{}
   \end{subfigure}
-  \begin{subfigure}{0.32\textwidth}
+  \begin{subfigure}{0.28\textwidth}
     \includegraphics[width=\textwidth]{vae_recon_panel_ang_11_truth.pdf}
     \caption{}
   \end{subfigure}
   \\
-  \begin{subfigure}{0.32\textwidth}
+  \begin{subfigure}{0.28\textwidth}
     \includegraphics[width=\textwidth]{vae_recon_panel_deec_b1_truth.pdf}
     \caption{}
   \end{subfigure}
-  \begin{subfigure}{0.32\textwidth}
+  \begin{subfigure}{0.28\textwidth}
     \includegraphics[width=\textwidth]{vae_recon_panel_deec_min_truth.pdf}
     \caption{}
   \end{subfigure}
-  \begin{subfigure}{0.32\textwidth}
+  \begin{subfigure}{0.28\textwidth}
     \includegraphics[width=\textwidth]{vae_recon_panel_decf3_truth.pdf}
     \caption{}
   \end{subfigure}
   \\
-  \begin{subfigure}{0.32\textwidth}
+  \begin{subfigure}{0.28\textwidth}
     \includegraphics[width=\textwidth]{vae_recon_panel_dc2_truth.pdf}
     \caption{}
   \end{subfigure}
-  \begin{subfigure}{0.32\textwidth}
+  \begin{subfigure}{0.28\textwidth}
     \includegraphics[width=\textwidth]{vae_recon_panel_dd2_truth.pdf}
     \caption{}
   \end{subfigure}
-  \begin{subfigure}{0.32\textwidth}
+  \begin{subfigure}{0.28\textwidth}
     \includegraphics[width=\textwidth]{vae_recon_panel_L1_truth.pdf}
     \caption{}
   \end{subfigure}
   \\
-  \begin{subfigure}{0.32\textwidth}
+  \begin{subfigure}{0.28\textwidth}
     \includegraphics[width=\textwidth]{vae_recon_panel_Lratio_truth.pdf}
     \caption{}
   \end{subfigure}
-  \begin{subfigure}{0.32\textwidth}
+  \begin{subfigure}{0.28\textwidth}
     \includegraphics[width=\textwidth]{vae_recon_panel_ip2d_truth.pdf}
     \caption{}
   \end{subfigure}
-  \begin{subfigure}{0.32\textwidth}
+  \begin{subfigure}{0.28\textwidth}
     \includegraphics[width=\textwidth]{vae_recon_panel_promptfrac_truth.pdf}
     \caption{}
   \end{subfigure}
   \\
-  \begin{subfigure}{0.32\textwidth}
+  \begin{subfigure}{0.28\textwidth}
     \includegraphics[width=\textwidth]{vae_recon_panel_tau1_disp_truth.pdf}
     \caption{}
   \end{subfigure}
-  \begin{subfigure}{0.32\textwidth}
+  \begin{subfigure}{0.28\textwidth}
     \includegraphics[width=\textwidth]{vae_recon_panel_tau21_disp_truth.pdf}
     \caption{}
   \end{subfigure}
-  \begin{subfigure}{0.32\textwidth}
+  \begin{subfigure}{0.28\textwidth}
     \includegraphics[width=\textwidth]{vae_recon_panel_tau32_disp_truth.pdf}
     \caption{}
   \end{subfigure}
@@ -1440,7 +1443,7 @@ random seed are set per grid point at run time. The background samples
 use the same beam settings with \texttt{HardQCD:all} (inclusive
 dijets) or \texttt{HardQCD:hardbbbar} ($b$-enriched) and
 \texttt{PhaseSpace:pTHatMin = 450}, and the pileup library uses
-\texttt{SoftQCD:inelastic}.
+\texttt{SoftQCD:\allowbreak inelastic}.
 
 {\small
 \begin{verbatim}
