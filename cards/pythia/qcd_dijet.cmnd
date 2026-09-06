@@ -1,6 +1,10 @@
 ! QCD dijet background. Flavor split (light/c/b) is done at analysis time by
 ! hadron-based jet labeling, so one inclusive sample serves all three ROCs.
-! pTHat slice matched to the Z'(1.5 TeV) -> dijet spectrum (jets ~ 500-900 GeV).
+! pTHat slice set below the 500 GeV jet cut so the cut is not sitting on the
+! generator turn-on. At pTHatMin = 450 the jet spectrum peaked on the threshold
+! and the selection sculpted the sample that the pT reweighting then had to
+! correct. Lowering to 400 buys margin; 300 would be fully efficient but costs
+! a factor ~6 in selected jets per generated event (measured).
 ! Random seed is set programmatically.
 
 Beams:idA = 2212
@@ -8,7 +12,7 @@ Beams:idB = 2212
 Beams:eCM = 13600.
 
 HardQCD:all = on
-PhaseSpace:pTHatMin = 450.
+PhaseSpace:pTHatMin = 400.
 
 Random:setSeed = on
 Next:numberShowEvent = 0

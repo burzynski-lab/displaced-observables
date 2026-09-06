@@ -140,29 +140,28 @@ def generate_sample(
     n_events: int,
     seed: int = 1,
     ctau_mm: float | None = None,
-    out_dir: str | Path = "data",
+    out_dir: str | Path = "data/events",
+    progress: bool = True,
 ) -> Path:
-    """Generate one sample and write it to parquet. Returns the output path."""
-    if sample == "signal":
-        card = CARD_DIR / "signal_zprime_hv.cmnd"
-        if ctau_mm is None:
-            raise ValueError("signal requires ctau_mm (0 = prompt)")
-        tag = f"signal_ctau{ctau_mm:g}mm"
-    elif sample == "qcd":
-        card = CARD_DIR / "qcd_dijet.cmnd"
-        tag = "qcd"
-    elif sample == "qcd_bb":
-        card = CARD_DIR / "qcd_bbbar.cmnd"
-        tag = "qcdbb"
-    elif sample == "minbias":
-        card = CARD_DIR / "minbias.cmnd"
-        tag = "minbias"
-    else:
-        raise ValueError(f"unknown sample {sample!r}")
+    """Generate one sample point and write ``<out_dir>/<stem>.parquet``.
 
-    pythia = make_pythia(card, seed=seed, ctau_mm=ctau_mm)
-    arr = generate(pythia, n_events)
-    out = Path(out_dir) / f"{tag}_seed{seed}.parquet"
+    The stem is the join key for every later stage, so it is built by
+    ``samples.stem`` rather than assembled here.
+    """
+    from .samples import SAMPLES, stem as sample_stem
+
+    if sample not in SAMPLES:
+        raise ValueError(f"unknown sample {sample!r}")
+    if sample == "signal" and ctau_mm is None:
+        raise ValueError("signal requires ctau_mm (0 = prompt)")
+    card = CARD_DIR / f"{SAMPLES[sample][0]}.cmnd"
+
+    pythia = make_pythia(card, seed=seed, ctau_mm=ctau_mm if sample == "signal" else None)
+    arr = generate(pythia, n_events, progress=progress)
+    out = Path(out_dir) / f"{sample_stem(sample, seed, ctau_mm)}.parquet"
     out.parent.mkdir(parents=True, exist_ok=True)
-    ak.to_parquet(arr, out)
+    # atomic: a killed job must not leave a short parquet that looks complete
+    tmp = out.with_suffix(".parquet.part")
+    ak.to_parquet(arr, tmp)
+    tmp.rename(out)
     return out

@@ -9,7 +9,7 @@ Beams:idB = 2212
 Beams:eCM = 13600.
 
 HardQCD:hardbbbar = on
-PhaseSpace:pTHatMin = 450.
+PhaseSpace:pTHatMin = 400.
 
 Random:setSeed = on
 Next:numberShowEvent = 0

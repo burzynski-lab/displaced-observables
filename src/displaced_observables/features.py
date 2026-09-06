@@ -51,6 +51,22 @@ BASIS_D = {
 }
 
 
+# Plotted and scanned but deliberately NOT in the ML basis: lambda^1_2(w) is
+# the displaced-mass anchor and is highly correlated with ang_11.
+EXTRA_OBSERVABLES = {
+    "ang_12": lambda j: obs.angularity(j, 1, 2),
+}
+
+# Everything `analyze` computes: the union of the two bases plus the extras.
+# One registry, so the plotting step and the ML export can never drift apart.
+ALL_OBSERVABLES = {**BASIS_S, **BASIS_D, **EXTRA_OBSERVABLES}
+
+# "std" = lifetime-blind nominal partner, "disp" = displacement-weighted.
+GROUPS = ({k: "std" for k in BASIS_S}
+          | {k: "disp" for k in BASIS_D}
+          | {k: "disp" for k in EXTRA_OBSERVABLES})
+
+
 # heavy-tailed (values >> 1, multi-decade tails) features, optionally
 # stored as log(1+x). Empirically (see paper Sec. on anomaly detection):
 # the transform improves autoencoder reconstruction fidelity but DEGRADES

@@ -125,7 +125,10 @@ def lifetime_moment(jets, n: int) -> ak.Array:
 def lifetime_ratio(jets) -> ak.Array:
     """L2 L0 / L1^2 — dimensionless width of the |d0| distribution."""
     l0, l1, l2 = (lifetime_moment(jets, n) for n in (0, 1, 2))
-    return ak.where(l1 > 0, l2 * l0 / l1**2, 0.0)
+    # ak.where evaluates both branches, so the denominator is guarded too:
+    # a trackless jet would otherwise compute 0/0 and warn before it is masked
+    safe = ak.where(l1 > 0, l1, 1.0)
+    return ak.where(l1 > 0, l2 * l0 / safe**2, 0.0)
 
 
 # ------------------------------------------------- standard (non-lifetime)
@@ -188,6 +191,28 @@ def d2(jets, beta: float = 1.0) -> ak.Array:
     return ak.where(e2 > 0, e3 * e1**3 / ak.where(e2 > 0, e2, 1) ** 3, 0.0)
 
 
+def _exclusive_axes(p4, jetdef, n: int):
+    """Exclusive kT axes, without fastjet's spurious warning.
+
+    ``fastjet._multievent._warn_for_exclusive`` compares the JetDefinition
+    object against an algorithm *enum*, which is never equal, so it warns
+    "for jet-finders other than kt, C/A or genkt" even for a genuine kt
+    clustering. The axes here are kt by construction
+    (``jetdef.jet_algorithm() == fastjet.kt_algorithm``), so the warning is a
+    false positive and is filtered rather than propagated to every log.
+    """
+    import warnings
+
+    import fastjet
+
+    assert jetdef.jet_algorithm() == fastjet.kt_algorithm
+    with warnings.catch_warnings():
+        warnings.filterwarnings(
+            "ignore", message="dcut and exclusive jets for jet-finders other than",
+            category=UserWarning)
+        return fastjet.ClusterSequence(p4, jetdef).exclusive_jets(n_jets=n)
+
+
 def nsubjettiness(jets, n: int, beta: float = 1.0) -> ak.Array:
     """tau_N with exclusive-kT axes on the jet's tracks:
     tau_N = sum_i z_i min_a(dR_ia)^beta / sum_i z_i R^beta.
@@ -204,7 +229,7 @@ def nsubjettiness(jets, n: int, beta: float = 1.0) -> ak.Array:
         with_name="Momentum4D",
     )
     jetdef = fastjet.JetDefinition(fastjet.kt_algorithm, 1.0)
-    axes = fastjet.ClusterSequence(p4, jetdef).exclusive_jets(n_jets=n)
+    axes = _exclusive_axes(p4, jetdef, n)
 
     pairs = ak.cartesian({"t": sub, "a": axes}, axis=1, nested=True)
     dphi = np.mod(pairs.t.phi - pairs.a.phi + np.pi, 2 * np.pi) - np.pi
@@ -248,7 +273,7 @@ def nsubjettiness_disp(jets, n: int, beta: float = 1.0) -> ak.Array:
         with_name="Momentum4D",
     )
     jetdef = fastjet.JetDefinition(fastjet.kt_algorithm, 1.0)
-    axes = fastjet.ClusterSequence(p4, jetdef).exclusive_jets(n_jets=n)
+    axes = _exclusive_axes(p4, jetdef, n)
 
     pairs = ak.cartesian({"t": sub, "a": axes}, axis=1, nested=True)
     dphi = np.mod(pairs.t.phi - pairs.a.phi + np.pi, 2 * np.pi) - np.pi
