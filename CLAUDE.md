@@ -33,186 +33,133 @@ Managed by **pixi** (conda-forge). Three environments:
 |---|---|---|
 | `default` | pythia8, fastjet, delphes, root, awkward, uproot, hist, vector, mplhep, sklearn, tectonic | generation, observables, plots, paper |
 | `ml` | default + pytorch, h5py, xgboost | feature export, VAE/AE, BDT studies |
+| `gpu` | ml + CUDA torch (linux-64 only) | training on `ouheptmp` |
 | `mg5` | mg5amcnlo (python 3.9, isolated) | unused so far |
 
 ```bash
 pixi install                 # default env
 pixi install -e ml           # ml env
-pixi run test                # 15 unit tests, all should pass
+pixi run test                # 42 unit tests, all should pass
 pixi run paper               # tectonic -> paper/main.pdf
 ```
 
-`pixi run <cmd>` uses `default`; `pixi run -e ml <cmd>` uses `ml`.
+`pixi run <cmd>` uses `default`; `pixi run -e ml <cmd>` uses `ml`. The GPU
+environment needs `CONDA_OVERRIDE_CUDA=12.4 pixi install -e gpu` on a login
+node without a driver.
 Anything importing torch/h5py/xgboost **must** use `-e ml`.
 `pixi.lock` solves for `osx-arm64` and `linux-64`, so the same lockfile
 replays on the cluster.
 
 ## Data
 
-`data/` is gitignored, does **not** transfer with the repo, and on the
-cluster is a symlink to `/scratch/jburzyns/displaced-observables/data`.
-On a new machine it must be regenerated (see below).
-
-Production sample, generated on OSCER 2026-08-24, 32 GB, verified complete
-(270/270 files, every file a full 10k events):
-
-| sample | files | events | notes |
-|---|---|---|---|
-| signal | `signal_ctau{0,1,3,10,30,100,300}mm_seed{1..10}.parquet` | 100k per ctau | Z'(1.5 TeV) -> qD qDbar, Hidden Valley |
-| inclusive QCD | `qcd_seed{1..100}.parquet` | 1M | `HardQCD:all`, pTHatMin 450 |
-| b-enriched QCD | `qcdbb_seed{1..100}.parquet` | 1M | `HardQCD:hardbbbar` |
-| minimum bias | not generated | | only feeds the pileup study, which is commented out of the paper |
-
-Measured yields after selection (truth scenario, 2026-08-24 production),
-to 3 significant figures:
-
-| sample | jets | light | c | b |
-|---|---|---|---|---|
-| inclusive QCD | 1.20e6 | 9.68e5 | 1.57e5 | 7.26e4 |
-| b-enriched | 1.09e6 | 8.21e3 | 1.69e3 | 1.08e6 |
-| signal, per ctau | 9.13e4 | | | |
-
-As used in the analysis: `QCD light` 9.68e5, `QCD c` 1.57e5, `QCD b`
-1.15e6 (pooling inclusive b with b-enriched b). Signal totals 6.39e5
-over the seven lifetime points, and the feature file holds 2.92e6 jets.
-Exact counts, if needed: 1,198,022 / 968,322 / 157,140 / 72,560;
-1,086,051 / 8,213 / 1,686 / 1,076,152; 91,316 per ctau; 1,148,712
-pooled b; 2,923,285 total.
-
-**Flavour-composition discrepancy, unresolved.** The inclusive-QCD split
-above is 80.8% light / 13.1% c / 6.1% b, whereas the yields previously
-recorded here were 61.9% / 7.3% / 30.8%. The new fractions are reproduced
-file by file and are the more physical ones (a ~31% b fraction in
-`HardQCD:all` at pTHatMin 450 is not credible). The refactor is *not* the
-cause: `scripts/validate_sharding.py` shows the pre-refactor and current
-code agree exactly on the same files. The old sample no longer exists on
-this machine, so the discrepancy could not be chased down. Rejections are
-per-flavour efficiencies and so are composition-independent, and they do
-reproduce the old values, but anything quoting background *composition*
-should be re-derived rather than taken from the old record.
-
-Generation (~20-25 evt/s per process on one core):
+Bulk output lives on **`/ourdisk`**, never in home or on `/scratch`.
+`data`, `logs`, `models` and `results` are git-ignored symlinks to
+`/ourdisk/hpc/ouhep/jburzyns/dont_archive/displaced-observables/`. On a new
+account:
 
 ```bash
-pixi run generate --sample signal --ctau 10 --nevents 10000 --seed 1
-pixi run generate --sample signal --grid --nevents 10000    # full ctau grid
-pixi run generate --sample qcd    --nevents 10000 --seed 2
-pixi run generate --sample qcd_bb --nevents 10000 --seed 2
-pixi run generate --sample minbias --nevents 20000 --seed 1
+OD=/ourdisk/hpc/ouhep/$USER/dont_archive/displaced-observables
+mkdir -p $OD/{data,logs,models,results}
+for d in data logs models results; do ln -sfn $OD/$d $d; done
 ```
 
-Keep 10k events per file. `generate()` accumulates events in memory
-before writing, so a single 100k job is RAM-hungry; the analysis globs
-`*_seed*.parquet` and concatenates, so more seeds need no code changes.
+Stage directories are parallel and keyed by stem:
+`data/events/`, `data/observables/`, `data/features/`.
 
-### Running generation on SLURM
+**pTHatMin is 400**, lowered from 450 on 2026-09-06. At 450 the jet spectrum
+peaked on the 500 GeV selection, so the cut sat on the generator turn-on:
+62% of leading-2 jets passed, the subleading jet passed only 47%, and the
+selected spectrum was sculpted by the generator threshold that the pT
+reweighting then had to correct. Measured selection efficiency:
 
-Generation is embarrassingly parallel over (sample, ctau, seed), one
-array task per 10k-event file. The full workflow lives in `slurm/` and is
-documented in **[slurm/README.md](slurm/README.md)**. Short version, on
-OSCER:
+| pTHatMin | selected jets per generated event |
+|---|---|
+| 450 | 1.203 |
+| **400** | **0.726** |
+| 300 | 0.201 |
 
-```bash
-pixi install                 # ~2 min from the committed lockfile
-./slurm/manifest.sh          # build the job lists
-./slurm/submit.sh            # 270 array tasks
-./slurm/status.sh            # progress, disk usage, failures
-```
+300 would make the cut fully efficient but costs a factor 6 in yield, so 400
+is the compromise. Background seed counts rose 100 -> 165 to hold the jet
+statistics of the previous production. The signal card has no pTHat cut (it
+is an s-channel resonance) and is unaffected.
 
-Production scale is 100k events per ctau point (7 x 10 seeds), 1M
-inclusive QCD and 1M b-enriched QCD (100 seeds each): 270 tasks, 2.7M
-events, ~33 GB.
+Production scale: 10^5 events per lifetime point (7 x 10 seeds), 1.65 x 10^6
+events for each background (165 seeds), 10k events per file, 400 array tasks.
 
-To fill gaps after a partial run, `./slurm/manifest.sh --todo` rewrites
-the manifests with only the jobs whose parquet is missing, then submit
-again. It is idempotent, so repeat until `status.sh` is clean.
+Generation runs at ~5.6 evt/s per core, so a 10k-event file is ~30 min.
+`generate()` accumulates events in memory before writing, which is why files
+stay at 10k.
 
-Cluster specifics that cost time to rediscover:
+**The pre-refactor production (pTHatMin 450, 2.7M events) is superseded.**
+Its samples are parked at `/scratch/jburzyns/displaced-observables/data` and
+its figures at `.../plots_pthat450` until the new production is verified.
+Every yield and rejection quoted below the refactor line is from that old
+sample and must be re-derived.
 
-- The partition is `sooner_test` with an **underscore**. `sooner-test`
-  does not exist and `sbatch` rejects it.
+### Cluster specifics
+
+- The partition is `sooner_test` with an **underscore**; `sooner-test` does
+  not exist. GPU work goes to `ouheptmp` (one node, 4x L40S, no time limit).
 - Account `general`, QOS `normal`, capped at **1500 submitted jobs**.
 - `DefMemPerCPU` is 1024 MB, so `--mem` must always be set explicitly.
-  Tasks request 12 GB because `generate()` accumulates all events in
-  memory before writing, which is also why files stay at 10k events.
-- `data/` is a **symlink** to `/scratch/jburzyns/displaced-observables/data`.
-  Bulk samples belong on scratch (111 TB free) but every script still
-  just refers to `data/`.
-- pixi needs a writable `PIXI_CACHE_DIR`/`HOME` on the compute nodes; the
-  sbatch points it at scratch. The `.pixi/envs` tree is read off NFS, so
-  no per-job install is needed.
-- The seed is passed to Pythia as `Random:seed`. Seeds are deliberately
-  **reused across the ctau grid** so the hard process is common to all
-  lifetime points, which is what makes the ctau comparison controlled.
+- Set `PYTHONUNBUFFERED=1` in any job whose stdout is redirected: python
+  block-buffers otherwise and the log stays empty for the whole run, which
+  makes a working job indistinguishable from a hung one.
+- The session scratchpad under `/tmp` is **node-local**: a compute node
+  cannot see it. Anything a job must read goes on `/ourdisk` or `/scratch`.
+- `srun --chdir=$REPO pixi run --manifest-path $REPO/pixi.toml ...` is the
+  invocation the sbatch wrappers use; a bare `python script.py` will not
+  find the environment.
+- Seeds are **reused across the ctau grid** so the hard process is common to
+  every lifetime point, which is what makes the ctau comparison controlled.
 
-## Pipeline
+
+## The chain (no cache)
+
+One executable, one subcommand per stage. Each step reads the previous
+step's files and writes its own; nothing is recomputed implicitly and there
+is no pickle cache any more. `load_or_compute` is gone.
 
 ```
-Pythia (generate.py)  ->  parquet truth records (all visible particles,
-                          charge, production vertex, ancestry flags)
-     |
-jets.py               ->  anti-kt R=1.0 jets from ALL visible particles,
-                          leading 2, 500<pT<1000 GeV, |eta|<2.5;
-                          per-track z, dr, d0 (jet-signed), z0, r_prod
-     |
-tracking.py           ->  resolution smearing + PV-or-displaced selection
-     |
-observables.py        ->  the observable family (pure awkward functions)
-     |
-features.py           ->  per-jet feature vectors -> HDF5 (ej-vae format)
-     |
-scripts/*             ->  plots, ML studies, paper figures
+generate  Pythia8                      -> data/events/<stem>.parquet
+analyze   jets + tracking + observables -> data/observables/<stem>.parquet
+                                          (+ <stem>.wij.npz sidecar)
+features  column select + z-score       -> data/features/features_<sc>.h5, norm_<sc>.yaml
+train     Lightning AE/VAE              -> models/<name>/, logs/<name>_<ts>/
+evaluate  rejections, AD, supervised    -> results/*.{parquet,json,h5,npz}
+scan      (kappa,beta) angularity grid  -> results/kb_scan.parquet
+plot      every figure                  -> results/figures/*.{png,pdf}
 ```
 
-**Jet reconstruction detail**: jets are clustered from *all* visible
-final-state particles (charged + neutral), so jet pT and the z_i
-denominators include neutrals (charged pT fraction ~0.61, as expected).
-Observables then use only charged constituents with pT > 1 GeV,
-|eta| < 2.5, |d0| < 300 mm. Clustering happens at analysis time from
-stored particles, so jet-definition changes never require regeneration.
+The **stem is the join key** (`qcd_seed1`, `qcdbb_seed1`,
+`signal_ctau10mm_seed1`), parsed and built in one place, `samples.py`.
+`samples.find()` fixes the canonical order (sample rank, ctau, name), which
+fixes the concatenation order of every downstream array: sorting signal on
+ctau alone leaves ties to filesystem glob order and makes runs
+irreproducible.
 
-**Track selection** (in `tracking.py`, applies everywhere): keep a track
-if PV-associated (|z0 sin(theta)| < 1.5 mm) **or** a displaced candidate
-(|d0|/sigma > 3). Prompt hard-scatter tracks pass the first arm,
-displaced signal tracks pass the second, prompt pileup from other
-vertices fails both. It is nearly a no-op without pileup.
+**Compute never plots and `plot` never computes.** Every number the paper
+quotes is written by `evaluate` as a data file; `plot` reads `results/` and
+`data/observables/` and draws. Figures redraw in seconds.
 
-## The cache system (important)
+`analyze` computes the union of both bases (`ALL_OBSERVABLES` in
+`features.py`, 28 columns) exactly once. `features` then selects columns
+rather than recomputing, which removes the duplicated observable pass the
+old `export_features.py` did.
 
-Expensive stages persist their plotting inputs to `data/cache/*.pkl` via
-`load_or_compute()` in `analysis.py`. **Cosmetic figure changes replot
-from cache in ~2 minutes instead of hours.**
-
-```bash
-pixi run python scripts/make_plots.py --scenario truth            # cached
-pixi run python scripts/make_plots.py --scenario truth --recompute # rebuild
-```
-
-Every heavy script takes `--recompute`. **Pass it after any physics
-change** (observables, selections, samples, training). Known hazard:
-caches do *not* auto-invalidate when `data/features_truth.h5` is
-re-exported, so after re-running `export_features.py` you must
-`--recompute` the VAE and interpretability studies or you will compare
-against stale numbers. (This bit me once; the fix was a controlled A/B
-on one feature file.)
-
-## Scripts
-
-| script | env | what it makes |
+| command | env | what it writes |
 |---|---|---|
-| `generate.py` | default | samples |
-| `export_features.py` | ml | `features_truth.h5` + `norm_truth.yaml` |
-| `export_tracks.py` | ml | padded track arrays (constituent-level ML) |
-| `make_plots.py` | default | per-observable distributions, wij profile, rejection tables and curves |
-| `appendix_inputs.py` | ml | per-feature input panels (paper Figs 3-4) |
-| `correlation_matrix.py` | ml | D-basis Pearson correlations |
-| `vae_study.py` | ml | AE/VAE training, anomaly scores, efficiency curves, reconstruction panels |
-| `interpretability_study.py` | ml | supervised XGBoost ceiling vs single observables. **No longer feeds the paper**: the ceiling figure was dropped because the S+D classifier separates completely and the rejection is unquantifiable. The BDT curve in the money plot comes from `vae_study.py` (`BDT-sup`), not from here. Kept as a cross-check. |
-| `kappa_beta_scan.py` | default | (kappa,beta) angularity scan heatmaps |
-| `pileup_study.py` | default | minimum-bias overlay study (commented out of the paper) |
-| `scenario_comparison.py` | default | tracking-scenario comparison (dropped from the paper) |
-| `track_ip_plots.py` | default | per-track d0/z0 distributions (diagnostic) |
-| `run_full_chain.sh` | both | whole chain end to end |
+| `generate` | default | truth-record parquet, one file per sample point |
+| `analyze` | default | per-jet observable parquet + wij sidecar |
+| `features` | ml | `features_<scenario>.h5` + `norm_<scenario>.yaml` |
+| `train` | ml/gpu | AE and VAE on both bases (`--all` gives the four paper models) |
+| `evaluate` | ml | `--only rejections\|correlations\|anomaly\|supervised` |
+| `scan` | default | `kb_scan.parquet` |
+| `plot` | ml | `--only distributions\|appendix\|jetpt\|wij\|rejection\|correlations\|kbscan\|anomaly\|recon\|scores` |
+
+Training is config-driven (`src/displaced_observables/configs/{vae,ae}.yaml`);
+`train` forwards any unrecognized `--section.key=value` to LightningCLI.
+
 
 ## Observable basis
 
@@ -244,7 +191,16 @@ Non-obvious definitions:
   reweighting is the whole point (counts displaced prongs, not energy
   prongs).
 
-## Key results (current, R = 1.0, 2.7M-event production)
+## Key results
+
+> **SUPERSEDED, awaiting the pTHatMin=400 rerun (started 2026-09-06).**
+> Everything in this section is from the pTHatMin=450 production. The
+> selection efficiency, and therefore every yield, changes; the rejections
+> and anomaly efficiencies are expected to be close but must be re-derived
+> before anything here is quoted again. The old sample is parked at
+> `/scratch/jburzyns/displaced-observables/data`.
+
+### Previous production (R = 1.0, pTHatMin 450, 2.7M events)
 
 **Working point is 70% signal efficiency, not 50%.** At 50% the
 production sample still leaves six entries (QCD light and b) as
@@ -297,8 +253,15 @@ epochs, VAE 26 and 29), so the hyperparameters transferred to 10x data
 without retuning. Device was CPU: see slurm/README.md for the GPU path.
 
 Other established facts:
-- The (kappa,beta) scan favors the origin: Sum_i w_i is the best
-  angularity; energy weighting *dilutes* the lifetime information.
+- The (kappa,beta) scan: beta = 0 wins decisively in every row, so "every
+  power of theta dilutes" holds. **kappa is NOT monotone**: there is a
+  shallow ridge at kappa = 0.5 (it beat kappa = 0 in three of four panels,
+  by 1.3-3.8x) and then a cliff at kappa >= 1 (a factor 100-400 drop). The
+  paper still claims "a monotone gradient toward the origin", which is wrong
+  in kappa and needs rewording. Whether (0.5, 0) earns a slot in the ML
+  basis is untested: it sits between ang_00 and ang_10 at the same beta, so
+  it is a strong single observable that is plausibly redundant as a feature.
+  The clean test is a controlled A/B like the tau(w) one.
 - Normalized ratios (dc2, dd2, tau*_disp) are flat in ctau: they probe
   displacement *structure*, not amount. tau32_disp gives ~22x light-jet
   rejection vs ~1.6x for nominal tau32 (at the 70% WP).
@@ -385,9 +348,23 @@ cross-check.
   `aten::_nested_tensor_from_mask_left_aligned`; use
   `enable_nested_tensor=False`. (The transformer study was dropped from
   the paper, but the code pattern may recur.)
-- **Saturated rejections**: when no background survives the cut, the
-  rejection is a statistics *lower bound*, reported as `>N_eff` in
-  tables and open triangles in plots. Never quote them as measurements.
+- **Saturated rejections**: when too little background survives the cut, the
+  rejection is a statistics *lower bound*, capped at N_eff and flagged.
+  `MIN_EFF_SURVIVORS = 3` in `analysis.py`: a single low-weight survivor
+  otherwise gives sum(w)/w_surv, which can exceed the sample's own effective
+  size and used to be printed as a measurement. Never quote a flagged value.
+- **XGBoost scores must use `output_margin=True`, never `predict_proba`.**
+  The probabilities are float32, so every jet with log-odds above 16.6 rounds
+  to exactly 1.0f: at ctau = 100 mm that was 77% of the signal. It destroys
+  the tail and manufactures ties at the cut, where a tied background jet is
+  dropped by the strict inequality and inflates the rejection.
+- **`ak.where` evaluates both branches.** Guard the denominator as well as
+  the mask, or a trackless jet computes 0/0 and warns before being masked
+  (`lifetime_ratio` did exactly this).
+- **fastjet's exclusive-jets warning is a false positive.** Its guard compares
+  a JetDefinition against an algorithm enum, which is never equal, so it fires
+  even for a genuine kt clustering. `observables._exclusive_axes` asserts the
+  algorithm and filters that one message.
 - Jet radius is analysis-side only. The R = 0.4 -> 1.0 switch needed no
   regeneration, just defaults in `jets.py`/`pileup.py`/`observables.py`
   (`JET_R`) plus the wij profile range and unit tests.
@@ -418,9 +395,35 @@ form except the final production statistics and the public release.
 
 ## Immediate next steps
 
-1. Re-generate samples on the cluster at production scale (the binding
-   constraint on nearly every number is background statistics; several
-   long-lifetime entries are still saturation bounds).
-2. Re-run the full chain with `--recompute` and refresh the paper
-   numbers (they are quoted from `plots/*.log`).
-3. Fill the remaining TODOs above.
+1. **Verify the pTHatMin=400 production** (400 tasks, started 2026-09-06):
+   `./slurm/status.sh` until events == observables == 400, then
+   `./slurm/manifest.sh --todo && ./slurm/submit.sh` to refill gaps.
+2. `./slurm/chain.sh` for features -> train -> evaluate -> plot, plus
+   `sbatch slurm/cpu.sbatch scan --ctau 3 30`.
+3. Re-derive every number in the paper from the new `results/`, and check the
+   67 figures the document includes are all present
+   (`results/figures/`, `\graphicspath` points there).
+4. **Fix the (kappa,beta) paragraph**: the kappa half of the "monotone
+   gradient toward the origin" claim is contradicted by the grids.
+5. Decide whether to A/B `ang_05_0` into basis D.
+6. Fill the remaining paper TODOs (IRC framing, ctau-measurement section,
+   acknowledgements).
+
+## Open questions carried from the previous production
+
+- **Flavour composition**: the inclusive-QCD split measured 80.8% light /
+  13.1% c / 6.1% b, against 61.9 / 7.3 / 30.8 recorded earlier. The new
+  fractions reproduce file by file and are the physical ones (a ~31% b
+  fraction in `HardQCD:all` is not credible). Never resolved; the old sample
+  is gone. Re-derive rather than trusting either record.
+- **The supervised ceiling is not measurable**: the S+D classifier separates
+  the test samples completely for ctau >= 10 mm, so its rejection is only a
+  bound. Loosening the working point does not fix it (90% and 95% still give
+  bounds; 99% makes the "ceiling" fall below single observables). The
+  ceiling figure was dropped from the paper for this reason. Quoting signal
+  efficiency at a fixed background rate instead would be measurable, and is
+  how the anomaly section already works.
+- **Track acceptance is on |d0| < 300 mm, not production radius.** The
+  r_prod efficiency in `tracking.py` is tied to the smearing branch and so
+  never runs for the `truth` scenario the paper uses. The two differ at long
+  lifetime, and the matching 300 mm numbers are a coincidence.
