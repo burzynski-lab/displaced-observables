@@ -11,7 +11,7 @@ set -euo pipefail
 REPO=/home/jburzyns/displaced-observables
 cd "$REPO"
 export WORKDIR="$REPO"
-export PIXI_CACHE_DIR=/scratch/jburzyns/.pixi-cache
+export PIXI_CACHE_DIR=/ourdisk/hpc/ouhep/jburzyns/dont_archive/pixi-cache
 export PYTHONUNBUFFERED=1
 
 NEVENTS=${NEVENTS:-10000}

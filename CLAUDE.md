@@ -126,6 +126,25 @@ sample and must be re-derived.
   makes a working job indistinguishable from a hung one.
 - The session scratchpad under `/tmp` is **node-local**: a compute node
   cannot see it. Anything a job must read goes on `/ourdisk` or `/scratch`.
+- **Home has a quota, and pixi fills it.** By default pixi puts environments
+  in `.pixi/envs/` *inside the repo*, i.e. in `/home`, and downloads packages
+  to `~/.cache/rattler`. Those were 12.5 GB and 13 GB respectively and filled
+  the quota, at which point nothing in home could be written at all (`sed`
+  could not create a temp file). Symlinking `data`/`logs`/`models`/`results`
+  to /ourdisk moves the *data* but not the *software*. Both are now detached:
+
+  ```bash
+  pixi config set --local detached-environments /ourdisk/.../pixi-envs
+  export PIXI_CACHE_DIR=/ourdisk/hpc/ouhep/$USER/dont_archive/pixi-cache
+  ```
+
+  `detached-environments` is recorded in `.pixi/config.toml` and persists.
+  The sbatch wrappers export `PIXI_CACHE_DIR` to the same place. The repo's
+  footprint in home is then ~5 MB of source. The failure mode is worth
+  recognising: it surfaces as a link error on an unrelated package
+  ("failed to link pcre2 ... Quota exceeded"), not as anything about torch.
+  Note that a quota-full home blocks *installing* an environment but not
+  *running* one that already exists.
 - `srun --chdir=$REPO pixi run --manifest-path $REPO/pixi.toml ...` is the
   invocation the sbatch wrappers use; a bare `python script.py` will not
   find the environment.

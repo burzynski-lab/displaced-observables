@@ -14,7 +14,7 @@ set -euo pipefail
 REPO=/home/jburzyns/displaced-observables
 cd "$REPO"
 export WORKDIR="$REPO"
-export PIXI_CACHE_DIR=/scratch/jburzyns/.pixi-cache
+export PIXI_CACHE_DIR=/ourdisk/hpc/ouhep/jburzyns/dont_archive/pixi-cache
 export CONDA_OVERRIDE_CUDA=12.4
 export PYTHONUNBUFFERED=1
 export OMP_NUM_THREADS=${SLURM_CPUS_PER_TASK:-8}
