@@ -56,8 +56,8 @@ def main() -> None:
     def plot_panel(ax, var, annotate=False, label_fs=None, legend=None):
         allv = np.concatenate([jets[var][light], jets[var][bjet]]
                               + [jets[var][m] for m in sig_masks.values()])
-        hi_q = 0.98 if var in ("dd2", "d2") else 0.999
-        lo, hi = np.quantile(allv, [0.001, hi_q])
+        hi_q = 0.98 if var in ("dd2", "d2") else 0.9999
+        lo, hi = 0.0, np.quantile(allv, hi_q)   # observables start at zero
         if hi <= lo:
             hi = lo + 1
         if var == "ntrk":  # integer-centered bins
@@ -65,6 +65,7 @@ def main() -> None:
             bins = np.arange(np.floor(lo) - 0.5, hi + w, w)
         else:
             bins = np.linspace(lo, hi, 45)
+        ax.set_xlim(bins[0], bins[-1])   # axis ends where the binning does
         ax.hist(np.clip(jets[var][light], lo, hi), bins=bins, density=True,
                 weights=w_light, histtype="stepfilled", alpha=0.45,
                 color="#7f8fa6", label="QCD light")
@@ -98,17 +99,6 @@ def main() -> None:
                     transform=ax.transAxes, va="top",
                     fontsize=13 if label_fs is None else label_fs - 5)
 
-    for tag, basis in (("S", BASIS_S), ("D", BASIS_D)):
-        fig, axes = plt.subplots(4, 3, figsize=(17, 19))
-        for ax, var in zip(axes.ravel(), basis):
-            plot_panel(ax, var, annotate=True, label_fs=16)
-        fig.tight_layout()
-        out = Path(args.out) / f"appendix_inputs_{tag}_{args.scenario}.png"
-        for _ext in ("png", "pdf"):
-            fig.savefig(str(out).replace(".png", "." + _ext), dpi=140)
-        plt.close(fig)
-        print(f"wrote {out}")
-
     # standalone per-feature panels for subfigure layouts
     for var in BASIS_S + BASIS_D:
         fig, ax = plt.subplots(figsize=(7, 6))
@@ -118,7 +108,7 @@ def main() -> None:
             fig.savefig(Path(args.out) / f"appendix_input_{var}_{args.scenario}.{_ext}",
                         dpi=150)
         plt.close(fig)
-    print("wrote 24 appendix_input_* panels")
+    print(f"wrote {len(BASIS_S) + len(BASIS_D)} appendix_input_* panels")
 
     # panels for the paired body figure: legend only, no generator annotation
     for var in ("girth", "ang_11", "eec_b1", "deec_min"):
@@ -130,17 +120,6 @@ def main() -> None:
                         dpi=150)
         plt.close(fig)
     print("wrote 4 paired_panel_* panels")
-
-    # paper Figure 1: nominal (left) vs displacement-weighted (right) pairs
-    fig, axes = plt.subplots(2, 2, figsize=(13, 10.5))
-    for ax, var in zip(axes.ravel(), ("girth", "ang_11", "eec_b1", "deec_min")):
-        plot_panel(ax, var, annotate=True, label_fs=17)
-    fig.tight_layout()
-    out = Path(args.out) / f"paired_dists_{args.scenario}.png"
-    for _ext in ("png", "pdf"):
-        fig.savefig(str(out).replace(".png", "." + _ext), dpi=150)
-    plt.close(fig)
-    print(f"wrote {out}")
 
 
 if __name__ == "__main__":

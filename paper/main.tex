@@ -48,11 +48,10 @@ observables precisely in the short-lifetime regime where dark pions
 must be distinguished from $B$ hadrons. Augmenting the input basis of
 an otherwise unchanged variational autoencoder with these observables
 raises the signal efficiency at a fixed $1\%$ QCD anomaly rate from
-below the percent level to $34\%$ at $c\tau = 1$~mm and above $83\%$
+below the percent level to $37\%$ at $c\tau = 1$~mm and above $86\%$
 for $c\tau \geq 10$~mm, leaving the QCD background model unaffected,
-and realizes about half to all of the fully supervised ceiling defined
-by a boosted-decision-tree classifier on the complete observable
-basis. The observables are robust against impact-parameter resolution and
+and recovers from a third to all of the efficiency of a fully
+supervised boosted-decision-tree classifier on the same basis. The observables are robust against impact-parameter resolution and
 are inexpensive to add to existing anomaly-detection architectures.}
 
 \begin{document}
@@ -184,6 +183,15 @@ weakly-decaying bottom (charm) hadron with $\pT > 5$~GeV lies within
 $\dR < 1.0$ of the jet axis. A dedicated hard-$b\bar b$ sample
 augments the $b$-jet statistics. Per-flavor results are shape-based, so
 the samples are combined freely.
+
+Each lifetime point is generated with $10^5$ events, giving
+$9.13\times 10^4$ selected jets per point. The inclusive and
+hard-$b\bar b$ backgrounds use $10^6$ generated events each, giving
+$1.20\times 10^6$ and $1.09\times 10^6$ selected jets. Pooling the
+two background samples gives $1.15\times 10^6$ $b$ jets and
+$9.68\times 10^5$ light jets, which is what allows the rejections of
+Sec.~\ref{sec:results} to be quoted as measurements rather than
+as sample-statistics bounds.
 
 \subsection{Jet and track selection}
 
@@ -318,7 +326,7 @@ partner, and any \emph{shape} difference between the pair is a pure
 lifetime effect. A scan in $(\kappa, \beta)$ identifies which moments
 carry the lifetime information.
 Figure~\ref{fig:kbscan} shows the $(\kappa,\beta)$ scan of the weighted
-angularities: $b$-jet rejection at 50\% signal efficiency over the
+angularities: $b$-jet rejection at 70\% signal efficiency over the
 grid $\kappa, \beta \in [0, 2]$. The result is a monotone gradient
 toward the origin: the best moment is
 $\lambda^0_0(w) = \sum_i w_i$, the displacement-weighted track
@@ -328,10 +336,10 @@ discrimination. Physically, the lifetime information resides in the
 products are numerous but soft and broadly distributed within the jet,
 so energy weighting suppresses exactly the tracks that carry the
 signal. The single-observable hierarchy is therefore: weighted multiplicity
-$\sum_i w_i$ $\gtrsim$ pairwise correlation (dEEC) $\gg$
-energy-weighted angularities $\gg$ single-track means, with the dEEC
+$\sum_i w_i$ $\gtrsim$ pairwise correlation ($\mathrm{dECF}_2$) $\gg$
+energy-weighted angularities $\gg$ single-track means, with the $\mathrm{dECF}_2$
 ahead against light jets at the shortest lifetimes. This motivates the benchmark set carried into
-Secs.~\ref{sec:anomaly}--\ref{sec:supervised}: $\{\mathrm{dEEC}(\min),\;
+Secs.~\ref{sec:anomaly}--\ref{sec:supervised}: $\{\mathrm{dECF}_2(\min),\;
 \sum_i w_i,\; \lambda^1_0(w)\}$.
 
 \begin{figure}[tb]
@@ -344,7 +352,7 @@ Secs.~\ref{sec:anomaly}--\ref{sec:supervised}: $\{\mathrm{dEEC}(\min),\;
     \includegraphics[width=\textwidth]{kb_scan_QCD_b_ctau30_truth.pdf}
     \caption{}
   \end{subfigure}
-  \caption{$b$-jet rejection at 50\% signal efficiency for the displacement-weighted angularities $\lambda^\kappa_\beta(w)$ over the $(\kappa,\beta)$ grid, at $\ctau = 3$~mm (a) and 30~mm (b). ``$>$'' marks sample-statistics lower bounds.}
+  \caption{$b$-jet rejection at 70\% signal efficiency for the displacement-weighted angularities $\lambda^\kappa_\beta(w)$ over the $(\kappa,\beta)$ grid, at $\ctau = 3$~mm (a) and 30~mm (b). ``$>$'' marks sample-statistics lower bounds.}
   \label{fig:kbscan}
 \end{figure}
 
@@ -355,9 +363,9 @@ function~\cite{Larkoski:2013eya} and its displaced counterpart are
 \begin{equation}
   \mathrm{ECF}_2(\beta) \;=\; \sum_{i<j} z_i z_j \, (\dR_{ij})^\beta,
   \qquad\qquad
-  \mathrm{dEEC}(\beta) \;=\; \sum_{i<j} z_i z_j \,
+  \mathrm{dECF}_2(\beta) \;=\; \sum_{i<j} z_i z_j \,
       (\dR_{ij})^\beta \; g(w_i, w_j),
-  \label{eq:deec}
+  \label{eq:decf2}
 \end{equation}
 with pair weighting $g = w_i w_j$ or $g = \min(w_i, w_j)$.
 The physics carried by the weighting is qualitatively new at this
@@ -375,8 +383,8 @@ connects to the energy-correlator-on-tracks literature
 \cite{Chang:2013rca,Jaarsma:2023ell}.
 
 The construction extends to higher point count. Writing
-$\mathrm{dECF}_1 = \sum_i z_i w_i$ and
-$\mathrm{dECF}_2 = \mathrm{dEEC}$, the displaced three-point correlator
+$\mathrm{dECF}_1 = \sum_i z_i w_i$, with $\mathrm{dECF}_2$ as given in
+Eq.~(\ref{eq:decf2}), the displaced three-point correlator
 is
 \begin{equation}
   \mathrm{dECF}_3(\beta) \;=\; \sum_{i<j<k} z_i z_j z_k \,
@@ -492,7 +500,7 @@ Refs.~\cite{Schwaller:2015gea,CMS:EJ}.
       & displ.\ $\pT$ frac., displ.\ girth, displ.\ mass \\
     2-point correlator
       & $\mathrm{ECF}_2(\beta)$
-      & $\mathrm{dEEC}(\beta)$, $g = w_i w_j$ or $\min(w_i, w_j)$ \\
+      & $\mathrm{dECF}_2(\beta)$, $g = w_i w_j$ or $\min(w_i, w_j)$ \\
     3-point correlators
       & $\mathrm{ECF}_3$, $C_2$, $D_2$
       & $\mathrm{dECF}_3$, $C_2(w)$, $D_2(w)$ \\
@@ -686,8 +694,8 @@ Figure~\ref{fig:corr} shows the Pearson correlations of the displaced
 features for QCD and signal. Three aspects are relevant for the
 anomaly detection. First, the correlation \emph{structure} is itself
 lifetime-sensitive: the angular-correlator block ($\lambda^1_1(w)$,
-dEEC, $\mathrm{dECF}_3$) tightens markedly from QCD to signal
-(e.g.\ $\rho[\lambda^1_1(w), \mathrm{dEEC}]$: $0.73 \to 0.90$),
+$\mathrm{dECF}_2$, $\mathrm{dECF}_3$) tightens markedly from QCD to signal
+(e.g.\ $\rho[\lambda^1_1(w), \mathrm{dECF}_2]$: $0.73 \to 0.90$),
 because in signal these observables are fed by the same displaced
 vertices. Since an autoencoder models the joint density, signal
 jets that violate the learned QCD correlation pattern accrue
@@ -696,7 +704,7 @@ ratio observables ($C_2(w)$, $D_2(w)$, $L_2L_0/L_1^2$) are largely
 decorrelated ($|\rho| \lesssim 0.4$) from the absolute-displacement
 block in both samples, confirming that the vertex-structure
 information enters the basis orthogonally. Third, two near-duplicate
-pairs, $\mathrm{dEEC}(\mathrm{prod})/\mathrm{dEEC}(\min)$
+pairs, $\mathrm{dECF}_2(\mathrm{prod})/\mathrm{dECF}_2(\min)$
 ($\rho \simeq 0.96$--$0.99$) and
 $L_1/\langle|\dnought|/\sigma\rangle$ ($\rho \simeq 0.75$),
 justify carrying only one of each into the benchmark observable set,
@@ -720,7 +728,7 @@ dominating the Pearson estimator rather than genuine independence.)
 
 \subsection{Discrimination power versus lifetime}
 
-Figure~\ref{fig:rejection} shows the background rejection at 50\%
+Figure~\ref{fig:rejection} shows the background rejection at 70\%
 signal efficiency as a function of $\ctau(\pid)$, per background
 flavor. Three qualitative results emerge:
 
@@ -728,27 +736,30 @@ flavor. Three qualitative results emerge:
   \item \textbf{Multiplicity and pair correlation dominate the
   single-track baselines.} With $R = 1.0$ jets capturing most of the
   dark shower, the weighted multiplicity $\Sigma_i w_i$ is the
-  strongest single observable against $b$ jets at every lifetime,
-  reaching $385\times$ at $\ctau = 3$~mm and $54\times$ even at 1~mm,
-  versus $\mathcal{O}(5)$ for the single-track means
-  $\langle|\dnought|/\sigma\rangle$ and $L_1$, while the pairwise
-  dEEC leads against light jets at the shortest lifetimes
-  ($619\times$ at 1~mm). The displacement-normalized ratio $C_2(w)$
+  strongest single observable against $b$ jets for $\ctau \geq 3$~mm,
+  reaching $77\times$ at $\ctau = 3$~mm and $4.6\times 10^3$ at
+  30~mm, versus $\mathcal{O}(2)$ for the single-track means
+  $\langle|\dnought|/\sigma\rangle$ and $L_1$ at the same
+  lifetimes. At $\ctau = 1$~mm the pairwise $\mathrm{dECF}_2(\min)$
+  takes over against $b$ jets, $23\times$ against $16\times$, and it
+  is also the strongest of the correlator observables against light
+  jets there ($251\times$). The displacement-normalized ratio $C_2(w)$
   shows a distinct and complementary behavior: its rejection is nearly
-  \emph{independent of lifetime} ($\approx 10\times$ against $b$ jets
+  \emph{independent of lifetime} ($\approx 6\times$ against $b$ jets
+  and $\approx 11\times$ against light jets
   for $1 \le \ctau \le 300$~mm), as expected for a variable sensitive
   to the vertex structure of the displacement rather than its amount.
   This provides a uniform working point across the entire lifetime
   grid. The displaced prong observables of Eq.~(\ref{eq:tauw}) behave
   the same way and illustrate the value of the axis reweighting:
-  $\tau_{32}(w)$ rejects light jets by a factor of $\sim 40$, an order
-  of magnitude above its nominal partner $\tau_{32}$ at $\sim 3$, while
+  $\tau_{32}(w)$ rejects light jets by a factor of $\sim 22$, an order
+  of magnitude above its nominal partner $\tau_{32}$ at $\sim 1.6$, while
   remaining flat in $\ctau$ from 1 to 300~mm. Their contribution is
   complementary rather than additive: including them in the supervised
   basis improves the $b$-jet rejection at $\ctau = 1$~mm, the hardest
-  point of the grid, from $1.8\times 10^4$ to $2.7\times 10^4$.
+  point of the grid, from $4.9\times 10^3$ to $6.5\times 10^3$.
   \item \textbf{Standard substructure carries no lifetime information.}
-  All lifetime-blind observables sit at rejections of $2$--$5$,
+  All lifetime-blind observables sit at rejections of $1.6$ to $2.3$,
   independent of $\ctau$, confirming that the discrimination above is
   attributable entirely to the displacement weighting. This is the
   quantitative statement of the anomaly-detection blind spot motivated
@@ -756,14 +767,16 @@ flavor. Three qualitative results emerge:
   observables, emerging jets are at most mildly atypical, and no
   unsupervised method, however expressive, can recover
   information absent from its inputs.
-  \item \textbf{The long-lifetime regime approaches saturation even at
-  $10^5$-jet background samples.} With $1.2\times 10^5$ $b$ jets and
-  $10^5$ light jets, rejections up to a few $\times 10^4$ are measured
-  rather than bounded (e.g.\ $\Sigma_i w_i$ reaches a measured
-  $b$-jet rejection of $3.2\times 10^4$ at $\ctau = 30$~mm), with
-  the strongest entries at $\ctau \geq 100$~mm remaining statistics
-  lower bounds (open markers).
-  \todo{final production statistics on the cluster}
+  \item \textbf{The production sample resolves the long-lifetime
+  regime.} With $1.15\times 10^6$ $b$ jets and $9.68\times 10^5$ light
+  jets, every rejection quoted here is measured rather than bounded,
+  including $\Sigma_i w_i$ reaching $2.7\times 10^4$ against $b$ jets
+  and $1.1\times 10^5$ against light jets at $\ctau = 100$~mm. This
+  is the reason the working point is 70\% rather than the 50\% used
+  in earlier iterations of this study: at 50\% the same samples leave
+  six entries as sample-statistics lower bounds, all of them in the
+  long-lifetime regime where the discrimination is strongest and a
+  bound is least informative.
 \end{enumerate}
 
 \begin{figure}[tb]
@@ -776,7 +789,7 @@ flavor. Three qualitative results emerge:
     \includegraphics[width=\textwidth]{rejection_paper_QCD_light_truth.pdf}
     \caption{}
   \end{subfigure}
-  \caption{Background rejection at 50\% signal efficiency versus $\ctau(\pid)$ for $b$ jets (a) and light jets (b), for the benchmark displacement-weighted observables (colored) and two nominal references (gray dotted). Open triangles mark statistics lower bounds.}
+  \caption{Background rejection at 70\% signal efficiency versus $\ctau(\pid)$ for $b$ jets (a) and light jets (b), for the benchmark displacement-weighted observables (colored) and the two most discriminating nominal references (gray, dashed). Every entry is a measurement: at this working point no point is limited by the background sample size.}
   \label{fig:rejection}
 \end{figure}
 
@@ -798,12 +811,13 @@ displacement-aware anomaly detectors is the input basis.
 \label{sec:addata}
 
 The background training sample is the inclusive QCD dijet sample of
-Sec.~\ref{sec:simulation}: $122\,258$ selected jets, split
-$60/20/20$ into training ($73\,354$), validation ($24\,452$), and test
-($24\,452$) subsets by a seeded random permutation. The autoencoders
-never see signal: all $9\,126$ signal jets per $\ctau$ point are used
-for evaluation only. The b-enriched sample ($108\,453$ $b$-labeled
-jets) is likewise held out and used only to measure the heavy-flavor
+Sec.~\ref{sec:simulation}: $1.20\times 10^6$ selected jets, split
+$60/20/20$ into training ($7.19\times 10^5$), validation
+($2.40\times 10^5$), and test ($2.40\times 10^5$) subsets by a seeded
+random permutation. The autoencoders never see signal: all
+$9.13\times 10^4$ signal jets per $\ctau$ point are used for
+evaluation only. The b-enriched sample
+($1.08\times 10^6$ $b$-labeled jets) is likewise held out and used only to measure the heavy-flavor
 composition of the anomaly tail.
 
 Two per-jet input vectors are compared. Basis $S$ (12 features) is the
@@ -812,7 +826,7 @@ $\mathrm{ECF}_2$, $\mathrm{ECF}_3$, $C_2$, $D_2$, $\tau_1$,
 $\tau_{21}$, $\tau_{32}$, $\pT^D$, $n_{\mathrm{trk}}$, and jet mass.
 Basis $S{+}D$ (27 features) appends the displacement-weighted column:
 $\Sigma_i w_i$, $\lambda^1_0(w)$, $\lambda^1_1(w)$,
-$\mathrm{dEEC}(\mathrm{prod})$, $\mathrm{dEEC}(\min)$,
+$\mathrm{dECF}_2(\mathrm{prod})$, $\mathrm{dECF}_2(\min)$,
 $\mathrm{dECF}_3$, $C_2(w)$, $D_2(w)$, $L_1$, $L_2L_0/L_1^2$,
 $\langle|\dnought|/\sigma\rangle$, the prompt-$\pT$ fraction, and the
 displaced prong observables $\tau_1(w)$, $\tau_{21}(w)$, and
@@ -869,13 +883,14 @@ per $\ctau$ point.
 
 Figure~\ref{fig:vaescore} shows the score distributions. In basis $S$
 the signal is indistinguishable from QCD at every lifetime. The
-efficiency at the $1\%$ working point is $0.3$--$0.8\%$,
-consistent with the background rate, and zero to sample precision at
-$10^{-3}$.
+efficiency at the $1\%$ working point is $0.5$--$1.0\%$ and at the
+$10^{-3}$ point $0.1$--$0.2\%$, in both cases consistent with the
+background rate itself: the score carries no information about the
+lifetime.
 In basis $S{+}D$, with architecture, training, and working points
 unchanged, the signal population migrates orders of magnitude into the
 loss tail, and the efficiency at the $1\%$ working point becomes
-$34\%$ at $\ctau = 1$~mm, $59\%$ at 3~mm, $83\%$ at 10~mm, and
+$37\%$ at $\ctau = 1$~mm, $62\%$ at 3~mm, $86\%$ at 10~mm, and
 $\geq 96\%$ for $\ctau \geq 30$~mm (VAE, Fig.~\ref{fig:vae}).
 
 Figure~\ref{fig:vaerecon} shows \emph{why} through the per-feature
@@ -889,11 +904,12 @@ Three further observations:
 \begin{enumerate}
   \item \textbf{The background model is stable under augmentation.}
   The $b$-jet anomaly rate at the $1\%$ inclusive working point rises
-  only from $\sim 0.4\%$ (basis $S$) to $\sim 2\%$ (basis $S{+}D$).
+  only from $0.5\%$ (basis $S$) to $1.8\%$ (basis $S{+}D$) for the
+  VAE, and from $0.8\%$ to $2.5\%$ for the AE.
   This is the anticipated mild heavy-flavor tail, usable as an in-situ
   validation region.
   \item \textbf{The variational architecture outperforms the
-  deterministic AE at short lifetime} ($34\%$ versus $24\%$ at 1~mm at
+  deterministic AE at short lifetime} ($37\%$ versus $21\%$ at 1~mm at
   the $1\%$ working point): the KL term regularizes the background
   model against the broad displaced features that otherwise dominate
   the plain MSE objective.
@@ -903,11 +919,12 @@ Three further observations:
   trained per $\ctau$ point on the same $S{+}D$ basis and evaluated at
   the identical fixed-anomaly-rate working points, so the gap to the
   red curve isolates supervision alone. The unsupervised VAE realizes
-  $34\%$ of the supervised efficiency at $\ctau = 1$~mm, $60\%$ at
-  3~mm, $84\%$ at 10~mm, and $\geq 96\%$ for $\ctau \geq 30$~mm: at
-  long lifetime the signal sits so deep in the tails of the learned
-  QCD density that supervision buys nothing, while near the $B$-hadron
-  lifetime a targeted search retains a genuine advantage.
+  $37\%$ of the supervised efficiency at $\ctau = 1$~mm, $62\%$ at
+  3~mm, $86\%$ at 10~mm and $97\%$ at 30~mm, and is indistinguishable
+  from it for $\ctau \geq 100$~mm: at long lifetime the signal sits so
+  deep in the tails of the learned QCD density that supervision buys
+  nothing, while near the $B$-hadron lifetime a targeted search retains
+  a genuine advantage.
 \end{enumerate}
 
 \begin{figure}[tb]
@@ -989,43 +1006,35 @@ classifiers trained on the same features and jet splits. The ceiling
 is an XGBoost~\cite{Chen:2016btl} classifier on the complete
 27-feature $S{+}D$ basis,
 trained separately per $\ctau$ point: signal versus inclusive QCD
-using the training subsets of Sec.~\ref{sec:addata} ($73\,354$ QCD
-and $5\,476$ signal jets), up to 400 trees with the library defaults
+using the training subsets of Sec.~\ref{sec:addata} ($7.19\times 10^5$
+QCD and $5.48\times 10^4$ signal jets), up to 400 trees with the library defaults
 (maximum depth 6, learning rate 0.3), class-weighted by the training
 imbalance (\texttt{scale\_pos\_weight} $\simeq 13$), with early
 stopping after 20 rounds without validation-logloss improvement.
 Scores are class probabilities, and working points use the same
-definitions as elsewhere (50\% signal efficiency for rejections, or
+definitions as elsewhere (70\% signal efficiency for rejections, or
 fixed QCD anomaly rates in Sec.~\ref{sec:adresults}). An identically
-configured classifier restricted to the 12-feature nominal basis $S$,
-and the two strongest single observables ($\mathrm{dEEC}(\min)$ and
-$\Sigma_i w_i$), are evaluated on the same test jets.
+configured classifier restricted to the 12-feature nominal basis $S$ is
+evaluated on the same test jets.
 
-Figure~\ref{fig:gap} shows the outcome. The single observables capture
-$40$--$100\%$ of the ceiling's log-rejection across the lifetime grid:
-the weighted multiplicity leads against $b$ jets at every lifetime and
-itself saturates the test-sample ceiling for $\ctau \geq 30$~mm, while
-the dEEC leads against light jets at the shortest lifetimes. The
-nominal-basis classifier is the supervised counterpart of the
-anomaly-detection blind spot: supervised training does extract a
-lifetime-\emph{independent} $\sim 40\times$ $b$-jet rejection from
-shape information alone, but the curve never rises with $\ctau$.
-Displacement is where all the lifetime discrimination lives, and two
-interpretable observables transmit most of it.
+The outcome is that the $S{+}D$ classifier separates the two samples
+completely. For $\ctau \geq 10$~mm not one of the $1.28\times 10^6$
+background test jets survives the 70\% signal-efficiency cut, so the
+supervised rejection is not quantifiable with this sample and is known
+only to exceed it. The separation is genuine rather than an artifact of
+overtraining: the training and test signal scores agree to better than
+1\% in the median, and the highest-scoring background jet sits several
+units of log-odds below the lowest-scoring signal region.
 
-\begin{figure}[tb]
-  \centering
-  \begin{subfigure}{0.49\textwidth}
-    \includegraphics[width=\textwidth]{gap_rejection_truth.pdf}
-    \caption{}
-  \end{subfigure}
-  \begin{subfigure}{0.49\textwidth}
-    \includegraphics[width=\textwidth]{gap_fraction_truth.pdf}
-    \caption{}
-  \end{subfigure}
-  \caption{(a) $b$-jet rejection at 50\% signal efficiency versus $\ctau(\pid)$ for the supervised XGBoost ceiling on the full $S{+}D$ basis, the classifier restricted to the nominal basis $S$, and the two strongest single observables. Plateaus reflect the test-sample statistics. (b) Fraction of the ceiling's log-rejection captured by each proxy.}
-  \label{fig:gap}
-\end{figure}
+The informative comparison is therefore not against the ceiling but
+against the same classifier at the same working points as the
+autoencoders, which is what Fig.~\ref{fig:vae} shows. The nominal-basis
+classifier is the supervised counterpart of the anomaly-detection blind
+spot: supervised training extracts a lifetime-\emph{independent}
+$\sim 18\times$ $b$-jet rejection from shape information alone, and the
+curve never rises with $\ctau$. The blind spot is a property of the
+inputs, not of the method.
+
 
 \stub{Per-flavor efficiency curves. Latent-space diagnostics.
 Cross-check with reco-level set-based architectures (deep-set / DETR).}
@@ -1046,13 +1055,13 @@ probe the vertex structure of a jet independently of its overall
 displacement. Characterized across dark-pion lifetimes from the prompt
 limit to $\ctau = 300$~mm and against light-flavor and heavy-flavor
 QCD jets separately, the weighted track multiplicity $\Sigma_i w_i$
-and the pairwise correlators provide background rejections that reach
-several hundred against $b$ jets already at $\ctau = 3$~mm and exceed
+and the pairwise correlators provide background rejections of order
+$10^2$ against $b$ jets already at $\ctau = 3$~mm and exceeding
 $10^4$ at long lifetime, while every nominal substructure observable
-remains at rejection factors of a few, independent of lifetime. A
-fully supervised classifier on the complete observable basis confirms
-that two interpretable observables transmit most of the available
-discrimination.
+remains at rejection factors below three, independent of lifetime. A
+fully supervised classifier on the complete observable basis separates
+the samples entirely for $\ctau \geq 10$~mm, so the discrimination
+available in this basis exceeds what the present samples can measure.
 
 The lifetime-independence of the nominal substructure basis is the
 central cautionary result. A dark shower whose distinguishing feature
@@ -1062,9 +1071,10 @@ in model capacity can recover information that is absent from the
 inputs. Augmenting the input vector of an otherwise unchanged
 variational autoencoder with fifteen displacement-weighted observables
 raises the signal efficiency at a fixed $1\%$ QCD anomaly rate from
-the background-consistent level to $34\%$ at $\ctau = 1$~mm and above
-$83\%$ for $\ctau \geq 10$~mm, realizing a third to all of the fully
-supervised ceiling depending on lifetime. The QCD background
+the background-consistent level to $37\%$ at $\ctau = 1$~mm and above
+$86\%$ for $\ctau \geq 10$~mm, recovering from a third of the fully
+supervised efficiency at the shortest lifetime to all of it for
+$\ctau \geq 100$~mm. The QCD background
 model is essentially unchanged by the augmentation and the heavy-flavor
 anomaly rate grows only mildly.
 
@@ -1324,7 +1334,7 @@ JHEP \textbf{04} (2011) 091, [\texttt{arXiv:1102.3795}].
 %     \includegraphics[width=\textwidth]{pileup_mu_deec_min_truth.pdf}
 %     \caption{}
 %   \end{subfigure}
-%   \caption{$b$-jet rejection versus $\ctau(\pid)$ for the weighted multiplicity (a) and the dEEC (b), with ($\mu = 60$, red) and without ($\mu = 0$, black) minimum-bias pileup overlay. Open triangles are sample-statistics lower bounds.}
+%   \caption{$b$-jet rejection versus $\ctau(\pid)$ for the weighted multiplicity (a) and the $\mathrm{dECF}_2$ (b), with ($\mu = 60$, red) and without ($\mu = 0$, black) minimum-bias pileup overlay. Open triangles are sample-statistics lower bounds.}
 %   \label{fig:pileup}
 % \end{figure}
 

@@ -64,6 +64,19 @@ def main() -> None:
                     grid[ik, ib] = val
                     sat_mask[ik, ib] = sat
 
+            # Dump the grid: the heatmap annotations render as glyph paths
+            # and cannot be read back out of the PDF, and the "gradient
+            # toward the origin" claim needs the actual numbers.
+            print(f"  grid ctau={ctau:g}mm {bname}  (rows kappa, cols beta)")
+            print("        beta:" + "".join(f"{b:>10g}" for b in BETAS))
+            for ik, kappa in enumerate(KAPPAS):
+                cells = "".join(
+                    ("&gt;" if sat_mask[ik, ib] else " ") + f"{grid[ik, ib]:>9.0f}"
+                    for ib in range(len(BETAS)))
+                print(f"  kappa={kappa:<5g}" + cells.replace("&gt;", ">"))
+            np.savez(out_dir / f"kb_grid_{bname.replace(' ', '_')}_ctau{ctau:g}_{args.scenario}.npz",
+                     grid=grid, sat=sat_mask, kappas=KAPPAS, betas=BETAS)
+
             fig, ax = plt.subplots(figsize=(8, 6.4))
             im = ax.imshow(np.log10(np.maximum(grid, 1.0)), origin="lower",
                            cmap="viridis", aspect="auto")

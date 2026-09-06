@@ -65,7 +65,7 @@ def feature_table(jets: ak.Array, chunk_size: int = 5_000,
     ``log1p=True`` the LOG1P_FEATURES are stored log1p-transformed.
 
     Computed in chunks: the pairwise/triple combination observables
-    (dEEC, ECF3, dECF3) allocate O(n_jets * n_trk^3) transients, which at
+    (dECF2, ECF3, dECF3) allocate O(n_jets * n_trk^3) transients, which at
     10^5+ jets would otherwise reach tens of GB."""
     cols = {**BASIS_S, **BASIS_D}
     dtype = np.dtype([(name, "f4") for name in cols])

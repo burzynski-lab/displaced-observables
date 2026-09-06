@@ -144,55 +144,6 @@ def plot_reconstruction(series, basis, kind, basis_name, out_dir, scenario):
     from cached physical-unit input/reconstruction arrays."""
     inp = series[0][1]
     rec = series[1][1]
-    tag = f"{kind}_{basis_name.replace('+', 'p')}_{scenario}"
-
-    # one grid for the nominal features, one for the displaced features
-    # (single grid when the basis has no displaced block); legend on every
-    # panel
-    blocks = ([("", basis, range(len(basis)))] if len(basis) <= 12 else
-              [("_nominal", basis[:12], range(12)),
-               ("_displaced", basis[12:], range(12, len(basis)))])
-    for suffix, vars_blk, idx_blk in blocks:
-        fig, axes = plt.subplots(4, 3, figsize=(17, 19))
-        for ax, var, k in zip(axes.ravel(), vars_blk, idx_blk):
-            allv = np.concatenate([s[1][:, k] for s in series])
-            hi_q = 0.98 if var in ("dd2", "d2") else 0.999
-            lo, hi = np.quantile(allv, [0.001, hi_q])
-            if hi <= lo:
-                hi = lo + 1
-            # scale huge-valued axes into the label instead of an offset text
-            scale = 10.0 ** np.floor(np.log10(max(abs(hi), 1))) if abs(hi) > 1e4 else 1.0
-            lo, hi = lo / scale, hi / scale
-            bins = np.linspace(lo, hi, 50)
-            for label, arr, color, ls, filled in series:
-                if filled:
-                    ax.hist(np.clip(arr[:, k] / scale, lo, hi), bins=bins,
-                            histtype="stepfilled", alpha=0.45, color=color,
-                            label=label, density=True)
-                else:
-                    ax.hist(np.clip(arr[:, k] / scale, lo, hi), bins=bins,
-                            histtype="step", lw=1.5, label=label, color=color,
-                            ls=ls, density=True)
-            ax.set_yscale("log")
-            ax.set_ylim(top=ax.get_ylim()[1] * 3e4)
-            name = LABELS.get(var, var)
-            xlab = name if scale == 1.0 else f"{name}  [$\\times 10^{{{int(np.log10(scale))}}}$]"
-            ax.set_xlabel(xlab, fontsize=16)
-            from make_plots import PYTHIA_VERSION
-            ax.text(0.04, 0.97,
-                    f"Pythia {PYTHIA_VERSION}, $\\sqrt{{s}}=13.6$ TeV\n"
-                    "$Z'(1.5\\,\\mathrm{TeV})\\to q_D\\bar{q}_D$\n"
-                    "anti-$k_t$ $R=1.0$",
-                    transform=ax.transAxes, va="top", fontsize=10)
-            ax.set_ylabel("density", fontsize=12)
-            ax.tick_params(labelsize=10)
-            ax.legend(fontsize=11, loc="upper right")
-        for ax in axes.ravel()[len(vars_blk):]:
-            ax.set_visible(False)
-        fig.tight_layout()
-        for _ext in ("png", "pdf"):
-            fig.savefig(out_dir / f"vae_recon_{tag}{suffix}.{_ext}", dpi=140)
-        plt.close(fig)
 
     # standalone per-feature panels (VAE, S+D) for subfigure layouts
     if kind == "VAE" and basis_name == "S+D":
@@ -200,13 +151,14 @@ def plot_reconstruction(series, basis, kind, basis_name, out_dir, scenario):
             k = basis.index(var)
             fig, ax = plt.subplots(figsize=(7, 6))
             allv = np.concatenate([s[1][:, k] for s in series])
-            hi_q = 0.98 if var in ("dd2", "d2") else 0.999
-            lo, hi = np.quantile(allv, [0.001, hi_q])
+            hi_q = 0.98 if var in ("dd2", "d2") else 0.9999
+            lo, hi = 0.0, np.quantile(allv, hi_q)   # observables start at zero
             if hi <= lo:
                 hi = lo + 1
             scale = 10.0 ** np.floor(np.log10(max(abs(hi), 1))) if abs(hi) > 1e4 else 1.0
             lo, hi = lo / scale, hi / scale
             bins = np.linspace(lo, hi, 50)
+            ax.set_xlim(bins[0], bins[-1])   # axis ends where the binning does
             for label, arr, color, ls, filled in series:
                 if filled:
                     ax.hist(np.clip(arr[:, k] / scale, lo, hi), bins=bins,
@@ -230,33 +182,20 @@ def plot_reconstruction(series, basis, kind, basis_name, out_dir, scenario):
                             dpi=150)
             plt.close(fig)
 
-    # normalized residual summary (bias and spread per feature)
-    diff = rec - inp
-    iqr_in = np.percentile(inp, 75, axis=0) - np.percentile(inp, 25, axis=0)
-    scale = np.where(iqr_in > 0, iqr_in, 1.0)
-    med = np.median(diff, axis=0) / scale
-    iqr = (np.percentile(diff, 75, axis=0) - np.percentile(diff, 25, axis=0)) / scale
-    fig, axes = plt.subplots(2, 1, figsize=(10, 7), sharex=True)
-    x = np.arange(len(basis))
-    axes[0].bar(x, med, color="C0")
-    axes[0].axhline(0, color="k", lw=0.8, ls="--")
-    axes[0].set_ylabel("median(rec$-$in)/IQR(in)", fontsize=10)
-    axes[1].bar(x, iqr, color="C1")
-    axes[1].set_ylabel("IQR(rec$-$in)/IQR(in)", fontsize=10)
-    axes[1].set_xticks(x, basis, rotation=60, ha="right", fontsize=8)
-    fig.suptitle(f"{kind}, basis {basis_name} — reconstruction residual summary",
-                 fontsize=12)
-    fig.tight_layout()
-    for _ext in ("png", "pdf"):
-        fig.savefig(out_dir / f"vae_recon_summary_{tag}.{_ext}", dpi=140)
-    plt.close(fig)
-
 
 def compute(args) -> dict:
     """Expensive stage: train the four (V)AEs and the supervised BDTs,
     score every sample, and assemble all plotting inputs."""
     torch.manual_seed(args.seed)
-    device = "cpu"
+    # GPU when one is present and torch was built for it, otherwise CPU.
+    # Note the conda-forge default is the cpu_mkl build, which reports
+    # cuda available = False even on a GPU node: the `mlgpu` environment is
+    # the one that carries a CUDA-enabled torch. Results differ slightly
+    # between devices through floating-point non-associativity, so do not
+    # mix devices within one set of published numbers.
+    device = args.device or ("cuda" if torch.cuda.is_available() else "cpu")
+    print(f"device: {device}"
+          + (f" ({torch.cuda.get_device_name(0)})" if device == "cuda" else ""))
 
     with h5py.File(Path(args.data) / f"features_{args.scenario}.h5") as f:
         jets = f["jets"][:]
@@ -365,6 +304,8 @@ def main() -> None:
     ap.add_argument("--out", default="plots")
     ap.add_argument("--scenario", default="truth")
     ap.add_argument("--seed", type=int, default=17)
+    ap.add_argument("--device", default=None,
+                    help="force 'cuda' or 'cpu' (default: cuda when available)")
     ap.add_argument("--recompute", action="store_true",
                     help="retrain instead of using the cached results")
     args = ap.parse_args()
@@ -423,9 +364,10 @@ def main() -> None:
             ax_fig, ax = plt.subplots(figsize=(7, 6))
             d = score_store[(kind, basis_name)]
             allv = np.concatenate([d["qcd"], d["bb"]] + list(d["sig"].values()))
-            lo = max(np.quantile(allv, 0.001), 1e-4)
-            hi = np.quantile(allv, 0.999)
+            lo = max(np.quantile(allv, 0.0001), 1e-4)
+            hi = np.quantile(allv, 0.9999)
             bins = np.logspace(np.log10(lo), np.log10(hi if hi > lo else lo * 10), 55)
+            ax.set_xlim(bins[0], bins[-1])   # axis ends where the binning does
             ax.hist(np.clip(d["qcd"], lo, hi), bins=bins, density=True,
                     histtype="stepfilled", alpha=0.45, color="#7f8fa6",
                     label="QCD (test)")

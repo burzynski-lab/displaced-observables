@@ -52,7 +52,7 @@ def _pair_dr(pairs):
 
 def deec(jets, beta: float = 1.0, g: str = "prod") -> ak.Array:
     """Displaced energy-energy correlator:
-    dEEC(beta) = sum_{i<j} z_i z_j (dR_ij)^beta g(w_i, w_j),
+    dECF2(beta) = sum_{i<j} z_i z_j (dR_ij)^beta g(w_i, w_j),
     g = w_i*w_j ('prod') or min(w_i, w_j) ('min').
 
     Signal: dark-pion decays give *pairs* of displaced tracks from common
@@ -79,7 +79,7 @@ def wij_vs_dr(jets):
 
 def decf(jets, n: int = 2, beta: float = 1.0, g: str = "prod") -> ak.Array:
     """Displaced energy correlation functions:
-    dECF1 = sum_i z_i w_i,  dECF2 = dEEC(beta, g),
+    dECF1 = sum_i z_i w_i,  dECF2 as above,
     dECF3 = sum_{i<j<k} z_i z_j z_k (dR_ij dR_ik dR_jk)^beta g(w_i,w_j,w_k),
     with g the product ('prod') or minimum ('min') of the leg weights.
     Sensitive to MULTIPLE displaced vertices per jet (dark showers have

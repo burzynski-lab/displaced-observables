@@ -27,7 +27,7 @@ from make_plots import decorate
 plt.style.use(hep.style.ATLAS)
 
 FLAGSHIP = {
-    "deec_min": ("dEEC($\\beta$=1, min)", lambda j: obs.deec(j, 1.0, "min")),
+    "deec_min": ("dECF$_2$($\\beta$=1, min)", lambda j: obs.deec(j, 1.0, "min")),
     "ang_00": ("disp. multiplicity  $\\Sigma_i w_i$", lambda j: obs.angularity(j, 0, 0)),
     "promptfrac": ("prompt $p_T$ fraction", obs.prompt_pt_fraction),
 }
