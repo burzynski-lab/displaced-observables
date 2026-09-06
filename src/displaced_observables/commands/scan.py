@@ -44,52 +44,72 @@ def run(args) -> None:
     out = Path(args.out)
     out.mkdir(parents=True, exist_ok=True)
 
-    # The pT reweighting reference is the *whole* signal grid, matching
-    # `evaluate`; trimming it to the scanned lifetimes would silently change
-    # the weights and make the scan incomparable to the rejection tables.
     files = find(args.indir)
     if not files:
         raise SystemExit(f"no truth parquet in {args.indir}/")
 
-    jets_by = {}
+    # Stream one file at a time. Holding every jet table at once is ~80 GB at
+    # production scale; accumulating only the angularity values per grid point
+    # is a few hundred MB, because each is one float per jet.
+    grid = [(k, b) for k in args.kappas for b in args.betas]
+    want_ctau = set(args.ctau)
+    acc: dict = {}          # key -> {(kappa,beta): [arrays]}
+    pt_acc: dict = {}       # key -> [arrays], for the pT reweighting
     for f in files:
-        j = apply_tracking(build_jet_table(ak.from_parquet(f.path)), scenario)
-        key = ("sig", f.ctau) if f.sample == "signal" else ("bkg", f.sample)
-        jets_by.setdefault(key, []).append(j)
-    jets_by = {k: ak.concatenate(v) for k, v in jets_by.items()}
+        jets = apply_tracking(build_jet_table(ak.from_parquet(f.path)), scenario)
+        if f.sample == "signal":
+            # every signal point contributes to the reweighting reference, but
+            # only the scanned lifetimes need their angularities computed
+            pt_acc.setdefault("ref", []).append(np.asarray(jets.pt))
+            if f.ctau not in want_ctau:
+                continue
+            groups = {("sig", f.ctau): jets}
+        elif f.sample == "qcd":
+            groups = {("bkg", "QCD light"): jets[jets.flav == 0],
+                      ("bkg", "QCD c"): jets[jets.flav == 4],
+                      ("bkg", "QCD b"): jets[jets.flav == 5]}
+        elif f.sample == "qcd_bb":
+            groups = {("bkg", "QCD b"): jets[jets.flav == 5]}
+        else:
+            continue
+        for key, j in groups.items():
+            if len(j) == 0:
+                continue
+            pt_acc.setdefault(key, []).append(np.asarray(j.pt))
+            slot = acc.setdefault(key, {})
+            for kappa, beta in grid:
+                v = chunked(lambda jj, k=kappa, b=beta: obs.angularity(jj, k, b),
+                            j, args.chunk)
+                slot.setdefault((kappa, beta), []).append(np.asarray(v))
+        del jets
 
-    sig_all = {c: jets_by[("sig", c)] for (t, c) in jets_by if t == "sig"}
-    inc = jets_by.get(("bkg", "qcd"))
-    bb = jets_by.get(("bkg", "qcd_bb"))
-    if inc is None or not sig_all:
-        raise SystemExit("need inclusive QCD and at least one signal point")
-    bkg = {"QCD light": inc[inc.flav == 0], "QCD c": inc[inc.flav == 4],
-           "QCD b": ak.concatenate([inc[inc.flav == 5]]
-                                   + ([bb[bb.flav == 5]] if bb is not None else []))}
-    ref_pt = np.concatenate([np.asarray(sig_all[c].pt) for c in sorted(sig_all)])
-    bkg_w = {n: pt_weights(ref_pt, np.asarray(j.pt)) for n, j in bkg.items()}
+    if "ref" not in pt_acc:
+        raise SystemExit("no signal files: the pT reweighting needs them")
+    ref_pt = np.concatenate(pt_acc.pop("ref"))
+    cat = lambda d, key: {gk: np.concatenate(v) for gk, v in d[key].items()}
+    bkg_keys = [k for k in acc if k[0] == "bkg"]
+    sig_keys = [k for k in acc if k[0] == "sig"]
+    if not sig_keys:
+        raise SystemExit(f"no signal at ctau in {args.ctau}")
+    bkg_w = {k: pt_weights(ref_pt, np.concatenate(pt_acc[k])) for k in bkg_keys}
 
     rows = {k: [] for k in ("ctau", "background", "kappa", "beta",
                             "rejection", "saturated")}
-    for ctau in args.ctau:
-        if ctau not in sig_all:
-            print(f"no signal at ctau={ctau:g} mm, skipping", flush=True)
-            continue
-        sig = sig_all[ctau]
-        for kappa in args.kappas:
-            for beta in args.betas:
-                fn = (lambda j, k=kappa, b=beta: obs.angularity(j, k, b))
-                vs = chunked(fn, sig, args.chunk)
-                for bn, jb in bkg.items():
-                    vb = chunked(fn, jb, args.chunk)
-                    val, sat = rejection(vs, vb, eff=args.eff, bkg_weights=bkg_w[bn])
-                    rows["ctau"].append(float(ctau))
-                    rows["background"].append(bn)
-                    rows["kappa"].append(float(kappa))
-                    rows["beta"].append(float(beta))
-                    rows["rejection"].append(float(val))
-                    rows["saturated"].append(bool(sat))
-        print(f"  ctau={ctau:g} mm done", flush=True)
+    for sk in sorted(sig_keys, key=lambda k: k[1]):
+        sig_vals = cat(acc, sk)
+        for bk in sorted(bkg_keys, key=lambda k: k[1]):
+            bkg_vals = cat(acc, bk)
+            for kappa, beta in grid:
+                val, sat = rejection(sig_vals[(kappa, beta)],
+                                     bkg_vals[(kappa, beta)],
+                                     eff=args.eff, bkg_weights=bkg_w[bk])
+                rows["ctau"].append(float(sk[1]))
+                rows["background"].append(bk[1])
+                rows["kappa"].append(float(kappa))
+                rows["beta"].append(float(beta))
+                rows["rejection"].append(float(val))
+                rows["saturated"].append(bool(sat))
+        print(f"  ctau={sk[1]:g} mm done", flush=True)
 
     path = out / "kb_scan.parquet"
     pq.write_table(pa.table(rows), path)

@@ -430,11 +430,18 @@ form except the final production statistics and the public release.
 
 ## Open questions carried from the previous production
 
-- **Flavour composition**: the inclusive-QCD split measured 80.8% light /
-  13.1% c / 6.1% b, against 61.9 / 7.3 / 30.8 recorded earlier. The new
-  fractions reproduce file by file and are the physical ones (a ~31% b
-  fraction in `HardQCD:all` is not credible). Never resolved; the old sample
-  is gone. Re-derive rather than trusting either record.
+- **Flavour composition: RESOLVED (2026-09-06).** Two independent
+  productions now agree, so the old 61.9 / 7.3 / 30.8 record was simply
+  wrong and should be ignored:
+
+  | production | light | c | b |
+  |---|---|---|---|
+  | pTHatMin 450 | 80.8% | 13.1% | 6.1% |
+  | pTHatMin 400 | 80.7% | 13.2% | 6.1% |
+
+  The composition is also insensitive to the pTHatMin change, which is the
+  expected behaviour: the flavour fractions of `HardQCD:all` vary slowly with
+  the pThat slice. ~6% b is the physical value; ~31% never was.
 - **The supervised ceiling is not measurable**: the S+D classifier separates
   the test samples completely for ctau >= 10 mm, so its rejection is only a
   bound. Loosening the working point does not fix it (90% and 95% still give
