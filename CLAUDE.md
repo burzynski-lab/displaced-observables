@@ -83,6 +83,25 @@ is the compromise. Background seed counts rose 100 -> 165 to hold the jet
 statistics of the previous production. The signal card has no pTHat cut (it
 is an s-channel resonance) and is unaffected.
 
+**Residual sculpting at 400 is accepted (author's decision, 2026-09-06).**
+Measured on 30k generated events, the uncut leading-2 jet pT spectrum still
+peaks just above the generator threshold and is falling through the cut:
+
+```
+400-425: 7337    475-500: 5860
+425-450: 8195 <- peak     500-525: 4706 <- the 500 GeV cut lands here
+450-475: 7177    525-550: 3613
+```
+
+So the cut sits on the falling edge of the turn-on rather than on a clean
+power law: 400 is better than 450 (where the peak was *at* the cut) but not
+fully efficient. The decision is to accept it because every background is pT
+-reweighted to the signal spectrum before any rejection is computed, which
+removes the shape difference the sculpting introduces. Note this corrects
+the *pT* shape only; it does not by construction remove any correlation
+between the sculpting and substructure. Do not re-open without new evidence
+of such a correlation.
+
 Production scale: 10^5 events per lifetime point (7 x 10 seeds), 1.65 x 10^6
 events for each background (165 seeds), 10k events per file, 400 array tasks.
 
