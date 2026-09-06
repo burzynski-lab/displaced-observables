@@ -195,7 +195,8 @@ def merge_shards(shards: list) -> dict:
         }
 
     pt_bkg = {n: cat("bkg", n, "pt") for n in bkg_names}
-    ref_pt = np.concatenate([cat("sig", c, "pt") for c in sig_keys])
+    pt_sig = {c: cat("sig", c, "pt") for c in sig_keys}
+    ref_pt = np.concatenate([pt_sig[c] for c in sig_keys])
     bkg_w = {n: pt_weights(ref_pt, pt_bkg[n]) for n in bkg_names}
 
     wij = {}
@@ -212,7 +213,8 @@ def merge_shards(shards: list) -> dict:
                 for c in sig_keys},
     }
     return {"vals": vals, "bkg_w": bkg_w, "wij": wij,
-            "dr_bins": DR_BINS, "counts": counts}
+            "dr_bins": DR_BINS, "counts": counts,
+            "pt": {"bkg": pt_bkg, "sig": pt_sig}}
 
 
 def compute_all(data_dir, scenario: str) -> dict:
@@ -332,6 +334,39 @@ def main() -> None:
         for _ext in ("png", "pdf"):
             fig.savefig(out_dir / f"dist_{key}_{args.scenario}.{_ext}", dpi=150)
         plt.close(fig)
+
+    # Jet pT spectrum, drawn twice: as selected, and with the background
+    # pT reweighting that every rejection in this script uses. The pair
+    # shows what the reweighting actually does to the backgrounds, and how
+    # much the 500 GeV selection sits on the generator turn-on.
+    if "pt" in data:
+        for tag, use_w, note in (
+            ("", False, "no $p_T$ reweighting"),
+            ("_reweighted", True, "backgrounds $p_T$-reweighted to signal"),
+        ):
+            fig, axp = plt.subplots(figsize=(8, 6))
+            allpt = np.concatenate(list(data["pt"]["bkg"].values())
+                                   + list(data["pt"]["sig"].values()))
+            bins = np.linspace(allpt.min(), allpt.max(), 60)
+            axp.set_xlim(bins[0], bins[-1])
+            for name, v in data["pt"]["bkg"].items():
+                axp.hist(v, bins=bins, density=True, histtype="step", ls="--",
+                         weights=data["bkg_w"][name] if use_w else None,
+                         label=name)
+            for ctau, v in data["pt"]["sig"].items():
+                axp.hist(v, bins=bins, density=True, histtype="step",
+                         label=f"signal $c\\tau$={ctau:g} mm")
+            axp.set_xlabel("jet $p_{\\mathrm{T}}$ [GeV]")
+            axp.set_ylabel("density")
+            axp.set_yscale("log")
+            axp.set_ylim(top=axp.get_ylim()[1] * 300)
+            axp.legend(fontsize=12, loc="upper right")
+            decorate(axp, extra=note)
+            fig.tight_layout()
+            for _ext in ("png", "pdf"):
+                fig.savefig(out_dir / f"dist_jetpt{tag}_{args.scenario}.{_ext}",
+                            dpi=150)
+            plt.close(fig)
 
     # differential <w_i w_j> vs dR profile (energy-weighted)
     fig, ax = plt.subplots(figsize=(8, 6))
