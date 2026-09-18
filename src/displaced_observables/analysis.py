@@ -1,115 +1,52 @@
-"""Shared analysis machinery: sample loading, jet-pT reweighting, and
-saturation-aware rejection, used by the plotting and scan scripts."""
+"""Shared analysis machinery: observable-table loading, jet-pT reweighting,
+and saturation-aware rejection.
+
+No caching lives here any more. ``analyze`` writes per-jet parquet and every
+consumer reads it, so a stale result is impossible by construction.
+"""
 
 from __future__ import annotations
 
-import re
-from pathlib import Path
-
-import awkward as ak
 import numpy as np
 
-from .jets import build_jet_table
-from .tracking import SCENARIOS, apply_tracking
+
+BACKGROUNDS = ("QCD light", "QCD c", "QCD b")
 
 
-def _ctau_of(path: Path) -> float:
-    """Lifetime in mm parsed from a signal filename."""
-    return float(re.search(r"ctau([\d.]+)mm", path.name)[1])
+def load_observables(indir="data/observables", scenario_note: str = "") -> dict:
+    """Read every per-jet observable parquet into one in-memory table.
 
+    Returns ``{"columns": {name: array}, "backgrounds": {name: mask},
+    "signals": {ctau: mask}}``. Masks index into the concatenated table, so an
+    observable for one sample is ``columns[obs][masks[name]]`` with no copying
+    of the other samples.
 
-def sample_files(data_dir: str | Path) -> tuple[list[Path], list[Path], list[Path]]:
-    """Canonical, fully deterministic (qcd, qcdbb, signal) file lists.
-
-    Order matters: it fixes the concatenation order of every downstream
-    array, so sharded and unsharded runs agree element by element. Signal
-    files sort by (ctau, name) rather than ctau alone, because sorting on
-    ctau alone leaves ties broken by filesystem glob order.
+    ``QCD b`` pools the b jets of the inclusive and the b-enriched samples;
+    light and c come from the inclusive sample only, since the b-enriched
+    sample's few light and c jets are not a representative light/c sample.
     """
-    data_dir = Path(data_dir)
-    return (
-        sorted(data_dir.glob("qcd_seed*.parquet")),
-        sorted(data_dir.glob("qcdbb_seed*.parquet")),
-        sorted(data_dir.glob("signal_ctau*_seed*.parquet"),
-               key=lambda p: (_ctau_of(p), p.name)),
-    )
+    import numpy as np
+    import pyarrow.parquet as pq
 
+    from .samples import find
 
-def load_raw_tables(data_dir: str | Path, files: tuple | None = None) -> dict:
-    """Build truth jet tables (pre-tracking-scenario) for every sample.
+    files = find(indir)
+    if not files:
+        raise SystemExit(f"no observable parquet in {indir}/ (run `analyze` first)")
+    tables = [pq.read_table(f.path) for f in files]
+    names = tables[0].column_names
+    columns = {c: np.concatenate([np.asarray(t[c]) for t in tables]) for c in names}
 
-    Returns {"backgrounds": {"QCD light": t, "QCD c": t, "QCD b": t},
-             "signals": {ctau_mm: t}}. b jets pool the inclusive and
-    b-enriched samples (per-flavor results are shape-only).
-
-    Pass `files` as a (qcd, qcdbb, signal) tuple of path lists to build only
-    that subset, which is how the sharded path processes one block at a time.
-    """
-    if files is None:
-        qcd_files, bb_files, sig_files = sample_files(data_dir)
-        if not qcd_files or not sig_files:
-            raise SystemExit(f"need qcd and signal parquet files in {data_dir}/")
-    else:
-        qcd_files, bb_files, sig_files = files
-
-    def build(fs):
-        return ak.concatenate([build_jet_table(ak.from_parquet(f)) for f in fs])
-
-    # A shard may legitimately hold no QCD (or no signal) files at all. Such
-    # samples are left out of the dict entirely rather than represented by a
-    # fabricated empty table, and the merge step tolerates absent keys.
-    backgrounds = {}
-    if qcd_files:
-        qcd = build(qcd_files)
-        backgrounds["QCD light"] = qcd[qcd.flav == 0]
-        backgrounds["QCD c"] = qcd[qcd.flav == 4]
-        qcd_b = qcd[qcd.flav == 5]
-    else:
-        qcd_b = None
-    if bb_files:
-        bb = build(bb_files)
-        bb_b = bb[bb.flav == 5]
-        qcd_b = bb_b if qcd_b is None else ak.concatenate([qcd_b, bb_b])
-    if qcd_b is not None:
-        backgrounds["QCD b"] = qcd_b
-
-    # Group by ctau *before* concatenating. Keying by ctau inside the loop
-    # would let each seed overwrite the previous one, silently keeping only
-    # the last file per lifetime point.
-    grouped: dict[float, list] = {}
-    for f in sig_files:
-        grouped.setdefault(_ctau_of(f), []).append(build_jet_table(ak.from_parquet(f)))
-    signals = {c: ak.concatenate(v) for c, v in grouped.items()}
-
-    return {"backgrounds": backgrounds, "signals": signals}
-
-
-def with_scenario(tables: dict, scenario: str) -> dict:
-    """Apply a tracking scenario to every table in a load_raw_tables dict."""
-    sc = SCENARIOS[scenario]
-    return {
-        "backgrounds": {k: apply_tracking(v, sc) for k, v in tables["backgrounds"].items()},
-        "signals": {k: apply_tracking(v, sc) for k, v in tables["signals"].items()},
+    sample, flav, ctau = columns["sample"], columns["flav"], columns["ctau"]
+    inc, bb, sig = sample == 0, sample == 1, sample == 2
+    backgrounds = {
+        "QCD light": inc & (flav == 0),
+        "QCD c": inc & (flav == 4),
+        "QCD b": (inc | bb) & (flav == 5),
     }
-
-
-def load_or_compute(cache_file, compute_fn, recompute: bool = False):
-    """Compute/plot separation: expensive stages persist their plotting
-    inputs to data/cache/ and cosmetic plot edits reuse them. Pass
-    --recompute (recompute=True) after any physics or selection change."""
-    import pickle
-
-    path = Path(cache_file)
-    if path.exists() and not recompute:
-        with open(path, "rb") as f:
-            print(f"[cache] loaded {path}")
-            return pickle.load(f)
-    result = compute_fn()
-    path.parent.mkdir(parents=True, exist_ok=True)
-    with open(path, "wb") as f:
-        pickle.dump(result, f)
-    print(f"[cache] wrote {path}")
-    return result
+    signals = {float(c): sig & (ctau == c) for c in np.unique(ctau[sig])}
+    return {"columns": columns, "backgrounds": backgrounds, "signals": signals,
+            "n_files": len(files)}
 
 
 def chunked(fn, jets, chunk_size: int = 5_000) -> np.ndarray:

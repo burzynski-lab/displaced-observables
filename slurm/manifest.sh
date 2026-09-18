@@ -1,47 +1,41 @@
 #!/bin/bash
-# Build (or rebuild) the per-sample job manifests.
-#
-# Each manifest has one line per 10k-event job: "<sample> <ctau|-> <seed>".
-# The array index into the manifest is the SLURM_ARRAY_TASK_ID.
-#
-# Usage:
-#   ./slurm/manifest.sh          # full manifests
-#   ./slurm/manifest.sh --todo   # only jobs whose output parquet is missing
+# Build the generation manifests: one line per output file, "<sample> <ctau|-> <seed>".
+#   ./slurm/manifest.sh          # full production
+#   ./slurm/manifest.sh --todo   # only the points whose observable parquet is missing
 set -euo pipefail
-
 REPO=/home/jburzyns/displaced-observables
-DATA=$REPO/data
-DIR=$REPO/slurm
-TODO_ONLY=${1:-}
+cd "$REPO"
+TODO=${1:-}
 
+# pTHatMin was lowered 450 -> 400 so the 500 GeV jet cut is not sitting on the
+# generator turn-on. Measured selection efficiency drops 1.203 -> 0.726 selected
+# jets per generated event, so the background seed counts rise by 1.66x to hold
+# the jet statistics of the previous production.
 CTAUS="0 1 3 10 30 100 300"
-SIGNAL_SEEDS=10    # 10 x 10k = 100k per ctau point
-QCD_SEEDS=100      # 100 x 10k = 1M
-QCDBB_SEEDS=100    # 100 x 10k = 1M
+SIGNAL_SEEDS=${SIGNAL_SEEDS:-10}
+QCD_SEEDS=${QCD_SEEDS:-165}
+QCDBB_SEEDS=${QCDBB_SEEDS:-165}
 
-# outfile <sample> <ctau>  <seed>  ->  path generate_sample() will write
-outfile() {
+stem() {   # stem <sample> <ctau> <seed>
     case $1 in
-        signal) printf '%s/signal_ctau%gmm_seed%d.parquet' "$DATA" "$2" "$3" ;;
-        qcd)    printf '%s/qcd_seed%d.parquet'   "$DATA" "$3" ;;
-        qcd_bb) printf '%s/qcdbb_seed%d.parquet' "$DATA" "$3" ;;
+        signal) printf 'signal_ctau%gmm_seed%d' "$2" "$3" ;;
+        qcd)    printf 'qcd_seed%d' "$3" ;;
+        qcd_bb) printf 'qcdbb_seed%d' "$3" ;;
     esac
 }
-
-emit() {  # emit <sample> <ctau> <seed>
-    if [[ $TODO_ONLY == --todo ]] && [[ -s $(outfile "$1" "$2" "$3") ]]; then
+emit() {   # skip points that already have BOTH stages done
+    if [[ $TODO == --todo ]] && [[ -s "data/observables/$(stem "$1" "$2" "$3").parquet" ]]; then
         return
     fi
     echo "$1 $2 $3"
 }
 
-for s in $(seq 1 $SIGNAL_SEEDS); do
+for s in $(seq 1 "$SIGNAL_SEEDS"); do
     for c in $CTAUS; do emit signal "$c" "$s"; done
-done > "$DIR/manifest_signal.txt"
+done > slurm/manifest_signal.txt
+for s in $(seq 1 "$QCD_SEEDS");   do emit qcd    - "$s"; done > slurm/manifest_qcd.txt
+for s in $(seq 1 "$QCDBB_SEEDS"); do emit qcd_bb - "$s"; done > slurm/manifest_qcd_bb.txt
 
-for s in $(seq 1 $QCD_SEEDS);   do emit qcd    - "$s"; done > "$DIR/manifest_qcd.txt"
-for s in $(seq 1 $QCDBB_SEEDS); do emit qcd_bb - "$s"; done > "$DIR/manifest_qcd_bb.txt"
-
-for f in "$DIR"/manifest_*.txt; do
-    printf '%-40s %5d jobs\n' "$f" "$(wc -l < "$f")"
+for f in slurm/manifest_*.txt; do
+    printf '%-34s %5d tasks\n' "$f" "$(wc -l < "$f")"
 done

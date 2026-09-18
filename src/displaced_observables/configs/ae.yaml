@@ -1,0 +1,35 @@
+# displaced-observables train --config src/displaced_observables/configs/ae.yaml [--section.key=value ...]
+seed_everything: 17
+name: ae
+
+model:
+  input_dim: 27          # basis S+D; use 12 with --data.basis=S
+  hidden_dims: [64, 32]
+  latent_dim: 8
+  variational: false
+  lr: 1.0e-3
+  basis: S+D
+
+data:
+  features: data/features/features_truth.h5
+  basis: S+D
+  batch_size: 256
+  seed: 17
+  num_workers: 0         # tensors are sliced in-process; forked workers add nothing
+  max_jets: null         # debug cap on the QCD training pool
+
+trainer:
+  max_epochs: 200
+  accelerator: auto
+  devices: 1
+  log_every_n_steps: 50
+  default_root_dir: logs
+  enable_progress_bar: false
+  logger: false
+  callbacks:
+    - class_path: displaced_observables.lightning.callbacks.Checkpoint
+      init_args: {monitor_loss: val/loss}
+    - class_path: displaced_observables.lightning.callbacks.SaveRunConfig
+    - class_path: displaced_observables.lightning.callbacks.EpochHistory
+    - class_path: lightning.pytorch.callbacks.EarlyStopping
+      init_args: {monitor: val/loss, patience: 15, mode: min, min_delta: 1.0e-5}

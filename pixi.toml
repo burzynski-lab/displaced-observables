@@ -5,11 +5,17 @@ name = "displaced-observables"
 platforms = ["osx-arm64", "linux-64"]
 version = "0.1.0"
 
+# every step goes through the one executable: `pixi run displaced-observables <command>`
 [tasks]
-generate = "python scripts/generate.py"
-plots = "python scripts/make_plots.py"
-test = "pytest tests/ -v"
-paper = "tectonic paper/main.tex"
+generate = "displaced-observables generate"
+analyze  = "displaced-observables analyze"
+features = "displaced-observables features"
+train    = "displaced-observables train"
+evaluate = "displaced-observables evaluate"
+scan     = "displaced-observables scan"
+plot     = "displaced-observables plot"
+test     = "pytest tests/ -v"
+paper    = "tectonic paper/main.tex"
 
 [dependencies]
 python = "3.12.*"
@@ -52,7 +58,22 @@ lhapdf = "*"
 pytorch = ">=2.4"
 h5py = "*"
 xgboost = "*"
+lightning = ">=2.4"
+jsonargparse = "*"
+typeshed-client = "*"     # jsonargparse[signatures] extras
+docstring_parser = "*"
+
+# CUDA torch for the ouheptmp GPU node. linux-64 only so the lockfile still
+# solves for osx-arm64.
+[feature.gpu]
+platforms = ["linux-64"]
+[feature.gpu.system-requirements]
+cuda = "12"
+[feature.gpu.dependencies]
+pytorch-gpu = "*"
+cuda-version = "12.*"
 
 [environments]
 mg5 = { features = ["mg5"], no-default-feature = true }
 ml = { features = ["ml"] }
+gpu = { features = ["ml", "gpu"] }
